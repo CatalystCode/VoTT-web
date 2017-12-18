@@ -13,23 +13,26 @@ module.exports = {
     setConfiguration:(configValues)=>{
         for(var k in configValues) configuration[k]=configValues[k];
     },
-    getNextImageTagTask:(args, res)=>{
+    getProjects:(args, res)=>{
+        return new Promise((resolve, reject)=>{
+            // TODO: Ensure user has project access to the app.
+            resolve([
+                { projectId:uuid(), name:"Some Project" }
+            ]);
+        });
+    },
+    createProject:(args, res)=>{
+        return new Promise((resolve, reject)=>{
+            // TODO: Ensure user has project access to the app.
+            resolve({ projectId:uuid(), name:"Some Project" });
+        });
+    },
+    removeProject:(args, res)=>{
         return new Promise((resolve, reject)=>{
             // TODO: Ensure projectId exists.
             // TODO: Ensure user has access to projectId.
             const projectId = args.projectId;
-            const simulatedDeployment = uuid();
-            resolve({
-                type:"ANNOTATE",
-                taskId:uuid(),
-                imageURL:`http://vott-${simulatedDeployment}.azure.com/images/${uuid()}.jpg`,
-                objectClassNames:["tide-detergent"],
-                instructions:{
-                    text:"Please draw a rectangle around any Tide detergent boxes you see.",
-                    sampleImageURL:`http://vott-${simulatedDeployment}.azure.com/images/sample.${uuid()}.jpg`,
-                    sampleVideoURL:`http://vott-${simulatedDeployment}.azure.com/images/sample.${uuid()}.m4v`
-                }
-            });
+            resolve({ projectId:projectId, name:"Some Project" });
         });
     },
     allocateImages:(args, res)=>{
@@ -47,9 +50,9 @@ module.exports = {
             resolve(result);
         });
     },
-    submitImageTags:(args, res)=>{
+    commitImages:(args, res)=>{
         return new Promise((resolve, reject)=>{
-            resolve(uuid());
+            resolve("OK");
         });
     }
 };

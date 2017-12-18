@@ -1,0 +1,7 @@
+type Query {
+  getNextImageTagTask(projectId: String!): ImageTagTask
+}
+
+type Mutation {
+  submitImageTags(taskId: String!, tags:[ImageTag]!): String
+}

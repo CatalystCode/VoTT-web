@@ -8,7 +8,8 @@ const helmet = require('helmet');
 const graphiql = require('graphql');
 const fs = require("fs");
 
-const schemaController = require('./src/schema-controller');
+const collaborationController = require('./src/collaboration');
+const projectController = require('./src/project');
 
 const blobService = azure.createBlobService();
 const queueService = azure.createQueueService();
@@ -30,21 +31,35 @@ async.series(
       return;
     }
 
-    schemaController.setConfiguration({
+    const services = {
       blobService:blobService,
       queueService:queueService,
       tableService:tableService  
-    });
+    };
+
+    collaborationController.setConfiguration(services);
+    projectController.setConfiguration(services);
   
     const schemaFile = fs.readFileSync("src/schema.graphql", "utf8");
-    const schema = graphiql.buildSchema(schemaFile);
+
+    const collaborationSchemaFile = fs.readFileSync("src/collaboration.graphql", "utf8");
+    const collaborationSchema = graphiql.buildSchema(schemaFile + collaborationSchemaFile);
+
+    const projectSchemaFile = fs.readFileSync("src/project.graphql", "utf8");
+    const projectSchema = graphiql.buildSchema(schemaFile + projectSchemaFile);
+
     const graphiqlEnabled = process.env.GRAPHIQL_ENABLED == 'true';
     const app = express();
     app.use(helmet());
     app.use(express.static('web'))
-    app.use('/v1/graphql', graphqlHTTP({
-      schema: schema,
-      rootValue: schemaController,
+    app.use('/v1/graphql/collaboration', graphqlHTTP({
+      schema: collaborationSchema,
+      rootValue: collaborationController,
+      graphiql: graphiqlEnabled,
+    }));
+    app.use('/v1/graphql/project', graphqlHTTP({
+      schema: projectSchema,
+      rootValue: projectController,
       graphiql: graphiqlEnabled,
     }));
     app.listen(process.env.PORT, () => console.log(`Started on port ${process.env.PORT}`))  

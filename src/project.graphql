@@ -1,0 +1,10 @@
+type Query {
+  getProjects: [ImageTagProject]
+}
+
+type Mutation {
+  createProject:ImageTagProject
+  removeProject(projectId:String!):ImageTagProject
+  allocateImages(projectId: String!, imageCount:Int!): [String]
+  commitImages(images:[String]): String
+}

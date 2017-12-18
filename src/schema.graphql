@@ -2,6 +2,7 @@ type ImageTagProject {
   projectId: String!
   name: String!
 }
+
 type ImageTagTask {
   type: ImageTagTaskType!
   taskId: String!
@@ -9,31 +10,26 @@ type ImageTagTask {
   objectClassNames: [String!]!
   instructions: ImageTagInstructions
 }
+
 enum ImageTagTaskType {
   ANNOTATE
   CLASSIFY
 }
+
 type ImageTagInstructions {
   text: String!
   sampleImageURL: String!
   sampleVideoURL: String!
 }
+
 input ImageTag {
   objectClass: String!
   objectBoundingBox: BoundingBox
 }
+
 input BoundingBox {
   x: Int!
   y: Int!
   width: Int!
   height: Int!
-}
-
-type Query {
-  getNextImageTagTask(projectId: String!): ImageTagTask
-}
-
-type Mutation {
-  allocateImages(projectId: String!, imageCount:Int!): [String]
-  submitImageTags(taskId: String!, tags:[ImageTag]!): String
 }
