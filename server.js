@@ -5,8 +5,10 @@ const azure = require('azure-storage');
 const express = require('express');
 const graphqlHTTP = require('express-graphql');
 const helmet = require('helmet');
-const { buildSchema } = require('graphql');
+const graphiql = require('graphql');
 const fs = require("fs");
+
+const schemaController = require('./src/schema-controller');
 
 const blobService = azure.createBlobService();
 const queueService = azure.createQueueService();
@@ -27,20 +29,22 @@ async.series(
       console.error(err);
       return;
     }
+
+    schemaController.setConfiguration({
+      blobService:blobService,
+      queueService:queueService,
+      tableService:tableService  
+    });
   
-    const schemaFile = fs.readFileSync("schema.graphql", "utf8");
-    const schema = buildSchema(schemaFile);
+    const schemaFile = fs.readFileSync("src/schema.graphql", "utf8");
+    const schema = graphiql.buildSchema(schemaFile);
     const graphiqlEnabled = process.env.GRAPHIQL_ENABLED == 'true';
     const app = express();
     app.use(helmet());
     app.use(express.static('web'))
     app.use('/v1/graphql', graphqlHTTP({
       schema: schema,
-      rootValue: {
-        hello: () => {
-          return 'Hello world!';
-        },
-      },
+      rootValue: schemaController,
       graphiql: graphiqlEnabled,
     }));
     app.listen(process.env.PORT, () => console.log(`Started on port ${process.env.PORT}`))  

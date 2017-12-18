@@ -1,18 +1,23 @@
+type ImageTagProject {
+  projectId: String!
+  name: String!
+}
 type ImageTagTask {
-  type: String!
+  type: ImageTagTaskType!
   taskId: String!
-  imageURL: String
-  objectClassNames: [String!]
+  imageURL: String!
+  objectClassNames: [String!]!
   instructions: ImageTagInstructions
+}
+enum ImageTagTaskType {
+  ANNOTATE
+  CLASSIFY
 }
 type ImageTagInstructions {
   text: String!
   sampleImageURL: String!
+  sampleVideoURL: String!
 }
-type Query {
-  getNextImageTagTask(projectId: String!): ImageTagTask
-}
-
 input ImageTag {
   objectClass: String!
   objectBoundingBox: BoundingBox
@@ -23,6 +28,12 @@ input BoundingBox {
   width: Int!
   height: Int!
 }
+
+type Query {
+  getNextImageTagTask(projectId: String!): ImageTagTask
+}
+
 type Mutation {
+  allocateImages(projectId: String!, imageCount:Int!): [String]
   submitImageTags(taskId: String!, tags:[ImageTag]!): String
 }
