@@ -3,8 +3,8 @@ type Query {
 }
 
 type Mutation {
-  createProject:ImageTagProject
-  removeProject(projectId:String!):ImageTagProject
+  createProject(name:String!):ImageTagProject
+  removeProject(projectId:String!):String
   allocateImages(projectId: String!, imageCount:Int!): [String]
   commitImages(images:[String]): String
 }
