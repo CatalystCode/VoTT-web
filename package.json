@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/jcjimenez/VoTT-web#readme",
   "dependencies": {
+    "async": "^2.6.0",
     "azure-storage": "^2.7.0",
     "body-parser": "^1.18.2",
     "dotenv": "^4.0.0",

@@ -1,0 +1,28 @@
+type ImageTagTask {
+  type: String!
+  taskId: String!
+  imageURL: String
+  objectClassNames: [String!]
+  instructions: ImageTagInstructions
+}
+type ImageTagInstructions {
+  text: String!
+  sampleImageURL: String!
+}
+type Query {
+  getNextImageTagTask(projectId: String!): ImageTagTask
+}
+
+input ImageTag {
+  objectClass: String!
+  objectBoundingBox: BoundingBox
+}
+input BoundingBox {
+  x: Int!
+  y: Int!
+  width: Int!
+  height: Int!
+}
+type Mutation {
+  submitImageTags(taskId: String!, tags:[ImageTag]!): String
+}

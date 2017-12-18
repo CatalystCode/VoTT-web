@@ -1,34 +1,47 @@
 require('dotenv').config()
 
-const express = require('express');
-const helmet = require('helmet');
+const async = require("async");
 const azure = require('azure-storage');
+const express = require('express');
+const graphqlHTTP = require('express-graphql');
+const helmet = require('helmet');
+const { buildSchema } = require('graphql');
+const fs = require("fs");
 
-const tableService = azure.createTableService();
 const blobService = azure.createBlobService();
+const queueService = azure.createQueueService();
+const tableService = azure.createTableService();
 
-const imageTableName = process.env.IMAGE_TABLE_NAME || 'images';
 const imageContainerName = process.env.IMAGE_CONTAINER_NAME || 'images';
+const imageQueueName = process.env.IMAGE_CONTAINER_NAME || 'images';
+const imageTableName = process.env.IMAGE_TABLE_NAME || 'images';
 
-tableService.createTableIfNotExists(imageTableName, (error, result, response) => {
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  console.log(result ? `Created table ${imageTableName}`:`Table ${imageTableName} already exists.`);
-
-  blobService.createContainerIfNotExists(imageContainerName, { publicAccessLevel: 'blob' }, (error, result, response) => {
-    if (error) {
-      console.error(error);
+async.series(
+  [
+    (callback) => { blobService.createContainerIfNotExists(imageContainerName, { publicAccessLevel: 'blob' }, callback); },
+    (callback) => { queueService.createQueueIfNotExists(imageQueueName, callback); },
+    (callback) => { tableService.createTableIfNotExists(imageTableName, callback); }
+  ],
+  (err, results) => {
+    if (err) {
+      console.error(err);
       return;
     }
-    console.log(result ? `Created container ${imageContainerName}`:`Container ${imageContainerName} already exists.`);
-
+  
+    const schemaFile = fs.readFileSync("schema.graphql", "utf8");
+    const schema = buildSchema(schemaFile);
+    const graphiqlEnabled = process.env.GRAPHIQL_ENABLED == 'true';
     const app = express();
     app.use(helmet());
-    app.get('/', (req, res) => res.send('Welcome to VoTT!'))
+    app.use(express.static('web'))
+    app.use('/v1/graphql', graphqlHTTP({
+      schema: schema,
+      rootValue: {
+        hello: () => {
+          return 'Hello world!';
+        },
+      },
+      graphiql: graphiqlEnabled,
+    }));
     app.listen(process.env.PORT, () => console.log(`Started on port ${process.env.PORT}`))  
-  });
-  
 });
