@@ -15,6 +15,7 @@ const blobService = azure.createBlobService();
 const queueService = azure.createQueueService();
 const tableService = azure.createTableService();
 const services = {
+  azure:azure,
   blobService:blobService,
   queueService:queueService,
   tableService:tableService  

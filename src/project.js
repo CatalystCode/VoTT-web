@@ -3,8 +3,10 @@
 const Promise = require('promise');
 const uuid = require('uuid/v4');
 const async = require("async");
+var qs = require('qs'); 
 
 const configuration = {
+    azure:null,
     blobService:null,
     queueService:null,
     tableService:null
@@ -94,11 +96,31 @@ module.exports = {
             // TODO: Ensure user has access to projectId.
             const projectId = args.projectId;
 
+            var startDate = new Date(); 
+            var expiryDate = new Date(startDate); 
+            expiryDate.setMinutes(startDate.getMinutes() + 15); 
+
+            var sharedAccessPolicy = { 
+              AccessPolicy: { 
+                Permissions: "WRITE",
+                Start: startDate,
+                Expiry: expiryDate
+              } 
+            };
+
             // Create imageCount pre-authenticated blob locations and return their URLs.
             const imageCount = args.imageCount;
             const result = [];
             for (let i = 0; i < imageCount; i++) {
-                result.push(uuid());
+                // Create a shared-access signature URI
+                var blobName = uuid() + '.jpg';
+                var signature = configuration.blobService.generateSharedAccessSignature(
+                    imageContainerName,
+                    blobName,
+                    sharedAccessPolicy
+                );
+                const url = configuration.blobService.getUrl(imageContainerName, blobName, signature);
+                result.push(url);
             }
             resolve(result);
         });
