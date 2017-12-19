@@ -1,5 +1,6 @@
 type Project {
   projectId: String!
+  taskType: ImageTagTaskType!
   name: String!
 }
 
