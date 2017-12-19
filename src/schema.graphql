@@ -1,6 +1,12 @@
-type ImageTagProject {
+type Project {
   projectId: String!
   name: String!
+}
+
+type Image {
+  projectId: String!
+  imageId: String!
+  imageURL: String!
 }
 
 type ImageTagTask {

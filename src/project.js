@@ -1,11 +1,11 @@
 'use strict';
 
-const uuid = require('uuid/v4');
 const async = require("async");
-var qs = require('qs'); 
+const azure = require('azure-storage');
+const qs = require('qs'); 
+const uuid = require('uuid/v4');
 
 const configuration = {
-    azure:null,
     blobService:null,
     queueService:null,
     tableService:null
@@ -34,13 +34,12 @@ module.exports = {
     getProjects:(args, res)=>{
         return new Promise((resolve, reject)=>{
             // TODO: Ensure user has project access to the app.
-            // var query = new azure.TableQuery().top(256);
-            configuration.tableService.queryEntities(projectTableName, null, null, (error, results, response)=>{
+            var query = new azure.TableQuery().top(256);
+            configuration.tableService.queryEntities(projectTableName, query, null, (error, results, response)=>{
                 if (error) {
                     reject(error);
                     return;
                 }
-                console.log(results);
                 resolve(results.entries.map((value)=>{
                     return {
                         projectId:value.projectId._,
@@ -55,78 +54,127 @@ module.exports = {
             // TODO: Ensure user has project access to the app.
             const name = args.name;
             const projectId = uuid().toString();
+
             const project = {
-                PartitionKey: projectId,
-                RowKey: projectId,
-                projectId: projectId,
-                name: name
+                  PartitionKey: "projects", /* place all project records (not many, anyway) in the same partition. */
+                  RowKey: projectId,
+                  projectId: projectId,
+                  name: name
             };
-            configuration.tableService.insertEntity(projectTableName, project, (error, result, response) => {
-                if (!error) {
+
+            async.series(
+                {
+                    queue:(callback)=>{ configuration.queueService.createQueueIfNotExists(projectId, callback); },
+                    container:(callback)=>{ configuration.blobService.createContainerIfNotExists(projectId, { publicAccessLevel: 'blob' }, callback); },
+                    entity:(callback)=>{ configuration.tableService.insertEntity(projectTableName, project, callback); }
+                },
+                (error, results)=>{
+                    if (error) {
+                        return reject(error);
+                    }
                     resolve(project);
                 }
-                else {
-                    reject(error);
-                }
-            });
+            ); /* async.series */
         });
     },
     removeProject:(args, res)=>{
         return new Promise((resolve, reject)=>{
-            // TODO: Ensure projectId exists.
             // TODO: Ensure user has access to projectId.
             const projectId = args.projectId;
-            configuration.tableService.deleteEntity(
-                projectTableName,
-                {PartitionKey:{"_":projectId}, RowKey:{"_":projectId}},
-                (error, response)=>{
+
+            async.series(
+                {
+                    entity:(callback)=>{ configuration.tableService.deleteEntity(projectTableName, {PartitionKey:{"_":"projects"}, RowKey:{"_":projectId}}, callback); },
+                    queue:(callback)=>{ configuration.queueService.deleteQueueIfExists(projectId, callback); },
+                    container:(callback)=>{ configuration.blobService.deleteContainerIfExists(projectId, null, callback); }
+                },
+                (error, results)=>{
                     if (error) {
-                        reject(error);
-                        return;
+                        return reject(error);
                     }
-                    resolve({ projectId:projectId, name:"Some Project" });
+                    resolve(projectId);
                 }
-            );
+            ); /* async.series */
         });
     },
-    allocateImages:(args, res)=>{
+    createImages:(args, res)=>{
         return new Promise((resolve, reject)=>{
-            // TODO: Ensure projectId exists.
             // TODO: Ensure user has access to projectId.
             const projectId = args.projectId;
 
-            var startDate = new Date(); 
-            var expiryDate = new Date(startDate); 
-            expiryDate.setMinutes(startDate.getMinutes() + 15); 
+            configuration.tableService.retrieveEntity("projects", "projects", projectId, (error, project)=>{
+                if (error) {
+                    return reject(error);
+                }
+                configuration.blobService.createContainerIfNotExists(projectId, { publicAccessLevel: 'blob' }, (error)=>{
+                    if (error) {
+                        return reject(error);
+                    }
 
-            var sharedAccessPolicy = { 
-              AccessPolicy: { 
-                Permissions: "WRITE",
-                Start: startDate,
-                Expiry: expiryDate
-              } 
-            };
+                    const startDate = new Date();
+                    const expiryDate = new Date(startDate);
+                    expiryDate.setMinutes(startDate.getMinutes() + 1440);
+        
+                    const BlobUtilities = azure.BlobUtilities;
+                    const sharedAccessPolicy = {
+                      AccessPolicy: {
+                        Permissions: BlobUtilities.SharedAccessPermissions.ADD + BlobUtilities.SharedAccessPermissions.CREATE + BlobUtilities.SharedAccessPermissions.WRITE,
+                        Start: startDate,
+                        Expiry: expiryDate
+                      }
+                    };
+        
+                    // Create imageCount pre-authenticated blob locations and return their URLs.
+                    const imageCount = args.imageCount;
+                    const result = [];
+                    for (let i = 0; i < imageCount; i++) {
+                        // Create a shared-access signature URI
+                        const imageId = uuid();
+                        const containerName = projectId;
+                        const blobName = imageId + '.jpg';
+                        const signature = configuration.blobService.generateSharedAccessSignature(
+                            containerName,
+                            blobName,
+                            sharedAccessPolicy
+                        );
+                        const url = configuration.blobService.getUrl(containerName, blobName, signature);
+                        result.push({
+                            projectId:projectId,
+                            imageId:imageId,
+                            imageURL:url
+                        });
+                    }
+                    resolve(result);        
 
-            // Create imageCount pre-authenticated blob locations and return their URLs.
-            const imageCount = args.imageCount;
-            const result = [];
-            for (let i = 0; i < imageCount; i++) {
-                // Create a shared-access signature URI
-                var blobName = uuid() + '.jpg';
-                var signature = configuration.blobService.generateSharedAccessSignature(
-                    imageContainerName,
-                    blobName,
-                    sharedAccessPolicy
-                );
-                const url = configuration.blobService.getUrl(imageContainerName, blobName, signature);
-                result.push(url);
-            }
-            resolve(result);
+                }); /*createContainerIfNotExists*/
+            }); /*retrieveEntity*/
         });
     },
     commitImages:(args, res)=>{
         return new Promise((resolve, reject)=>{
-            resolve("OK");
+            // TODO: Ensure user has access to projectId.
+            const images = args.images;
+            if (images.size < 1) {
+                return reject("Parameter images must contain at least one element.");
+            }
+
+            const projectIds = new Set(images.map((image)=>image.projectId));
+            if (projectIds.size > 1) {
+                return reject("All images must belong to the same project.");
+            }
+
+            async.forEach(
+                images,
+                (image, callback)=>{
+                    configuration.queueService.createMessage(image.projectId, image.imageId, callback);
+                },
+                (error)=>{
+                    if (error) {
+                        return reject(error);
+                    }
+                    resolve("OK");
+                }
+            );
         });
     }
 };

@@ -1,10 +1,15 @@
 type Query {
-  getProjects: [ImageTagProject]
+  getProjects: [Project]
+}
+
+input ConfirmedImage {
+  projectId: String!
+  imageId: String!
 }
 
 type Mutation {
-  createProject(name:String!):ImageTagProject
+  createProject(name:String!):Project
   removeProject(projectId:String!):String
-  allocateImages(projectId: String!, imageCount:Int!): [String]
-  commitImages(images:[String]): String
+  createImages(projectId: String!, imageCount:Int!): [Image]
+  commitImages(images:[ConfirmedImage]): String
 }
