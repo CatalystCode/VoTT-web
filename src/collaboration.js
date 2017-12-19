@@ -30,10 +30,11 @@ module.exports = {
                     }
 
                     const messageId = message.messageId;
-                    const messageText = message.messageText;
-                    const imageURL = configuration.blobService.getUrl(projectId, messageText);
+                    const popReceipt = message.popReceipt;
+                    const imageData = JSON.parse(message.messageText);
+                    const imageURL = configuration.blobService.getUrl(projectId, imageData.imageId);
                     resolve({
-                        taskId: messageId,
+                        taskId: projectId + ":" + messageId + ":" + popReceipt,
                         imageURL: imageURL,
                         taskType: project.taskType._,
                         objectClassNames: JSON.parse(project.objectClassNames._),
@@ -48,7 +49,18 @@ module.exports = {
     },
     submitImageTags:(args, res)=>{
         return new Promise((resolve, reject)=>{
-            resolve(uuid());
+            const taskId = args.taskId;
+            const projectId = taskId.split(":")[0];
+            const messageId = taskId.split(":")[1];
+            const popReceipt = taskId.split(":")[2];
+            // TODO: Ensure user has access to projectId.
+            // TODO: Save annotations.
+            configuration.queueService.deleteMessage(projectId, messageId, popReceipt, (error)=>{
+                if (error) {
+                    return reject(error);
+                }
+                resolve(uuid());
+            });
         });
     }
 };

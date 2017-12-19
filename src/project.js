@@ -140,7 +140,7 @@ module.exports = {
                         // Create a shared-access signature URI
                         const imageId = uuid();
                         const containerName = projectId;
-                        const blobName = imageId + '.jpg';
+                        const blobName = imageId;
                         const signature = configuration.blobService.generateSharedAccessSignature(
                             containerName,
                             blobName,
@@ -175,7 +175,7 @@ module.exports = {
             async.forEach(
                 images,
                 (image, callback)=>{
-                    configuration.queueService.createMessage(image.projectId, image.imageId, callback);
+                    configuration.queueService.createMessage(image.projectId, JSON.stringify(image), callback);
                 },
                 (error)=>{
                     if (error) {
