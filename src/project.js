@@ -42,9 +42,14 @@ module.exports = {
                 }
                 resolve(results.entries.map((value)=>{
                     return {
-                        projectId:value.projectId._,
-                        name:value.name._
-                    }
+                        projectId: value.projectId._,
+                        name: value.name._,
+                        taskType: value.taskType._,
+                        objectClassNames: JSON.parse(value.objectClassNames._),
+                        instructionsText: value.instructionsText._,
+                        instructionsImageURL: (value.instructionsImageURL)?value.instructionsImageURL._:null,
+                        instructionsVideoURL: (value.instructionsVideoURL)?value.instructionsVideoURL._:null
+                    };
                 }));
             });
         });
@@ -52,16 +57,19 @@ module.exports = {
     createProject:(args, res)=>{
         return new Promise((resolve, reject)=>{
             // TODO: Ensure user has project access to the app.
-            const name = args.name;
             const projectId = uuid().toString();
 
             const project = {
                   PartitionKey: "projects", /* place all project records (not many, anyway) in the same partition. */
                   RowKey: projectId,
                   projectId: projectId,
-                  name: name
+                  name: args.name,
+                  taskType: args.taskType,
+                  objectClassNames: JSON.stringify(args.objectClassNames),
+                  instructionsText: args.instructionsText,
+                  instructionsImageURL: args.instructionsImageURL,
+                  instructionsVideoURL: args.instructionsVideoURL
             };
-
             async.series(
                 {
                     queue:(callback)=>{ configuration.queueService.createQueueIfNotExists(projectId, callback); },
@@ -72,6 +80,7 @@ module.exports = {
                     if (error) {
                         return reject(error);
                     }
+                    project.objectClassNames = args.objectClassNames;
                     resolve(project);
                 }
             ); /* async.series */

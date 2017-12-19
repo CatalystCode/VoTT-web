@@ -1,3 +1,13 @@
+type Project {
+  projectId: String!
+  taskType: TaskType!
+  name: String!
+  objectClassNames:[String]!
+  instructionsText: String
+  instructionsImageURL: String
+  instructionsVideoURL: String
+}
+
 type Query {
   getProjects: [Project]
 }
@@ -8,8 +18,8 @@ input ConfirmedImage {
 }
 
 type Mutation {
-  createProject(name:String!):Project
-  removeProject(projectId:String!):String
+  createProject(name: String!, taskType: TaskType!, objectClassNames:[String]!, instructionsText:String, instructionsImageURL:String, instructionsVideoURL:String):Project
+  removeProject(projectId: String!):String
   createImages(projectId: String!, imageCount:Int!): [Image]
-  commitImages(images:[ConfirmedImage]): String
+  commitImages(images:[ConfirmedImage]!): String
 }

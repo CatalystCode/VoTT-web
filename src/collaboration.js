@@ -33,15 +33,14 @@ module.exports = {
                     const messageText = message.messageText;
                     const imageURL = configuration.blobService.getUrl(projectId, messageText);
                     resolve({
-                        type: "ANNOTATE",
                         taskId: messageId,
                         imageURL: imageURL,
-                        objectClassNames: ["tide-detergent"],
-                        instructions:{
-                            text: "Please draw a rectangle around any Tide detergent boxes you see.",
-                            sampleImageURL: imageURL,
-                            sampleVideoURL: imageURL
-                        }
+                        taskType: project.taskType._,
+                        objectClassNames: JSON.parse(project.objectClassNames._),
+                        projectId: project.projectId._,
+                        instructionsText: project.instructionsText._,
+                        instructionsImageURL: (project.instructionsImageURL)?project.instructionsImageURL._:null,
+                        instructionsVideoURL: (project.instructionsVideoURL)?project.instructionsVideoURL._:null
                     });
                 });
             });
