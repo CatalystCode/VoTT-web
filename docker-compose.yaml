@@ -1,18 +1,15 @@
 version: "2"
 services:
   node:
-    build:
-      context: ./
+    image: node:8
     user: "node"
     working_dir: /home/node/app
     environment:
       - NODE_ENV=production
       - PORT=8080
-    ports:
-      - "8080::8080"
     volumes:
       - ./:/home/node/app
-    expose:
-      - "8888"
+    ports:
+      - "8080:8080"
     command: "npm start"
 

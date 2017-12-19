@@ -1,6 +1,5 @@
 'use strict';
 
-const Promise = require('promise');
 const uuid = require('uuid/v4');
 
 const configuration = {

@@ -1,6 +1,5 @@
 'use strict';
 
-const Promise = require('promise');
 const uuid = require('uuid/v4');
 const async = require("async");
 var qs = require('qs'); 
