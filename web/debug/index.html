@@ -1,0 +1,83 @@
+<html lang="en">
+  <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>vottdb</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script>
+      $(function(){
+        $.post("/v1/graphql/project", { query:"query { getProjects{ projectId name } }"})
+         .done(function(result) {
+           const projects = result.data.getProjects;
+           const $dropdown = $("#projectId");
+           $.each(projects, function() {
+             $dropdown.append($("<option />").val(this.projectId).text(this.name + " (" + this.projectId + ")"));
+           });
+         })
+         .fail(function(error){
+           console.log(error);
+         });
+
+         $("#projectForm").submit(function(event){
+           event.preventDefault();
+           const imageFile = $("#imageFile").val();
+           if (!imageFile) {
+             $("#errorModalBody").text("Please select an image to upload.");
+             $("#errorModal").modal("show");
+             return;
+           }
+           const projectId = $("#projectId").val();
+           console.log(imageFile);
+           $.post("/v1/graphql/project", { query: `mutation { createImages(projectId: "${projectId}", imageCount: 1) { imageId imageURL } }` })
+            .done(function(result){
+              const image = result.data.createImages[0];
+              console.log(`Preparing to post ${image.imageId} to ${image.imageURL}`);
+            })
+            .fail(function(error){
+              console.log(error);
+            });
+         });
+      });
+    </script>
+  </head>
+  <body>
+    <div class="container">
+        <h1>vottdb</h1>
+    </div>
+    <div class="container">
+      <h2>Projects</h2>
+      <form id="projectForm">
+        <div class="form-group">
+          <label for="projectId">Project</label>
+          <select name="project" id="projectId" class="form-control"></select>
+        </div>
+        <div>
+          <label for="imageFile">Image</label>
+          <input type="file" id="imageFile" />
+          <p class="help-block">Image to add to the project.</p>
+        </div>
+        <button type="submit" class="btn btn-default">Upload</button>
+      </form>
+    </div>
+
+    <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="errorModalLabel">Error</h4>
+          </div>
+          <div class="modal-body">
+            <p id="errorModalBody">An error has occurred.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+  </body>
+</html>
