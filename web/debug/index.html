@@ -17,6 +17,7 @@
            });
          })
          .fail(function(error){
+           console.log("Unable to load projects.");
            console.log(error);
          });
 
@@ -35,13 +36,10 @@
             .done(function(result){
               const images = result.data.createImages;
               $.each(images, function(index, currentImage){
-                console.log(`Preparing to post [${index}] ${currentImage.imageId} to ${currentImage.imageURL}`);
                 const currentFile = files[index];
-                console.log(currentFile);
                 const reader = new FileReader();
                 reader.onload = function(event){
                   if (event.target.readyState == FileReader.DONE) {
-                    console.log("Done reading!");
                     const data = new Uint8Array(event.target.result);
                     $.ajax({
                       url: currentImage.imageURL,
@@ -49,15 +47,19 @@
                       data: data,
                       processData: false,
                       beforeSend: function(xhr) {
-                         xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
+                        xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
+                        // xhr.setRequestHeader('x-ms-version', "2017-04-17");
+                        // xhr.setRequestHeader('Content-Length', data.byteLength);
+                        xhr.setRequestHeader('x-ms-blob-content-type', currentFile.type);
                       },
-                      success: function(data, status) {
-                        console.log(data);
+                      success: function(result, status) {
+                        console.log("Success!");
+                        console.log(result);
                         console.log(status);
                       },
                       error: function(xhr, desc, error) {
-                        console.log(desc);
-                        console.log(error);
+                        $("#errorModalBody").text("Unable to upload file.  " + error);
+                        $("#errorModal").modal("show");
                       }
                     })
                   }
@@ -67,7 +69,8 @@
 
             })
             .fail(function(error){
-              console.log(error);
+              $("#errorModalBody").text(error);
+              $("#errorModal").modal("show");
             });
          });
       });

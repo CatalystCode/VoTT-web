@@ -122,12 +122,12 @@ module.exports = {
 
                     const startDate = new Date();
                     const expiryDate = new Date(startDate);
-                    expiryDate.setMinutes(startDate.getMinutes() + 1440);
+                    expiryDate.setMinutes(startDate.getMinutes() + 5);
         
                     const BlobUtilities = azure.BlobUtilities;
                     const sharedAccessPolicy = {
                       AccessPolicy: {
-                        Permissions: BlobUtilities.SharedAccessPermissions.ADD + BlobUtilities.SharedAccessPermissions.CREATE + BlobUtilities.SharedAccessPermissions.WRITE,
+                        Permissions: BlobUtilities.SharedAccessPermissions.WRITE,
                         Start: startDate,
                         Expiry: expiryDate
                       }
