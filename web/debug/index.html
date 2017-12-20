@@ -48,14 +48,18 @@
                       processData: false,
                       beforeSend: function(xhr) {
                         xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
-                        // xhr.setRequestHeader('x-ms-version', "2017-04-17");
-                        // xhr.setRequestHeader('Content-Length', data.byteLength);
                         xhr.setRequestHeader('x-ms-blob-content-type', currentFile.type);
                       },
                       success: function(result, status) {
-                        console.log("Success!");
-                        console.log(result);
-                        console.log(status);
+                        $.post("/v1/graphql/project", { query: `mutation { commitImages(images: [ { projectId: "${projectId}", imageId: "${currentImage.imageId}" } ]) }` })
+                         .done(function(result){
+                          console.log("Committed image:");
+                          console.log(currentImage);
+                          console.log(result);
+                         })
+                         .fail(function(error){
+                           console.log(error);
+                         });
                       },
                       error: function(xhr, desc, error) {
                         $("#errorModalBody").text("Unable to upload file.  " + error);
