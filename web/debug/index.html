@@ -22,18 +22,49 @@
 
          $("#projectForm").submit(function(event){
            event.preventDefault();
-           const imageFile = $("#imageFile").val();
-           if (!imageFile) {
+           const imageFile = $("#imageFile");
+           if (!imageFile.val()) {
              $("#errorModalBody").text("Please select an image to upload.");
              $("#errorModal").modal("show");
              return;
            }
-           const projectId = $("#projectId").val();
-           console.log(imageFile);
-           $.post("/v1/graphql/project", { query: `mutation { createImages(projectId: "${projectId}", imageCount: 1) { imageId imageURL } }` })
+
+           const files = imageFile[0].files;
+           const projectId = $("#projectId");
+           $.post("/v1/graphql/project", { query: `mutation { createImages(projectId: "${projectId.val()}", imageCount: ${files.length}) { imageId imageURL } }` })
             .done(function(result){
-              const image = result.data.createImages[0];
-              console.log(`Preparing to post ${image.imageId} to ${image.imageURL}`);
+              const images = result.data.createImages;
+              $.each(images, function(index, currentImage){
+                console.log(`Preparing to post [${index}] ${currentImage.imageId} to ${currentImage.imageURL}`);
+                const currentFile = files[index];
+                console.log(currentFile);
+                const reader = new FileReader();
+                reader.onload = function(event){
+                  if (event.target.readyState == FileReader.DONE) {
+                    console.log("Done reading!");
+                    const data = new Uint8Array(event.target.result);
+                    $.ajax({
+                      url: currentImage.imageURL,
+                      type: "PUT",
+                      data: data,
+                      processData: false,
+                      beforeSend: function(xhr) {
+                         xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
+                      },
+                      success: function(data, status) {
+                        console.log(data);
+                        console.log(status);
+                      },
+                      error: function(xhr, desc, error) {
+                        console.log(desc);
+                        console.log(error);
+                      }
+                    })
+                  }
+                };
+                reader.readAsArrayBuffer(currentFile);
+            });
+
             })
             .fail(function(error){
               console.log(error);
@@ -55,7 +86,7 @@
         </div>
         <div>
           <label for="imageFile">Image</label>
-          <input type="file" id="imageFile" />
+          <input type="file" id="imageFile" style="width: 50%;" />
           <p class="help-block">Image to add to the project.</p>
         </div>
         <button type="submit" class="btn btn-default">Upload</button>
