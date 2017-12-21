@@ -51,13 +51,19 @@
                         xhr.setRequestHeader('x-ms-blob-content-type', currentFile.type);
                       },
                       success: function(result, status) {
-                        $.post("/v1/graphql/project", { query: `mutation { commitImages(images: [ { projectId: "${projectId}", imageId: "${currentImage.imageId}" } ]) }` })
+                        $.post("/v1/graphql/project", { query: `mutation { commitImages(images: [ { projectId: "${projectId.val()}", imageId: "${currentImage.imageId}" } ]) }` })
                          .done(function(result){
-                          console.log("Committed image:");
+                           if (result.errors) {
+                            $("#errorModalBody").text(JSON.stringify(result.errors[0]));
+                            $("#errorModal").modal("show");
+                            // return;
+                           }
+                          console.log("Committed image successfully:");
                           console.log(currentImage);
                           console.log(result);
                          })
                          .fail(function(error){
+                           console.log("Got an error!");
                            console.log(error);
                          });
                       },

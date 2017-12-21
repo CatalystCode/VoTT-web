@@ -172,11 +172,15 @@ module.exports = {
                 return reject("All images must belong to the same project.");
             }
 
-            async.forEach(
-                images,
-                (image, callback)=>{
-                    configuration.queueService.createMessage(image.projectId, JSON.stringify(image), callback);
-                },
+            const image = images[0];
+            console.log("Attempting to create queue messages for:");
+            console.log(image);
+            async.series(
+                [
+                    (callback)=>{configuration.queueService.createMessage(image.projectId, JSON.stringify(image), callback)},
+                    (callback)=>{configuration.queueService.createMessage(image.projectId, JSON.stringify(image), callback)},
+                    (callback)=>{configuration.queueService.createMessage(image.projectId, JSON.stringify(image), callback)}
+                ],
                 (error)=>{
                     if (error) {
                         return reject(error);
@@ -184,6 +188,7 @@ module.exports = {
                     resolve("OK");
                 }
             );
+            
         });
     }
 };
