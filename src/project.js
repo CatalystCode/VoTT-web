@@ -175,7 +175,12 @@ module.exports = {
             const imageTasks = [];
             for (var imageIndex in images) {
                 const currentImage = images[imageIndex];
+                const imageRecord = {
+                      PartitionKey: currentImage.projectId,
+                      RowKey: currentImage.imageId
+                };
                 imageTasks.push(
+                    (callback)=>{ configuration.tableService.insertEntity(imageTableName, imageRecord, callback); },
                     (callback)=>{configuration.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback)},
                     (callback)=>{configuration.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback)},
                     (callback)=>{configuration.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback)}
