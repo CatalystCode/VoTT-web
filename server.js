@@ -46,4 +46,15 @@ app.use('/v1/graphql/project', graphqlHTTP({
   rootValue: projectController,
   graphiql: graphiqlEnabled,
 }));
+
+app.get('/projects/', function (req, res) {
+  res.sendFile('project.html', {"root": __dirname + "/web"});
+});
+app.get('/projects/:projectId', function (req, res) {
+  res.sendFile('project.html', {"root": __dirname + "/web"});
+});
+app.get('/tasks/:taskId', function (req, res) {
+  res.sendFile('task.html', {"root": __dirname + "/web"});
+});
+
 app.listen(process.env.PORT, () => console.log(`Started on port ${process.env.PORT}`));
