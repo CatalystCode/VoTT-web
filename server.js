@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv').config();
 
 const async = require("async");
 const azure = require('azure-storage');
@@ -15,10 +15,10 @@ const blobService = azure.createBlobService();
 const queueService = azure.createQueueService();
 const tableService = azure.createTableService();
 const services = {
-  azure:azure,
-  blobService:blobService,
-  queueService:queueService,
-  tableService:tableService  
+  azure: azure,
+  blobService: blobService,
+  queueService: queueService,
+  tableService: tableService
 };
 
 collaborationController.setConfiguration(services);
@@ -35,7 +35,7 @@ const projectSchema = graphiql.buildSchema(schemaFile + projectSchemaFile);
 const graphiqlEnabled = process.env.GRAPHIQL_ENABLED == 'true';
 const app = express();
 app.use(helmet());
-app.use(express.static('web'))
+app.use(express.static('public'));
 app.use('/v1/graphql/collaboration', graphqlHTTP({
   schema: collaborationSchema,
   rootValue: collaborationController,
