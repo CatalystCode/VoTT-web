@@ -32,47 +32,47 @@ passport.deserializeUser((oid, done) => {
   done(null, usersByOID[oid]);
 });
 
-passport.use(
-  new OIDCStrategy(
-    {
-      clientID: process.env.MICROSOFT_APPLICATION_ID,
-      redirectUrl: process.env.MICROSOFT_APPLICATION_REDIRECT_URL,
-      clientSecret: process.env.MICROSOFT_APPLICATION_SECRET,
-      identityMetadata: 'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration',
-      responseType: 'code id_token',
-      responseMode: 'form_post',
-      allowHttpForRedirectUrl: true,
-      validateIssuer: false,
-      isB2C: false,
-      policyName: null,
-      issuer: null,
-      passReqToCallback: false,
-      scope: ['profile', 'offline_access'],
-      loggingLevel: 'error',
-      nonceLifetime: null,
-      nonceMaxAmount: 5,
-      useCookieInsteadOfSession: true,
-      cookieEncryptionKeys: [
-        { 'key': '12345678901234567890123456789012', 'iv': '123456789012' },
-        { 'key': 'abcdefghijklmnopqrstuvwxyzabcdef', 'iv': 'abcdefghijkl' }
-      ],
-      clockSkew: null,
-    },
-    (iss, sub, profile, accessToken, refreshToken, done) => {
-      if (!profile.oid) {
-        console.log("No oid found.");
-        return done(new Error("No oid found"), null);
-      }
-      console.log("Performing verification...");
-      const existingUser = usersByOID[profile.oid];
-      if (existingUser) {
-        done(null, existingUser);
-      }
-      usersByOID[profile.oid] = profile;
-      done(null, profile);
-    }
-  )
-);
+// passport.use(
+//   new OIDCStrategy(
+//     {
+//       clientID: process.env.MICROSOFT_APPLICATION_ID,
+//       redirectUrl: process.env.MICROSOFT_APPLICATION_REDIRECT_URL,
+//       clientSecret: process.env.MICROSOFT_APPLICATION_SECRET,
+//       identityMetadata: 'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration',
+//       responseType: 'code id_token',
+//       responseMode: 'form_post',
+//       allowHttpForRedirectUrl: true,
+//       validateIssuer: false,
+//       isB2C: false,
+//       policyName: null,
+//       issuer: null,
+//       passReqToCallback: false,
+//       scope: ['profile', 'offline_access'],
+//       loggingLevel: 'error',
+//       nonceLifetime: null,
+//       nonceMaxAmount: 5,
+//       useCookieInsteadOfSession: true,
+//       cookieEncryptionKeys: [
+//         { 'key': '12345678901234567890123456789012', 'iv': '123456789012' },
+//         { 'key': 'abcdefghijklmnopqrstuvwxyzabcdef', 'iv': 'abcdefghijkl' }
+//       ],
+//       clockSkew: null,
+//     },
+//     (iss, sub, profile, accessToken, refreshToken, done) => {
+//       if (!profile.oid) {
+//         console.log("No oid found.");
+//         return done(new Error("No oid found"), null);
+//       }
+//       console.log("Performing verification...");
+//       const existingUser = usersByOID[profile.oid];
+//       if (existingUser) {
+//         done(null, existingUser);
+//       }
+//       usersByOID[profile.oid] = profile;
+//       done(null, profile);
+//     }
+//   )
+// );
 
 function isAuthenticated(request) {
   if (!request) {
@@ -129,9 +129,9 @@ app.use(cookieParser());
 app.use(expressSession({ secret: 'keyboard gato', resave: true, saveUninitialized: false }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.get('/project/', ensureAuthenticated);
-app.get('/project/', express.static('public/project'));
-app.use('/v1/graphql/project', ensureAuthenticated, graphqlHTTP({
+// app.get('/project/', ensureAuthenticated);
+// app.get('/project/', express.static('public/project'));
+app.use('/v1/graphql/project', graphqlHTTP({
   schema: projectSchema,
   rootValue: projectController,
   graphiql: graphiqlEnabled,
