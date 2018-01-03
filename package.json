@@ -1,6 +1,10 @@
 {
   "name": "vott-web",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=8.0"
+  },
+  "engineStrict": true,
   "description": "Visual Object Tagging Tool: A lightweight and collaborative tool for image tagging. Edit",
   "main": "server.js",
   "scripts": {
