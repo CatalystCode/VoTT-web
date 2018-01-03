@@ -38,7 +38,6 @@ passport.use(
       clientID: process.env.MICROSOFT_APPLICATION_ID,
       redirectUrl: process.env.MICROSOFT_APPLICATION_REDIRECT_URL,
       clientSecret: process.env.MICROSOFT_APPLICATION_SECRET,
-      // identityMetadata: 'https://login.microsoftonline.com/microsoft.onmicrosoft.com/v2.0/.well-known/openid-configuration',
       identityMetadata: 'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration',
       responseType: 'code id_token',
       responseMode: 'form_post',
@@ -130,8 +129,31 @@ app.use(cookieParser());
 app.use(expressSession({ secret: 'keyboard gato', resave: true, saveUninitialized: false }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.get('/debug/', ensureAuthenticated);
-app.get('/debug/', express.static('public/debug'));
+app.get('/project/', ensureAuthenticated);
+app.get('/project/', express.static('public/project'));
+app.use('/v1/graphql/project', ensureAuthenticated, graphqlHTTP({
+  schema: projectSchema,
+  rootValue: projectController,
+  graphiql: graphiqlEnabled,
+}));
+app.post('/.auth/login/microsoftaccount/callback',
+  (request, response, next) => {
+    passport.authenticate('azuread-openidconnect', { response: response, failureRedirect: '/auth-error' })(request, response, next);
+  },
+  (request, response) => {
+    response.redirect("/project/");
+  });
+app.get('/logout', (request, response) => {
+  if (!request.session) {
+    request.logOut();
+    response.redirect("/");
+    return;
+  }
+  request.session.destroy((err) => {
+    request.logOut();
+    response.redirect("/");
+  });
+});
 
 app.use(express.static('public'));
 app.use('/v1/graphql/collaboration', graphqlHTTP({
@@ -139,38 +161,5 @@ app.use('/v1/graphql/collaboration', graphqlHTTP({
   rootValue: collaborationController,
   graphiql: graphiqlEnabled,
 }));
-app.use('/v1/graphql/project', ensureAuthenticated, graphqlHTTP({
-  schema: projectSchema,
-  rootValue: projectController,
-  graphiql: graphiqlEnabled,
-}));
-
-// app.get('/.auth/login/microsoftaccount/callback',
-//   function (request, response, next) {
-//     passport.authenticate('azuread-openidconnect', { response: response, failureRedirect: '/auth-terror' })(request, response, next);
-//   },
-//   function (request, response) {
-//     log.info('We received a return from AzureAD.');
-//     res.redirect('/');
-//   }
-// );
-
-app.post('/.auth/login/microsoftaccount/callback',
-  (request, response, next) => {
-    console.log("Calling athenticate (again?)");
-    passport.authenticate('azuread-openidconnect', { response: response, failureRedirect: '/auth-error' })(request, response, next);
-  },
-  (request, response) => {
-    console.log('We received a return from AzureAD.');
-    console.log(isAuthenticated(request));
-    response.redirect('/');
-  });
-
-app.get('/logout', (request, response) => {
-  request.session.destroy((err) => {
-    request.logOut();
-    response.redirect("/");
-  });
-});
 
 app.listen(process.env.PORT, () => console.log(`Started on port ${process.env.PORT}`));

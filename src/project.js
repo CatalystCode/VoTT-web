@@ -31,7 +31,7 @@ module.exports = {
             }
         );
     },
-    getProjects:(args, res)=>{
+    getProjects:(args, request)=>{
         return new Promise((resolve, reject)=>{
             // TODO: Ensure user has project access to the app.
             var query = new azure.TableQuery().top(256);
