@@ -9,28 +9,28 @@ const methodOverride = require('method-override');
 const helmet = require('helmet');
 const graphiql = require('graphql');
 const fs = require("fs");
-const passport = require('passport');
-const OIDCStrategy = require('passport-azure-ad').OIDCStrategy;
+// const passport = require('passport');
+// const OIDCStrategy = require('passport-azure-ad').OIDCStrategy;
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
 
 const collaborationController = require('./src/collaboration');
 const projectController = require('./src/project');
 
-const usersByOID = {};
+// const usersByOID = {};
 
-passport.serializeUser((user, done) => {
-  console.log("Serializing user.");
-  // console.log(user);
-  usersByOID[user.oid] = user;
-  done(null, user.oid);
-});
+// passport.serializeUser((user, done) => {
+//   console.log("Serializing user.");
+//   // console.log(user);
+//   usersByOID[user.oid] = user;
+//   done(null, user.oid);
+// });
 
-passport.deserializeUser((oid, done) => {
-  console.log("Deserializing user:");
-  console.log(oid);
-  done(null, usersByOID[oid]);
-});
+// passport.deserializeUser((oid, done) => {
+//   console.log("Deserializing user:");
+//   console.log(oid);
+//   done(null, usersByOID[oid]);
+// });
 
 // passport.use(
 //   new OIDCStrategy(
@@ -74,29 +74,29 @@ passport.deserializeUser((oid, done) => {
 //   )
 // );
 
-function isAuthenticated(request) {
-  if (!request) {
-    return false;
-  }
-  if (!request.session) {
-    return false;
-  }
-  if (!request.session.passport) {
-    return false;
-  }
-  return request.session.passport.user;
-}
+// function isAuthenticated(request) {
+//   if (!request) {
+//     return false;
+//   }
+//   if (!request.session) {
+//     return false;
+//   }
+//   if (!request.session.passport) {
+//     return false;
+//   }
+//   return request.session.passport.user;
+// }
 
-function ensureAuthenticated(request, response, next) {
-  console.log("Hello from ensureAuthenticated.");
-  console.log(request.session);
-  if (isAuthenticated(request)) {
-    console.log("Is authenticated.");
-    return next();
-  }
-  console.log("Not authenticated.");
-  passport.authenticate('azuread-openidconnect', { response: response, /*successRedirect: request.url,*/ failureRedirect: '/auth-error' })(request, response, next);
-};
+// function ensureAuthenticated(request, response, next) {
+//   console.log("Hello from ensureAuthenticated.");
+//   console.log(request.session);
+//   if (isAuthenticated(request)) {
+//     console.log("Is authenticated.");
+//     return next();
+//   }
+//   console.log("Not authenticated.");
+//   passport.authenticate('azuread-openidconnect', { response: response, /*successRedirect: request.url,*/ failureRedirect: '/auth-error' })(request, response, next);
+// };
 
 const blobService = azure.createBlobService();
 const queueService = azure.createQueueService();
@@ -121,8 +121,8 @@ const projectSchema = graphiql.buildSchema(schemaFile + projectSchemaFile);
 
 const graphiqlEnabled = process.env.GRAPHIQL_ENABLED == 'true';
 const app = express();
-app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.initialize());
+// app.use(passport.session());
 // app.use(helmet());
 app.use(methodOverride());
 app.use(cookieParser());
@@ -137,9 +137,9 @@ app.use('/v1/graphql/project', graphqlHTTP({
   graphiql: graphiqlEnabled,
 }));
 app.post('/.auth/login/microsoftaccount/callback',
-  (request, response, next) => {
-    passport.authenticate('azuread-openidconnect', { response: response, failureRedirect: '/auth-error' })(request, response, next);
-  },
+  // (request, response, next) => {
+  //   passport.authenticate('azuread-openidconnect', { response: response, failureRedirect: '/auth-error' })(request, response, next);
+  // },
   (request, response) => {
     response.redirect("/project/");
   });
