@@ -4,6 +4,7 @@ const async = require("async");
 const azure = require('azure-storage');
 const express = require('express');
 const graphqlHTTP = require('express-graphql');
+const expressSession = require('express-session');
 const methodOverride = require('method-override');
 const helmet = require('helmet');
 const graphiql = require('graphql');
@@ -59,12 +60,11 @@ passport.use(
       clockSkew: null,
     },
     (iss, sub, profile, accessToken, refreshToken, done) => {
-      console.log("Hello from OIDCStrategy callback.");
       if (!profile.oid) {
         console.log("No oid found.");
         return done(new Error("No oid found"), null);
       }
-      console.log("Performing simulated asynchronous verification...");
+      console.log("Performing verification...");
       const existingUser = usersByOID[profile.oid];
       if (existingUser) {
         done(null, existingUser);
@@ -75,14 +75,28 @@ passport.use(
   )
 );
 
+function isAuthenticated(request) {
+  if (!request) {
+    return false;
+  }
+  if (!request.session) {
+    return false;
+  }
+  if (!request.session.passport) {
+    return false;
+  }
+  return request.session.passport.user;
+}
+
 function ensureAuthenticated(request, response, next) {
   console.log("Hello from ensureAuthenticated.");
-  if (request.isAuthenticated()) {
+  console.log(request.session);
+  if (isAuthenticated(request)) {
     console.log("Is authenticated.");
     return next();
   }
   console.log("Not authenticated.");
-  passport.authenticate('azuread-openidconnect', { response: response, successRedirect: request.url, failureRedirect: '/auth-terror' })(request, response, next);
+  passport.authenticate('azuread-openidconnect', { response: response, /*successRedirect: request.url,*/ failureRedirect: '/auth-error' })(request, response, next);
 };
 
 const blobService = azure.createBlobService();
@@ -113,6 +127,7 @@ app.use(passport.session());
 // app.use(helmet());
 app.use(methodOverride());
 app.use(cookieParser());
+app.use(expressSession({ secret: 'keyboard gato', resave: true, saveUninitialized: false }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/debug/', ensureAuthenticated);
@@ -124,7 +139,7 @@ app.use('/v1/graphql/collaboration', graphqlHTTP({
   rootValue: collaborationController,
   graphiql: graphiqlEnabled,
 }));
-app.use('/v1/graphql/project', graphqlHTTP({
+app.use('/v1/graphql/project', ensureAuthenticated, graphqlHTTP({
   schema: projectSchema,
   rootValue: projectController,
   graphiql: graphiqlEnabled,
@@ -143,11 +158,11 @@ app.use('/v1/graphql/project', graphqlHTTP({
 app.post('/.auth/login/microsoftaccount/callback',
   (request, response, next) => {
     console.log("Calling athenticate (again?)");
-    passport.authenticate('azuread-openidconnect', { response: response, failureRedirect: '/auth-terror' })(request, response, next);
+    passport.authenticate('azuread-openidconnect', { response: response, failureRedirect: '/auth-error' })(request, response, next);
   },
   (request, response) => {
     console.log('We received a return from AzureAD.');
-    console.log(request.isAuthenticated());
+    console.log(isAuthenticated(request));
     response.redirect('/');
   });
 
