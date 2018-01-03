@@ -44,7 +44,7 @@ app.use(cookieParser());
 app.use(expressSession({ secret: 'keyboard gato', resave: true, saveUninitialized: false }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use('/v1/graphql/project', graphqlHTTP({
+app.use('/v1/graphql/project', expressGraphql({
   schema: projectSchema,
   rootValue: projectController,
   graphiql: graphiqlEnabled,
