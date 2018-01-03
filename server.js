@@ -4,12 +4,86 @@ const async = require("async");
 const azure = require('azure-storage');
 const express = require('express');
 const graphqlHTTP = require('express-graphql');
+const methodOverride = require('method-override');
 const helmet = require('helmet');
 const graphiql = require('graphql');
 const fs = require("fs");
+const passport = require('passport');
+const OIDCStrategy = require('passport-azure-ad').OIDCStrategy;
+const bodyParser = require("body-parser");
+const cookieParser = require('cookie-parser');
 
 const collaborationController = require('./src/collaboration');
 const projectController = require('./src/project');
+
+const usersByOID = {};
+
+passport.serializeUser((user, done) => {
+  console.log("Serializing user.");
+  // console.log(user);
+  usersByOID[user.oid] = user;
+  done(null, user.oid);
+});
+
+passport.deserializeUser((oid, done) => {
+  console.log("Deserializing user:");
+  console.log(oid);
+  done(null, usersByOID[oid]);
+});
+
+passport.use(
+  new OIDCStrategy(
+    {
+      clientID: process.env.MICROSOFT_APPLICATION_ID,
+      redirectUrl: process.env.MICROSOFT_APPLICATION_REDIRECT_URL,
+      clientSecret: process.env.MICROSOFT_APPLICATION_SECRET,
+      // identityMetadata: 'https://login.microsoftonline.com/microsoft.onmicrosoft.com/v2.0/.well-known/openid-configuration',
+      identityMetadata: 'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration',
+      responseType: 'code id_token',
+      responseMode: 'form_post',
+      allowHttpForRedirectUrl: true,
+      validateIssuer: false,
+      isB2C: false,
+      policyName: null,
+      issuer: null,
+      passReqToCallback: false,
+      scope: ['profile', 'offline_access'],
+      loggingLevel: 'error',
+      nonceLifetime: null,
+      nonceMaxAmount: 5,
+      useCookieInsteadOfSession: true,
+      cookieEncryptionKeys: [
+        { 'key': '12345678901234567890123456789012', 'iv': '123456789012' },
+        { 'key': 'abcdefghijklmnopqrstuvwxyzabcdef', 'iv': 'abcdefghijkl' }
+      ],
+      clockSkew: null,
+    },
+    (iss, sub, profile, accessToken, refreshToken, done) => {
+      console.log("Hello from OIDCStrategy callback.");
+      if (!profile.oid) {
+        console.log("No oid found.");
+        return done(new Error("No oid found"), null);
+      }
+      console.log("Performing simulated asynchronous verification...");
+      const existingUser = usersByOID[profile.oid];
+      if (existingUser) {
+        done(null, existingUser);
+      }
+      usersByOID[profile.oid] = profile;
+      done(null, profile);
+    }
+  )
+);
+
+function ensureAuthenticated(request, response, next) {
+  console.log("Hello from ensureAuthenticated.");
+  if (request.isAuthenticated()) {
+    console.log("Is authenticated.");
+    return next();
+  }
+  console.log("Not authenticated.");
+  passport.authenticate('azuread-openidconnect', { response: response, successRedirect: request.url, failureRedirect: '/auth-terror' })(request, response, next);
+};
 
 const blobService = azure.createBlobService();
 const queueService = azure.createQueueService();
@@ -34,7 +108,16 @@ const projectSchema = graphiql.buildSchema(schemaFile + projectSchemaFile);
 
 const graphiqlEnabled = process.env.GRAPHIQL_ENABLED == 'true';
 const app = express();
-app.use(helmet());
+app.use(passport.initialize());
+app.use(passport.session());
+// app.use(helmet());
+app.use(methodOverride());
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.get('/debug/', ensureAuthenticated);
+app.get('/debug/', express.static('public/debug'));
+
 app.use(express.static('public'));
 app.use('/v1/graphql/collaboration', graphqlHTTP({
   schema: collaborationSchema,
@@ -46,4 +129,33 @@ app.use('/v1/graphql/project', graphqlHTTP({
   rootValue: projectController,
   graphiql: graphiqlEnabled,
 }));
+
+// app.get('/.auth/login/microsoftaccount/callback',
+//   function (request, response, next) {
+//     passport.authenticate('azuread-openidconnect', { response: response, failureRedirect: '/auth-terror' })(request, response, next);
+//   },
+//   function (request, response) {
+//     log.info('We received a return from AzureAD.');
+//     res.redirect('/');
+//   }
+// );
+
+app.post('/.auth/login/microsoftaccount/callback',
+  (request, response, next) => {
+    console.log("Calling athenticate (again?)");
+    passport.authenticate('azuread-openidconnect', { response: response, failureRedirect: '/auth-terror' })(request, response, next);
+  },
+  (request, response) => {
+    console.log('We received a return from AzureAD.');
+    console.log(request.isAuthenticated());
+    response.redirect('/');
+  });
+
+app.get('/logout', (request, response) => {
+  request.session.destroy((err) => {
+    request.logOut();
+    response.redirect("/");
+  });
+});
+
 app.listen(process.env.PORT, () => console.log(`Started on port ${process.env.PORT}`));
