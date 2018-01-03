@@ -3,7 +3,7 @@ require('dotenv').config();
 const async = require("async");
 const azure = require('azure-storage');
 const express = require('express');
-const graphqlHTTP = require('express-graphql');
+const expressGraphql = require('express-graphql');
 const expressSession = require('express-session');
 const methodOverride = require('method-override');
 const helmet = require('helmet');
@@ -131,7 +131,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/project/', ensureAuthenticated);
 app.get('/project/', express.static('public/project'));
-app.use('/v1/graphql/project', ensureAuthenticated, graphqlHTTP({
+app.use('/v1/graphql/project', ensureAuthenticated, expressGraphql({
   schema: projectSchema,
   rootValue: projectController,
   graphiql: graphiqlEnabled,
@@ -156,7 +156,7 @@ app.get('/logout', (request, response) => {
 });
 
 app.use(express.static('public'));
-app.use('/v1/graphql/collaboration', graphqlHTTP({
+app.use('/v1/graphql/collaboration', expressGraphql({
   schema: collaborationSchema,
   rootValue: collaborationController,
   graphiql: graphiqlEnabled,
