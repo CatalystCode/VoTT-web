@@ -44,26 +44,11 @@ app.use(cookieParser());
 app.use(expressSession({ secret: 'keyboard gato', resave: true, saveUninitialized: false }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use('/v1/graphql/project', expressGraphql({
+app.use('/v1/graphql/projects', expressGraphql({
   schema: projectSchema,
   rootValue: projectController,
   graphiql: graphiqlEnabled,
 }));
-
-app.post('/.auth/login/microsoftaccount/callback',
-  (request, response) => {
-    console.log(`request.session ${JSON.stringify(request.session)}`);
-    response.redirect("/project/");
-  });
-app.get('/logout', (request, response) => {
-  if (!request.session) {
-    response.redirect("/");
-    return;
-  }
-  request.session.destroy((err) => {
-    response.redirect("/");
-  });
-});
 
 app.use(express.static('public'));
 app.use('/v1/graphql/collaboration', expressGraphql({

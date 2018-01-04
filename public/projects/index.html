@@ -12,7 +12,7 @@
     crossorigin="anonymous"></script>
   <script>
     $(function () {
-      $.post("/v1/graphql/project", { query: "query { getProjects{ projectId name } }" })
+      $.post("/v1/graphql/projects", { query: "query { getProjects{ projectId name } }" })
         .done(function (result) {
           const projects = result.data.getProjects;
           const $dropdown = $("#projectId");
@@ -36,7 +36,7 @@
 
         const files = imageFile[0].files;
         const projectId = $("#projectId");
-        $.post("/v1/graphql/project", { query: `mutation { createImages(projectId: "${projectId.val()}", imageCount: ${files.length}) { imageId imageURL } }` })
+        $.post("/v1/graphql/projects", { query: `mutation { createImages(projectId: "${projectId.val()}", imageCount: ${files.length}) { imageId imageURL } }` })
           .done(function (result) {
             const images = result.data.createImages;
             $.each(images, function (index, currentImage) {
@@ -55,7 +55,7 @@
                       xhr.setRequestHeader('x-ms-blob-content-type', currentFile.type);
                     },
                     success: function (result, status) {
-                      $.post("/v1/graphql/project", { query: `mutation { commitImages(images: [ { projectId: "${projectId.val()}", imageId: "${currentImage.imageId}" } ]) }` })
+                      $.post("/v1/graphql/projects", { query: `mutation { commitImages(images: [ { projectId: "${projectId.val()}", imageId: "${currentImage.imageId}" } ]) }` })
                         .done(function (result) {
                           if (result.errors) {
                             $("#errorModalBody").text(JSON.stringify(result.errors[0]));
@@ -101,10 +101,7 @@
         </div>
         <ul class="nav navbar-nav">
           <li class="active">
-            <a href="/project/">Projects</a>
-          </li>
-          <li>
-            <a href="/logout">Log Out</a>
+            <a href="/projects/">Projects</a>
           </li>
         </ul>
       </div>

@@ -15,7 +15,7 @@
         "GET",
         "POST"
       ],
-      "path_prefix": "/project",
+      "path_prefix": "/projects",
       "policies": {
         "unauthenticated_action": "RedirectToLoginPage"
       }
@@ -25,7 +25,7 @@
         "GET",
         "POST"
       ],
-      "path_prefix": "/v1/graphql/project",
+      "path_prefix": "/v1/graphql/projects",
       "policies": {
         "unauthenticated_action": "RedirectToLoginPage"
       }
