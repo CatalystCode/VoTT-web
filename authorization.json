@@ -1,10 +1,17 @@
 {
-  "routes": [{
+  "routes": [
+    {
       "path_prefix": "/",
       "policies": { "unauthenticated_action": "AllowAnonymous" }
-    },{
+    },
+    {
+      "path_prefix": "/project/",
+      "policies": { "unauthenticated_action": "RedirectToLoginPage" }
+    },
+    {
       "path_prefix": "/project",
       "policies": { "unauthenticated_action": "RedirectToLoginPage" }
-    }]
+    }
+  ]
 }
 
