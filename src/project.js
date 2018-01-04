@@ -16,6 +16,16 @@ const imageQueueName = process.env.IMAGE_CONTAINER_NAME || 'images';
 const imageTableName = process.env.IMAGE_TABLE_NAME || 'images';
 const projectTableName = process.env.IMAGE_TABLE_NAME || 'projects';
 
+const USER_NAME_HEADER = 'X-MS-CLIENT-PRINCIPAL-NAME';
+const USER_ID_HEADER = 'X-MS-CLIENT-PRINCIPAL-ID';
+
+function getUser(request) {
+    return {
+        name: request.get[USER_NAME_HEADER],
+        id: request.get[USER_ID_HEADER]
+    }
+}
+
 module.exports = {
     setConfiguration:(configValues)=>{
         for(var k in configValues) configuration[k]=configValues[k];
@@ -34,6 +44,7 @@ module.exports = {
     getProjects:(args, request)=>{
         return new Promise((resolve, reject)=>{
             // TODO: Ensure user has project access to the app.
+            console.log(getUser(request));
             var query = new azure.TableQuery().top(256);
             configuration.tableService.queryEntities(projectTableName, query, null, (error, results, response)=>{
                 if (error) {

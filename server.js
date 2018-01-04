@@ -57,12 +57,10 @@ app.post('/.auth/login/microsoftaccount/callback',
   });
 app.get('/logout', (request, response) => {
   if (!request.session) {
-    request.logOut();
     response.redirect("/");
     return;
   }
   request.session.destroy((err) => {
-    request.logOut();
     response.redirect("/");
   });
 });
