@@ -21,8 +21,8 @@ const USER_ID_HEADER = 'X-MS-CLIENT-PRINCIPAL-ID';
 
 function getUser(request) {
     return {
-        name: request.get[USER_NAME_HEADER],
-        id: request.get[USER_ID_HEADER]
+        name: request.headers[USER_NAME_HEADER],
+        id: request.headers[USER_ID_HEADER]
     }
 }
 
