@@ -5,7 +5,7 @@ const azure = require('azure-storage');
 const qs = require('qs'); 
 const uuid = require('uuid/v4');
 
-const configuration = {
+const services = {
     blobService:null,
     queueService:null,
     tableService:null
@@ -16,26 +16,28 @@ const imageQueueName = process.env.IMAGE_CONTAINER_NAME || 'images';
 const imageTableName = process.env.IMAGE_TABLE_NAME || 'images';
 const projectTableName = process.env.IMAGE_TABLE_NAME || 'projects';
 
-const USER_NAME_HEADER = 'X-MS-CLIENT-PRINCIPAL-NAME';
-const USER_ID_HEADER = 'X-MS-CLIENT-PRINCIPAL-ID';
+// NOTE: The raw headers are in uppercase but are lowercased by express. 
+const CLIENT_PRINCIPAL_NAME_HEADER = 'x-ms-client-principal-name';
+const CLIENT_PRINCIPAL_ID_HEADER = 'x-ms-client-principal-id';
+const CLIENT_PRINCIPAL_IDP_HEADER = 'x-ms-client-principal-idp';
 
 function getUser(request) {
-    console.log(request);
     return {
-        name: request.headers[USER_NAME_HEADER],
-        id: request.headers[USER_ID_HEADER]
-    }
+        id: request.headers[CLIENT_PRINCIPAL_ID_HEADER],
+        name: request.headers[CLIENT_PRINCIPAL_NAME_HEADER],
+        idp: request.headers[CLIENT_PRINCIPAL_IDP_HEADER]
+    };
 }
 
 module.exports = {
-    setConfiguration:(configValues)=>{
-        for(var k in configValues) configuration[k]=configValues[k];
+    setServices:(configValues)=>{
+        for(var k in configValues) services[k]=configValues[k];
         async.series(
             [
-              (callback) => { configuration.blobService.createContainerIfNotExists(imageContainerName, { publicAccessLevel: 'blob' }, callback); },
-              (callback) => { configuration.queueService.createQueueIfNotExists(imageQueueName, callback); },
-              (callback) => { configuration.tableService.createTableIfNotExists(imageTableName, callback); },
-              (callback) => { configuration.tableService.createTableIfNotExists(projectTableName, callback); }
+              (callback) => { services.blobService.createContainerIfNotExists(imageContainerName, { publicAccessLevel: 'blob' }, callback); },
+              (callback) => { services.queueService.createQueueIfNotExists(imageQueueName, callback); },
+              (callback) => { services.tableService.createTableIfNotExists(imageTableName, callback); },
+              (callback) => { services.tableService.createTableIfNotExists(projectTableName, callback); }
             ],
             (err, results) => {
                 console.log("Project configuration set successfully.");
@@ -47,7 +49,7 @@ module.exports = {
             // TODO: Ensure user has project access to the app.
             console.log(getUser(request));
             var query = new azure.TableQuery().top(256);
-            configuration.tableService.queryEntities(projectTableName, query, null, (error, results, response)=>{
+            services.tableService.queryEntities(projectTableName, query, null, (error, results, response)=>{
                 if (error) {
                     reject(error);
                     return;
@@ -84,9 +86,9 @@ module.exports = {
             };
             async.series(
                 {
-                    queue:(callback)=>{ configuration.queueService.createQueueIfNotExists(projectId, callback); },
-                    container:(callback)=>{ configuration.blobService.createContainerIfNotExists(projectId, { publicAccessLevel: 'blob' }, callback); },
-                    entity:(callback)=>{ configuration.tableService.insertEntity(projectTableName, project, callback); }
+                    queue:(callback)=>{ services.queueService.createQueueIfNotExists(projectId, callback); },
+                    container:(callback)=>{ services.blobService.createContainerIfNotExists(projectId, { publicAccessLevel: 'blob' }, callback); },
+                    entity:(callback)=>{ services.tableService.insertEntity(projectTableName, project, callback); }
                 },
                 (error, results)=>{
                     if (error) {
@@ -105,9 +107,9 @@ module.exports = {
 
             async.series(
                 {
-                    entity:(callback)=>{ configuration.tableService.deleteEntity(projectTableName, {PartitionKey:{"_":"projects"}, RowKey:{"_":projectId}}, callback); },
-                    queue:(callback)=>{ configuration.queueService.deleteQueueIfExists(projectId, callback); },
-                    container:(callback)=>{ configuration.blobService.deleteContainerIfExists(projectId, null, callback); }
+                    entity:(callback)=>{ services.tableService.deleteEntity(projectTableName, {PartitionKey:{"_":"projects"}, RowKey:{"_":projectId}}, callback); },
+                    queue:(callback)=>{ services.queueService.deleteQueueIfExists(projectId, callback); },
+                    container:(callback)=>{ services.blobService.deleteContainerIfExists(projectId, null, callback); }
                 },
                 (error, results)=>{
                     if (error) {
@@ -123,11 +125,11 @@ module.exports = {
             // TODO: Ensure user has access to projectId.
             const projectId = args.projectId;
 
-            configuration.tableService.retrieveEntity("projects", "projects", projectId, (error, project)=>{
+            services.tableService.retrieveEntity("projects", "projects", projectId, (error, project)=>{
                 if (error) {
                     return reject(error);
                 }
-                configuration.blobService.createContainerIfNotExists(projectId, { publicAccessLevel: 'blob' }, (error)=>{
+                services.blobService.createContainerIfNotExists(projectId, { publicAccessLevel: 'blob' }, (error)=>{
                     if (error) {
                         return reject(error);
                     }
@@ -153,12 +155,12 @@ module.exports = {
                         const imageId = uuid();
                         const containerName = projectId;
                         const blobName = imageId;
-                        const signature = configuration.blobService.generateSharedAccessSignature(
+                        const signature = services.blobService.generateSharedAccessSignature(
                             containerName,
                             blobName,
                             sharedAccessPolicy
                         );
-                        const url = configuration.blobService.getUrl(containerName, blobName, signature);
+                        const url = services.blobService.getUrl(containerName, blobName, signature);
                         result.push({
                             projectId:projectId,
                             imageId:imageId,
@@ -192,10 +194,10 @@ module.exports = {
                       RowKey: currentImage.imageId
                 };
                 imageTasks.push(
-                    (callback)=>{ configuration.tableService.insertEntity(imageTableName, imageRecord, callback); },
-                    (callback)=>{configuration.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback)},
-                    (callback)=>{configuration.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback)},
-                    (callback)=>{configuration.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback)}
+                    (callback)=>{ services.tableService.insertEntity(imageTableName, imageRecord, callback); },
+                    (callback)=>{services.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback)},
+                    (callback)=>{services.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback)},
+                    (callback)=>{services.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback)}
                 );
             }
             async.series(

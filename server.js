@@ -25,8 +25,8 @@ const services = {
   tableService: tableService
 };
 
-collaborationController.setConfiguration(services);
-projectController.setConfiguration(services);
+collaborationController.setServices(services);
+projectController.setServices(services);
 
 const schemaFile = fs.readFileSync("src/schema.graphql", "utf8");
 
