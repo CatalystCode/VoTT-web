@@ -1,9 +1,0 @@
-{
-  "routes": [
-    {
-      "path_prefix": "/project",
-      "policies": { "unauthenticated_action": "RedirectToLoginPage" }
-    }
-  ]
-}
-

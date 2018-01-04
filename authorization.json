@@ -1,13 +1,24 @@
 {
   "routes": [
     {
-      "path_prefix": "/project/",
-      "policies": { "unauthenticated_action": "RedirectToLoginPage" }
+      "http_methods": [
+        "GET",
+        "POST"
+      ],
+      "path_prefix": "/",
+      "policies": {
+        "unauthenticated_action": "AllowAnonymous"
+      }
     },
     {
+      "http_methods": [
+        "GET",
+        "POST"
+      ],
       "path_prefix": "/project",
-      "policies": { "unauthenticated_action": "RedirectToLoginPage" }
+      "policies": {
+        "unauthenticated_action": "RedirectToLoginPage"
+      }
     }
   ]
 }
-
