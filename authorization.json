@@ -19,6 +19,16 @@
       "policies": {
         "unauthenticated_action": "RedirectToLoginPage"
       }
+    },
+    {
+      "http_methods": [
+        "GET",
+        "POST"
+      ],
+      "path_prefix": "/v1/graphql/project",
+      "policies": {
+        "unauthenticated_action": "RedirectToLoginPage"
+      }
     }
   ]
 }
