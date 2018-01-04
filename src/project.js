@@ -20,6 +20,7 @@ const USER_NAME_HEADER = 'X-MS-CLIENT-PRINCIPAL-NAME';
 const USER_ID_HEADER = 'X-MS-CLIENT-PRINCIPAL-ID';
 
 function getUser(request) {
+    console.log(request);
     return {
         name: request.headers[USER_NAME_HEADER],
         id: request.headers[USER_ID_HEADER]
