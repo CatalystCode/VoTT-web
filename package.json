@@ -8,7 +8,7 @@
   "description": "Visual Object Tagging Tool: A lightweight and collaborative tool for image tagging. Edit",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -32,6 +32,7 @@
     "graphql": "^0.11.7",
     "helmet": "^3.9.0",
     "method-override": "^2.3.10",
+    "mocha": "^4.1.0",
     "passport-azure-ad": "^3.0.9",
     "qs": "^6.5.1"
   }

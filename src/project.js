@@ -6,6 +6,7 @@ const qs = require('qs');
 const uuid = require('uuid/v4');
 
 const services = {
+    authzService:null,
     blobService:null,
     queueService:null,
     tableService:null
@@ -31,18 +32,22 @@ function getUser(request) {
 
 module.exports = {
     setServices:(configValues)=>{
-        for(var k in configValues) services[k]=configValues[k];
-        async.series(
-            [
-              (callback) => { services.blobService.createContainerIfNotExists(imageContainerName, { publicAccessLevel: 'blob' }, callback); },
-              (callback) => { services.queueService.createQueueIfNotExists(imageQueueName, callback); },
-              (callback) => { services.tableService.createTableIfNotExists(imageTableName, callback); },
-              (callback) => { services.tableService.createTableIfNotExists(projectTableName, callback); }
-            ],
-            (err, results) => {
-                console.log("Project configuration set successfully.");
-            }
-        );
+        return new Promise((resolve, reject)=>{
+            for(var k in configValues) services[k]=configValues[k];
+            async.series(
+                [
+                  (callback) => { services.tableService.createTableIfNotExists(imageTableName, callback); },
+                  (callback) => { services.tableService.createTableIfNotExists(projectTableName, callback); }
+                ],
+                (err, results) => {
+                    console.log("Project configuration set successfully.");
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(results);
+                }
+            );
+        });
     },
     getProjects:(args, request)=>{
         return new Promise((resolve, reject)=>{
