@@ -115,7 +115,6 @@ module.exports = {
     getProjects: (args, request) => {
         return new Promise((resolve, reject) => {
             // TODO: Ensure user has project access to the app.
-            console.log(getUser(request));
             var query = new azure.TableQuery().top(256);
             services.tableService.queryEntities(projectTableName, query, null, (error, results, response) => {
                 if (error) {
@@ -124,7 +123,7 @@ module.exports = {
                 }
                 resolve(results.entries.map((value) => {
                     return {
-                        projectId: value.projectId._,
+                        projectId: value.RowKey._,
                         name: value.name._,
                         taskType: value.taskType._,
                         objectClassNames: JSON.parse(value.objectClassNames._),
@@ -227,7 +226,7 @@ module.exports = {
             // TODO: Ensure user has access to projectId.
             const projectId = args.projectId;
 
-            services.tableService.retrieveEntity("projects", "projects", projectId, (error, project) => {
+            services.tableService.retrieveEntity("projects", projectId/*PartitionKey*/, projectId/*PrimaryKey*/, (error, project) => {
                 if (error) {
                     return reject(error);
                 }
@@ -295,11 +294,12 @@ module.exports = {
                     PartitionKey: currentImage.projectId,
                     RowKey: currentImage.imageId
                 };
+                const taskQueueName = getTaskQueueName(currentImage.projectId);
                 imageTasks.push(
                     (callback) => { services.tableService.insertEntity(imageTableName, imageRecord, callback); },
-                    (callback) => { services.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback) },
-                    (callback) => { services.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback) },
-                    (callback) => { services.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback) }
+                    (callback) => { services.queueService.createMessage(taskQueueName, JSON.stringify(currentImage), callback) },
+                    (callback) => { services.queueService.createMessage(taskQueueName, JSON.stringify(currentImage), callback) },
+                    (callback) => { services.queueService.createMessage(taskQueueName, JSON.stringify(currentImage), callback) }
                 );
             }
             async.series(

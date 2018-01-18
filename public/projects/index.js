@@ -1,6 +1,7 @@
+const projectsGraphqlBasePath = '/v1/graphql/projects';
 function getProjects(callback) {
   $.post(
-    "/v1/graphql/projects",
+    projectsGraphqlBasePath,
     { query: "query { getProjects{ projectId name } }" }
   ).done(function (result) {
     if (result.errors) {
@@ -14,13 +15,10 @@ function getProjects(callback) {
 
 function getImages(projectId, callback) {
   $.post(
-    "/v1/graphql/projects",
+    projectsGraphqlBasePath,
     {
-      query: "query CreateImages($projectId: String!) { getImages(projectId: $projectId){ pageToken images {imageId imageURL} } }",
-      variables: {
-        projectId: projectId
+      query: 'query { getImages(projectId: "+JSON.stringify(projectId)+"){ pageToken images {imageId imageURL} } }'
       }
-    }
   ).done(function (result) {
     if (result.errors) {
       return callback(result.errors, null);
@@ -33,13 +31,9 @@ function getImages(projectId, callback) {
 
 function createImages(projectId, files, callback) {
   $.post(
-    "/v1/graphql/projects",
+    projectsGraphqlBasePath,
     {
-      query: 'mutation CreateImages($projectId: String!, $imageCount: Int!) { createImages(projectId: $projectId, imageCount: $imageCount) { imageId imageURL } }',
-      variables: {
-        projectId: projectId,
-        imageCount: files.length
-      }
+      query: 'mutation { createImages(projectId: '+JSON.stringify(projectId)+', imageCount: '+JSON.stringify(files.length)+') { projectId imageId imageURL } }'
     }
   ).done(function (result) {
     if (result.errors) {
@@ -52,13 +46,21 @@ function createImages(projectId, files, callback) {
 }
 
 function commitImages(images, callback) {
+  // {
+  //   query: 'mutation CommitImages($images: [ConfirmedImage]!) { commitImages(images: $images) }',
+  //   variables: {
+  //     '$images': images
+  //   }
+  // }
+
+  // TODO: Make variable substition work again.
+  var escapedImages = images.map(function(value){
+    return '{ projectId: ' + JSON.stringify(value.projectId) + ', imageId: ' + JSON.stringify(value.imageId) + ' } ';
+  });
   $.post(
-    "/v1/graphql/projects",
+    projectsGraphqlBasePath,
     {
-      query: 'mutation CommitImages($images: [ConfirmedImage]!) { commitImages(images: $images) }',
-      variables: {
-        images: images
-      }
+      query: 'mutation { commitImages(images: ['+escapedImages.join()+'] ) }'
     }
   ).done(function (result) {
     if (result.errors) {
@@ -144,12 +146,22 @@ function submitProjectForm(event) {
             if (error) {
               $("#errorModalBody").text("Unable to upload file.  " + error);
               $("#errorModal").modal("show");
+              console.log(error);
               return;
             }
+
+            commitImages([currentImage], function(error, result){
+              if (error) {
+                $("#errorModalBody").text("Unable to commit file.  " + error);
+                $("#errorModal").modal("show");
+                console.log(error);
+                return;                  
+              }
 
             console.log("Committed image successfully:");
             console.log(currentImage);
             console.log(result);
+          });
           });
         }
       };
