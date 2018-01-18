@@ -2,7 +2,7 @@ const projectsGraphqlBasePath = '/v1/graphql/projects';
 function getProjects(callback) {
   $.post(
     projectsGraphqlBasePath,
-    { query: "query { getProjects{ projectId name } }" }
+    { query: "query { getProjects{ projectId name taskType objectClassNames instructionsText } }" }
   ).done(function (result) {
     if (result.errors) {
       return callback(result.errors, null);
@@ -99,12 +99,40 @@ function loadProjects() {
       console.log(error);
       return;
     }
+
+    const tableBody = $("#projectsTable tbody")[0];
+    console.log(tableBody);
+
     const dropdown = $("#projectId");
     dropdown.html("");
     $.each(projects, function () {
       const projectId = this.projectId;
       dropdown.append($("<option />").val(projectId).text(this.name + " (" + projectId + ")"));
       console.log("Fetching images for: " + projectId);
+
+      const row = document.createElement("tr");
+      tableBody.append(row);
+
+      const projectIdCell = document.createElement("th");
+      projectIdCell.setAttribute("scope", "row");
+      projectIdCell.innerText = projectId;
+      row.appendChild(projectIdCell);
+
+      const projectNameCell = document.createElement("td");
+      projectNameCell.innerText = this.name;
+      row.appendChild(projectNameCell);
+
+      const projectTaskTypeCell = document.createElement("td");
+      projectTaskTypeCell.innerText = this.taskType;
+      row.appendChild(projectTaskTypeCell);
+
+      const editCell = document.createElement("td");
+      const editLink = document.createElement("a");
+      editLink.href = document.location + projectId;
+      editLink.innerText = "Edit";
+      editCell.appendChild(editLink);
+      row.appendChild(editCell);
+
       getImages(projectId, function(error, imageList){
         if (error) {
           console.log("Unable to fetch images:");
