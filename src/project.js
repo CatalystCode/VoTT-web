@@ -12,11 +12,6 @@ const services = {
     tableService: null
 };
 
-const imageContainerName = process.env.IMAGE_CONTAINER_NAME || 'images';
-const imageQueueName = process.env.IMAGE_CONTAINER_NAME || 'images';
-const imageTableName = process.env.IMAGE_TABLE_NAME || 'images';
-const projectTableName = process.env.IMAGE_TABLE_NAME || 'projects';
-
 // NOTE: The raw headers are in uppercase but are lowercased by express. 
 const CLIENT_PRINCIPAL_NAME_HEADER = 'x-ms-client-principal-name';
 const CLIENT_PRINCIPAL_ID_HEADER = 'x-ms-client-principal-id';
@@ -30,19 +25,63 @@ function getUser(request) {
     };
 }
 
-function getModelContainerName(projectId) {
-    return `${projectId}.models`;
+/**
+ * Global training queue that is shared by all projects. A separate set of
+ * workers that are able to handle messages from this queue will be listening
+ * to this.
+ */
+const trainingQueueName = process.env.TRAINING_QUEUE_NAME || 'training';
+
+/**
+ * Global images table that all projects share. The projectId is be used as the
+ * partition key and the image's id as the primary key.
+ */
+const imageTableName = process.env.IMAGE_TABLE_NAME || 'images';
+
+/**
+ * Global projects table.
+ */
+const projectTableName = process.env.IMAGE_TABLE_NAME || 'projects';
+
+/**
+ * @param {string} projectId containing the project primary key.
+ * @returns {string} containing the name of the task queue for the given project.
+ */
+function getTaskQueueName(projectId) {
+    return `${projectId}-tasks`;
 }
 
+/**
+ * @param {string} projectId containing the project primary key.
+ * @returns {string} containing the name of the container where all the models for the given project are stored.
+ */
+function getModelContainerName(projectId) {
+    return `${projectId}-models`;
+}
+
+/**
+ * @param {string} projectId containing the project primary key.
+ * @returns {string} containing the name of the container where all the images for the given project are stored.
+ */
+function getImageContainerName(projectId) {
+    return `${projectId}-images`;
+}
+
+/**
+ * @param {string} projectId containing the project primary key.
+ * @param {string} modelId containing the primary key of the model that is part of the given project.
+ * @returns {string} containing the full URL for the blob of the model.
+ */
 function getModelURL(projectId, modelId) {
     const containerName = getModelContainerName(projectId);
     return services.blobService.getUrl(containerName, modelId);
 }
 
-function getImageContainerName(projectId) {
-    return projectId;
-}
-
+/**
+ * @param {string} projectId containing the project primary key.
+ * @param {string} imageId containing the primary key of the image that is part of the given project.
+ * @returns {string} containing the full URL for the blob of the image.
+ */
 function getImageURL(projectId, imageId) {
     const containerName = getImageContainerName(projectId);
     return services.blobService.getUrl(containerName, imageId);
@@ -54,11 +93,12 @@ module.exports = {
             for (var k in configValues) services[k] = configValues[k];
             async.series(
                 [
+                    (callback) => { services.queueService.createQueueIfNotExists(trainingQueueName, callback); },
                     (callback) => { services.tableService.createTableIfNotExists(imageTableName, callback); },
                     (callback) => { services.tableService.createTableIfNotExists(projectTableName, callback); }
                 ],
                 (err, results) => {
-                    console.log("Created tables");
+                    console.log("Initialized project services.");
                     if (err) {
                         return reject(err);
                     }
@@ -74,7 +114,6 @@ module.exports = {
 
     getProjects: (args, request) => {
         return new Promise((resolve, reject) => {
-            console.log("Hola");
             // TODO: Ensure user has project access to the app.
             console.log(getUser(request));
             var query = new azure.TableQuery().top(256);
@@ -103,9 +142,8 @@ module.exports = {
             const projectId = uuid().toString();
 
             const project = {
-                PartitionKey: "projects", /* place all project records (not many, anyway) in the same partition. */
+                PartitionKey: projectId,
                 RowKey: projectId,
-                projectId: projectId,
                 name: args.name,
                 taskType: args.taskType,
                 objectClassNames: JSON.stringify(args.objectClassNames),
@@ -113,16 +151,21 @@ module.exports = {
                 instructionsImageURL: args.instructionsImageURL,
                 instructionsVideoURL: args.instructionsVideoURL
             };
+            const imageContainerName = getImageContainerName(projectId);
+            const modelContainerName = getModelContainerName(projectId);
+            const taskQueueName = getTaskQueueName(projectId);
             async.series(
-                {
-                    queue: (callback) => { services.queueService.createQueueIfNotExists(projectId, callback); },
-                    container: (callback) => { services.blobService.createContainerIfNotExists(projectId, { publicAccessLevel: 'blob' }, callback); },
-                    entity: (callback) => { services.tableService.insertEntity(projectTableName, project, callback); }
-                },
+                [
+                    (callback) => { services.queueService.createQueueIfNotExists(taskQueueName, callback); },
+                    (callback) => { services.blobService.createContainerIfNotExists(imageContainerName, { publicAccessLevel: 'blob' }, callback); },
+                    (callback) => { services.blobService.createContainerIfNotExists(modelContainerName, { publicAccessLevel: 'blob' }, callback); },
+                    (callback) => { services.tableService.insertEntity(projectTableName, project, callback); }
+                ],
                 (error, results) => {
                     if (error) {
                         return reject(error);
                     }
+                    project.projectId = projectId;
                     project.objectClassNames = args.objectClassNames;
                     resolve(project);
                 }
@@ -134,12 +177,17 @@ module.exports = {
             // TODO: Ensure user has access to projectId.
             const projectId = args.projectId;
 
+            const imageContainerName = getImageContainerName(projectId);
+            const modelContainerName = getModelContainerName(projectId);
+            const taskQueueName = getTaskQueueName(projectId);
+
             async.series(
-                {
-                    entity: (callback) => { services.tableService.deleteEntity(projectTableName, { PartitionKey: { "_": "projects" }, RowKey: { "_": projectId } }, callback); },
-                    queue: (callback) => { services.queueService.deleteQueueIfExists(projectId, callback); },
-                    container: (callback) => { services.blobService.deleteContainerIfExists(projectId, null, callback); }
-                },
+                [
+                    (callback) => { services.tableService.deleteEntity(projectTableName, { PartitionKey: { "_": projectId }, RowKey: { "_": projectId } }, callback); },
+                    (callback) => { services.queueService.deleteQueueIfExists(taskQueueName, callback); },
+                    (callback) => { services.blobService.deleteContainerIfExists(imageContainerName, null, callback); },
+                    (callback) => { services.blobService.deleteContainerIfExists(modelContainerName, null, callback); }
+                ],
                 (error, results) => {
                     if (error) {
                         return reject(error);
@@ -154,13 +202,12 @@ module.exports = {
             // TODO: Ensure user has project access to the project.
             const projectId = args.projectId;
             const pageToken = (args.pageToken) ? JSON.parse(args.pageToken) : null;
-            var query = new azure.TableQuery().where("PartitionKey == ?", projectId).top(4);
+            var query = new azure.TableQuery().where("PartitionKey == ?", projectId).top(12);
             services.tableService.queryEntities(imageTableName, query, pageToken, (error, results, response) => {
                 if (error) {
                     reject(error);
                     return;
                 }
-                console.log(results);
                 const images = results.entries.map((value) => {
                     return {
                         projectId: value.PartitionKey._,
@@ -184,7 +231,8 @@ module.exports = {
                 if (error) {
                     return reject(error);
                 }
-                services.blobService.createContainerIfNotExists(projectId, { publicAccessLevel: 'blob' }, (error) => {
+                const imageContainerName = getImageContainerName(projectId);
+                services.blobService.createContainerIfNotExists(imageContainerName, { publicAccessLevel: 'blob' }, (error) => {
                     if (error) {
                         return reject(error);
                     }
@@ -208,14 +256,13 @@ module.exports = {
                     for (let i = 0; i < imageCount; i++) {
                         // Create a shared-access signature URI
                         const imageId = uuid();
-                        const containerName = projectId;
                         const blobName = imageId;
                         const signature = services.blobService.generateSharedAccessSignature(
-                            containerName,
+                            imageContainerName,
                             blobName,
                             sharedAccessPolicy
                         );
-                        const url = services.blobService.getUrl(containerName, blobName, signature);
+                        const url = services.blobService.getUrl(imageContainerName, blobName, signature);
                         result.push({
                             projectId: projectId,
                             imageId: imageId,
