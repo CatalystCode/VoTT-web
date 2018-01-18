@@ -8,8 +8,19 @@ type Project {
   instructionsVideoURL: String
 }
 
+type ImageList {
+  images: [Image]
+  pageToken: String
+}
+
+type TrainingSession {
+  trainingSessionId: String!
+  projectId: String!
+}
+
 type Query {
   getProjects: [Project]
+  getImages(projectId: String!, pageToken: String): ImageList
 }
 
 input ConfirmedImage {
@@ -22,4 +33,5 @@ type Mutation {
   removeProject(projectId: String!):String
   createImages(projectId: String!, imageCount:Int!): [Image]
   commitImages(images:[ConfirmedImage]!): String
+  createTrainingSession(projectId: String!):String
 }

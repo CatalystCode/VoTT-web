@@ -2,14 +2,14 @@
 
 const async = require("async");
 const azure = require('azure-storage');
-const qs = require('qs'); 
-const uuid = require('uuid/v4');
+const qs = require('qs');
+const uuid = require('uuid/v4');
 
 const services = {
-    authzService:null,
-    blobService:null,
-    queueService:null,
-    tableService:null
+    authzService: null,
+    blobService: null,
+    queueService: null,
+    tableService: null
 };
 
 const imageContainerName = process.env.IMAGE_CONTAINER_NAME || 'images';
@@ -30,14 +30,32 @@ function getUser(request) {
     };
 }
 
+function getModelContainerName(projectId) {
+    return `${projectId}.models`;
+}
+
+function getModelURL(projectId, modelId) {
+    const containerName = getModelContainerName(projectId);
+    return services.blobService.getUrl(containerName, modelId);
+}
+
+function getImageContainerName(projectId) {
+    return `${projectId}.images`;
+}
+
+function getImageURL(projectId, imageId) {
+    const containerName = getImageContainerName(projectId);
+    return services.blobService.getUrl(containerName, imageId);
+}
+
 module.exports = {
-    setServices:(configValues)=>{
-        return new Promise((resolve, reject)=>{
-            for(var k in configValues) services[k]=configValues[k];
+    setServices: (configValues) => {
+        return new Promise((resolve, reject) => {
+            for (var k in configValues) services[k] = configValues[k];
             async.series(
                 [
-                  (callback) => { services.tableService.createTableIfNotExists(imageTableName, callback); },
-                  (callback) => { services.tableService.createTableIfNotExists(projectTableName, callback); }
+                    (callback) => { services.tableService.createTableIfNotExists(imageTableName, callback); },
+                    (callback) => { services.tableService.createTableIfNotExists(projectTableName, callback); }
                 ],
                 (err, results) => {
                     console.log("Created tables");
@@ -49,53 +67,59 @@ module.exports = {
             );
         });
     },
-    getProjects:(args, request)=>{
-        return new Promise((resolve, reject)=>{
+    getModelContainerName: getModelContainerName,
+    getModelURL: getModelURL,
+    getImageContainerName: getImageContainerName,
+    getImageURL: getImageURL,
+
+    getProjects: (args, request) => {
+        return new Promise((resolve, reject) => {
+            console.log("Hola");
             // TODO: Ensure user has project access to the app.
             console.log(getUser(request));
-            var query = new azure.TableQuery().top(256);
-            services.tableService.queryEntities(projectTableName, query, null, (error, results, response)=>{
+            var query = new azure.TableQuery().top(256);
+            services.tableService.queryEntities(projectTableName, query, null, (error, results, response) => {
                 if (error) {
                     reject(error);
                     return;
                 }
-                resolve(results.entries.map((value)=>{
+                resolve(results.entries.map((value) => {
                     return {
                         projectId: value.projectId._,
                         name: value.name._,
                         taskType: value.taskType._,
                         objectClassNames: JSON.parse(value.objectClassNames._),
                         instructionsText: value.instructionsText._,
-                        instructionsImageURL: (value.instructionsImageURL)?value.instructionsImageURL._:null,
-                        instructionsVideoURL: (value.instructionsVideoURL)?value.instructionsVideoURL._:null
+                        instructionsImageURL: (value.instructionsImageURL) ? value.instructionsImageURL._ : null,
+                        instructionsVideoURL: (value.instructionsVideoURL) ? value.instructionsVideoURL._ : null
                     };
                 }));
             });
         });
     },
-    createProject:(args, res)=>{
-        return new Promise((resolve, reject)=>{
+    createProject: (args, res) => {
+        return new Promise((resolve, reject) => {
             // TODO: Ensure user has project access to the app.
             const projectId = uuid().toString();
 
             const project = {
-                  PartitionKey: "projects", /* place all project records (not many, anyway) in the same partition. */
-                  RowKey: projectId,
-                  projectId: projectId,
-                  name: args.name,
-                  taskType: args.taskType,
-                  objectClassNames: JSON.stringify(args.objectClassNames),
-                  instructionsText: args.instructionsText,
-                  instructionsImageURL: args.instructionsImageURL,
-                  instructionsVideoURL: args.instructionsVideoURL
+                PartitionKey: "projects", /* place all project records (not many, anyway) in the same partition. */
+                RowKey: projectId,
+                projectId: projectId,
+                name: args.name,
+                taskType: args.taskType,
+                objectClassNames: JSON.stringify(args.objectClassNames),
+                instructionsText: args.instructionsText,
+                instructionsImageURL: args.instructionsImageURL,
+                instructionsVideoURL: args.instructionsVideoURL
             };
             async.series(
                 {
-                    queue:(callback)=>{ services.queueService.createQueueIfNotExists(projectId, callback); },
-                    container:(callback)=>{ services.blobService.createContainerIfNotExists(projectId, { publicAccessLevel: 'blob' }, callback); },
-                    entity:(callback)=>{ services.tableService.insertEntity(projectTableName, project, callback); }
+                    queue: (callback) => { services.queueService.createQueueIfNotExists(projectId, callback); },
+                    container: (callback) => { services.blobService.createContainerIfNotExists(projectId, { publicAccessLevel: 'blob' }, callback); },
+                    entity: (callback) => { services.tableService.insertEntity(projectTableName, project, callback); }
                 },
-                (error, results)=>{
+                (error, results) => {
                     if (error) {
                         return reject(error);
                     }
@@ -105,18 +129,18 @@ module.exports = {
             ); /* async.series */
         });
     },
-    removeProject:(args, res)=>{
-        return new Promise((resolve, reject)=>{
+    removeProject: (args, res) => {
+        return new Promise((resolve, reject) => {
             // TODO: Ensure user has access to projectId.
             const projectId = args.projectId;
 
             async.series(
                 {
-                    entity:(callback)=>{ services.tableService.deleteEntity(projectTableName, {PartitionKey:{"_":"projects"}, RowKey:{"_":projectId}}, callback); },
-                    queue:(callback)=>{ services.queueService.deleteQueueIfExists(projectId, callback); },
-                    container:(callback)=>{ services.blobService.deleteContainerIfExists(projectId, null, callback); }
+                    entity: (callback) => { services.tableService.deleteEntity(projectTableName, { PartitionKey: { "_": "projects" }, RowKey: { "_": projectId } }, callback); },
+                    queue: (callback) => { services.queueService.deleteQueueIfExists(projectId, callback); },
+                    container: (callback) => { services.blobService.deleteContainerIfExists(projectId, null, callback); }
                 },
-                (error, results)=>{
+                (error, results) => {
                     if (error) {
                         return reject(error);
                     }
@@ -125,16 +149,42 @@ module.exports = {
             ); /* async.series */
         });
     },
-    createImages:(args, res)=>{
-        return new Promise((resolve, reject)=>{
+    getImages: (args, res) => {
+        return new Promise((resolve, reject) => {
+            // TODO: Ensure user has project access to the project.
+            const projectId = args.projectId;
+            const pageToken = (args.pageToken) ? JSON.parse(args.pageToken) : null;
+            var query = new azure.TableQuery().where("PartitionKey == ?", projectId).top(4);
+            services.tableService.queryEntities(imageTableName, query, pageToken, (error, results, response) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+                console.log(results);
+                const images = results.entries.map((value) => {
+                    return {
+                        projectId: value.PartitionKey._,
+                        imageId: value.RowKey._,
+                        imageURL: getImageURL(projectId, value.RowKey._),
+                    };
+                });
+                resolve({
+                    pageToken: (results.continuationToken) ? JSON.stringify(results.continuationToken) : null,
+                    images: images
+                });
+            });
+        });
+    },
+    createImages: (args, res) => {
+        return new Promise((resolve, reject) => {
             // TODO: Ensure user has access to projectId.
             const projectId = args.projectId;
 
-            services.tableService.retrieveEntity("projects", "projects", projectId, (error, project)=>{
+            services.tableService.retrieveEntity("projects", "projects", projectId, (error, project) => {
                 if (error) {
                     return reject(error);
                 }
-                services.blobService.createContainerIfNotExists(projectId, { publicAccessLevel: 'blob' }, (error)=>{
+                services.blobService.createContainerIfNotExists(projectId, { publicAccessLevel: 'blob' }, (error) => {
                     if (error) {
                         return reject(error);
                     }
@@ -142,16 +192,16 @@ module.exports = {
                     const startDate = new Date();
                     const expiryDate = new Date(startDate);
                     expiryDate.setMinutes(startDate.getMinutes() + 5);
-        
+
                     const BlobUtilities = azure.BlobUtilities;
                     const sharedAccessPolicy = {
-                      AccessPolicy: {
-                        Permissions: BlobUtilities.SharedAccessPermissions.WRITE,
-                        Start: startDate,
-                        Expiry: expiryDate
-                      }
+                        AccessPolicy: {
+                            Permissions: BlobUtilities.SharedAccessPermissions.WRITE,
+                            Start: startDate,
+                            Expiry: expiryDate
+                        }
                     };
-        
+
                     // Create imageCount pre-authenticated blob locations and return their URLs.
                     const imageCount = args.imageCount;
                     const result = [];
@@ -167,26 +217,26 @@ module.exports = {
                         );
                         const url = services.blobService.getUrl(containerName, blobName, signature);
                         result.push({
-                            projectId:projectId,
-                            imageId:imageId,
-                            imageURL:url
+                            projectId: projectId,
+                            imageId: imageId,
+                            imageURL: url
                         });
                     }
-                    resolve(result);        
+                    resolve(result);
 
                 }); /*createContainerIfNotExists*/
             }); /*retrieveEntity*/
         });
     },
-    commitImages:(args, res)=>{
-        return new Promise((resolve, reject)=>{
+    commitImages: (args, res) => {
+        return new Promise((resolve, reject) => {
             // TODO: Ensure user has access to projectId.
             const images = args.images;
             if (images.size < 1) {
                 return reject("Parameter images must contain at least one element.");
             }
 
-            const projectIds = new Set(images.map((image)=>image.projectId));
+            const projectIds = new Set(images.map((image) => image.projectId));
             if (projectIds.size > 1) {
                 return reject("All images must belong to the same project.");
             }
@@ -195,19 +245,19 @@ module.exports = {
             for (var imageIndex in images) {
                 const currentImage = images[imageIndex];
                 const imageRecord = {
-                      PartitionKey: currentImage.projectId,
-                      RowKey: currentImage.imageId
+                    PartitionKey: currentImage.projectId,
+                    RowKey: currentImage.imageId
                 };
                 imageTasks.push(
-                    (callback)=>{ services.tableService.insertEntity(imageTableName, imageRecord, callback); },
-                    (callback)=>{services.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback)},
-                    (callback)=>{services.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback)},
-                    (callback)=>{services.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback)}
+                    (callback) => { services.tableService.insertEntity(imageTableName, imageRecord, callback); },
+                    (callback) => { services.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback) },
+                    (callback) => { services.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback) },
+                    (callback) => { services.queueService.createMessage(currentImage.projectId, JSON.stringify(currentImage), callback) }
                 );
             }
             async.series(
                 imageTasks,
-                (error)=>{
+                (error) => {
                     if (error) {
                         return reject(error);
                     }
@@ -215,6 +265,11 @@ module.exports = {
                 }
             );
 
+        });
+    },
+    createTrainingSession: (args, response) => {
+        return new Promise((resolve, reject) => {
+            reject("Not yet implemented.");
         });
     }
 };

@@ -23,4 +23,60 @@ describe('Project graphql controller', () => {
 
   });
 
+  describe("#getImageContainerName()", () => {
+
+    it('should end with .images', () => {
+      const projectId = 'someProjectId';
+      const containerName = projectController.getImageContainerName(projectId);
+      assert.equal(containerName, `${projectId}.images`);
+    });
+
+  });
+
+  describe('#getImageURL()', () => {
+
+    it('should use the images container', () => {
+      const projectId = 'someProjectId';
+      const modelId = 'someImageId';
+      projectController.setServices({
+        blobService: {
+          getUrl: (containerName, blobName)=>{
+            return `https://somestorageaccount.blob.core.windows.net/${containerName}/${blobName}`;
+          }
+        }
+      });
+      const imageURL = projectController.getImageURL(projectId, modelId);
+      assert.equal(imageURL, 'https://somestorageaccount.blob.core.windows.net/someProjectId.images/someImageId');
+    });
+
+  });
+
+  describe("#getModelContainerName()", () => {
+
+    it('should end with .models', () => {
+      const projectId = 'someProjectId';
+      const containerName = projectController.getModelContainerName(projectId);
+      assert.equal(containerName, `${projectId}.models`);
+    });
+
+  });
+
+  describe('#getModelURL()', () => {
+
+    it('should use the models container', () => {
+      const projectId = 'someProjectId';
+      const modelId = 'someModelId';
+      projectController.setServices({
+        blobService: {
+          getUrl: (containerName, blobName)=>{
+            return `https://somestorageaccount.blob.core.windows.net/${containerName}/${blobName}`;
+          }
+        }
+      });
+      const modelURL = projectController.getModelURL(projectId, modelId);
+      assert.equal(modelURL, 'https://somestorageaccount.blob.core.windows.net/someProjectId.models/someModelId');
+    });
+
+  });
+
 });

@@ -12,6 +12,25 @@ function getProjects(callback) {
   });
 }
 
+function getImages(projectId, callback) {
+  $.post(
+    "/v1/graphql/projects",
+    {
+      query: "query CreateImages($projectId: String!) { getImages(projectId: $projectId){ pageToken images {imageId imageURL} } }",
+      variables: {
+        projectId: projectId
+      }
+    }
+  ).done(function (result) {
+    if (result.errors) {
+      return callback(result.errors, null);
+    }
+    callback(null, result.data.getImages);
+  }).fail(function (error) {
+    callback(error);
+  });
+}
+
 function createImages(projectId, files, callback) {
   $.post(
     "/v1/graphql/projects",
@@ -81,8 +100,19 @@ function loadProjects() {
     const dropdown = $("#projectId");
     dropdown.html("");
     $.each(projects, function () {
-      dropdown.append($("<option />").val(this.projectId).text(this.name + " (" + this.projectId + ")"));
-    });
+      const projectId = this.projectId;
+      dropdown.append($("<option />").val(projectId).text(this.name + " (" + projectId + ")"));
+      console.log("Fetching images for: " + projectId);
+      getImages(projectId, function(error, imageList){
+        if (error) {
+          console.log("Unable to fetch images:");
+          console.log(error);
+          return;
+        }
+        console.log("imageList:");
+        console.log(imageList);
+      });
+    });    
   });
 }
 
