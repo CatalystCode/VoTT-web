@@ -28,7 +28,7 @@ describe('Project graphql controller', () => {
     it('should end with .images', () => {
       const projectId = 'someProjectId';
       const containerName = projectController.getImageContainerName(projectId);
-      assert.equal(containerName, `${projectId}.images`);
+      assert.equal(containerName, projectId);
     });
 
   });
@@ -46,7 +46,7 @@ describe('Project graphql controller', () => {
         }
       });
       const imageURL = projectController.getImageURL(projectId, modelId);
-      assert.equal(imageURL, 'https://somestorageaccount.blob.core.windows.net/someProjectId.images/someImageId');
+      assert.equal(imageURL, 'https://somestorageaccount.blob.core.windows.net/someProjectId/someImageId');
     });
 
   });

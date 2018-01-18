@@ -40,7 +40,7 @@ function getModelURL(projectId, modelId) {
 }
 
 function getImageContainerName(projectId) {
-    return `${projectId}.images`;
+    return projectId;
 }
 
 function getImageURL(projectId, imageId) {
