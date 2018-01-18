@@ -40,11 +40,11 @@ module.exports = {
                   (callback) => { services.tableService.createTableIfNotExists(projectTableName, callback); }
                 ],
                 (err, results) => {
-                    console.log("Project configuration set successfully.");
+                    console.log("Created tables");
                     if (err) {
                         return reject(err);
                     }
-                    resolve(results);
+                    resolve(configValues);
                 }
             );
         });

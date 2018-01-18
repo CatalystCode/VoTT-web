@@ -10,7 +10,11 @@ const services = {
 
 module.exports = {
     setServices:(configValues)=>{
-        for(var k in configValues) services[k]=configValues[k];
+        return new Promise((resolve, reject)=>{
+            for(var k in configValues) services[k]=configValues[k];
+            console.log("Connected services.");
+            resolve(configValues);
+        });
     },
     getNextImageTagTask:(args, res)=>{
         return new Promise((resolve, reject)=>{
