@@ -9,7 +9,7 @@ const methodOverride = require('method-override');
 const helmet = require('helmet');
 const graphiql = require('graphql');
 const fs = require("fs");
-const bodyParser = require("body-parser");
+// const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
 
 const collaborationController = require('./src/collaboration');
@@ -42,19 +42,21 @@ const app = express();
 app.use(methodOverride());
 app.use(cookieParser());
 app.use(expressSession({ secret: 'keyboard gato', resave: true, saveUninitialized: false }));
-app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/v1/graphql/projects', expressGraphql({
   schema: projectSchema,
   rootValue: projectController,
   graphiql: graphiqlEnabled,
+  pretty: true
 }));
 
-app.use(express.static('public'));
 app.use('/v1/graphql/collaboration', expressGraphql({
   schema: collaborationSchema,
   rootValue: collaborationController,
   graphiql: graphiqlEnabled,
-}));
+  pretty: true
+}));  
 
+app.use(express.static('public'));
 app.listen(process.env.PORT, () => console.log(`Started on port ${process.env.PORT}`));
