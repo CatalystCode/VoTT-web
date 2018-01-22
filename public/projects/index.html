@@ -11,12 +11,12 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
     crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue"></script>
-  <script src="index.js"></script>
 </head>
 
 <body>
 
-  <div class="container">
+  <div class="container" id="projectsView">
+
     <nav class="navbar navbar-default">
       <div class="container-fluid">
         <div class="navbar-header">
@@ -30,16 +30,17 @@
       </div>
     </nav>
 
-    <div id="projectsView">
+    <div>
       <h2>Projects</h2>
-      <span v-if="projects == null">{{status}}</span>
+      <button type="button" class="btn btn-primary" data-target=".bd-example-modal-lg" v-on:click="createProject">Create</button>
+      <div v-if="projects == null">{{status}}</div>
       <table v-if="projects != null" class="table" id="projectsTable">
         <thead>
           <tr>
             <th scope="col">Id</th>
             <th scope="col">Name</th>
             <th scope="col">Type</th>
-            <th scope="col">&nbsp;</th>
+            <th scope="col">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -47,67 +48,140 @@
             <th scope="row">{{project.projectId}}</th>
             <td>{{project.name}}</td>
             <td>{{project.taskType}}</td>
-            <td>Edit</td>
-            <td>Delete</td>
+            <td>
+              <button type="button" class="btn btn-warning" v-on:click="editProject(project)">Edit</button>
+              <button type="button" class="btn btn-danger">Delete</button>
+            </td>
           </tr>
         </tbody>
+        <tfoot v-if="nextPageToken">
+          <tr>
+            <td colspan="100%">
+              <nav aria-label="Page navigation example">
+                <ul class="pagination">
+                  <li class="page-item">
+                    <a class="page-link" href="#" v-on:click="viewPreviousProjectsPage">Previous</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#" v-on:click="viewNextProjectsPage">Next</a>
+                  </li>
+                </ul>
+              </nav>
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </div>
-  </div>
+    <!-- Projects -->
 
-  <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel">
+    <div id="projectDetails" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="projectDetailsLabel"
+      aria-hidden="true" data-keyboard="false">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <form v-on:submit.prevent="onSubmit">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+              <h4 class="modal-title" id="projectDetailsLabel">New Project</h4>
+            </div>
+            <div class="modal-body">
 
-    <div class="modal-dialog" role="document">
-
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-          <h4 class="modal-title" id="errorModalLabel">Error</h4>
-        </div>
-        <div class="modal-body">
-          <p id="errorModalBody">An error has occurred.</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <div class="form-group">
+                <label for="projectName">Name</label>
+                <input type="text" v-model="selectedProject.name" class="form-control" id="projectName" aria-describedby="projectNameHelp"
+                  placeholder="Project name">
+                <small id="projectNameHelp" class="form-text text-muted">The name of your project, e.g. "Candy Types" or "Guitar Bodies".</small>
+              </div>
+              <div class="form-group">
+                <label for="projectTaskType">Type</label>
+                <select class="form-control" v-model="selectedProject.taskType" id="projectTaskType" aria-describedby="projectTaskTypeHelp">
+                  <option value="ANNOTATE">Object Detection</option>
+                  <option value="CLASSIFY">Image Classification</option>
+                </select>
+                <small id="projectTaskTypeHelp" class="form-text text-muted">Select wether image tags should be used for object detection or image classification.</small>
+              </div>
+              <div class="form-group">
+                <label for="objectClassNames">Tags</label>
+                <input type="text" v-model="selectedProject.objectClassNames" class="form-control" id="objectClassNames" aria-describedby="objectClassNamesHelp"
+                  placeholder="Tags">
+                <small id="objectClassNamesHelp" class="form-text text-muted">Names of object or image class tags separated by spaces, e.g. "kit-kat reeses-pieces twix".</small>
+              </div>
+              <div class="form-group">
+                <label for="instructionsText">Instructions</label>
+                <input type="text" v-model="selectedProject.instructionsText" class="form-control" id="instructionsText" aria-describedby="instructionsTextHelp"
+                  placeholder="Instructions for collaborators">
+                <small id="instructionsTextHelp" class="form-text text-muted">Instructions for people performing the work of image tagging.</small>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" v-on:click="saveProject">Save</button>
+            </div>
+          </form>
         </div>
       </div>
-      <!-- /.modal-content -->
-
     </div>
-    <!-- /.modal-dialog -->
+    <!-- projectDetails -->
 
   </div>
-  <!-- /.modal -->
+  <!-- container -->
 
-  <script>
-    $(function () {
-      const projectsView = new Vue({
-        el: '#projectsView',
-        data: {
-          status: "Loading...",
-          projects: null
-        }
-      });
-
-      getProjects()
-        .done((result) => {
-          if (result.errors) {
-            console.log(result.errors);
-            projectsView.status = result.errors;
-            return;
-          }
-          projectsView.projects = result.data.projects;
-        })
-        .fail((error) => {
-          console.log(error);
-          projectsView.status = error;
-
-        });
-    });
-  </script>
 
 </body>
+
+<script src="index.js"></script>
+<script>
+  const projectsView = new Vue({
+    el: '#projectsView',
+    data: {
+      status: "Loading...",
+      projects: null,
+      nextPageToken: null,
+      selectedProject: {}
+    },
+    methods: {
+      createProject: function () {
+        this.selectedProject = {};
+        $('#projectDetails').modal('show');
+      },
+      editProject: function (project) {
+        // TODO: Create an editable copy of the project
+        this.selectedProject = project;
+        $('#projectDetails').modal('show');
+      },
+      saveProject: function () {
+        console.log("Hello from saveProject");
+        console.log(this.selectedProject);
+      },
+      viewPreviousProjectsPage: function() {
+        console.log("Previous");
+      },
+      viewNextProjectsPage: function() {
+        console.log("Next");
+      }
+    }
+  });
+
+  $(function () {
+    getProjects()
+      .done(function (result) {
+        if (result.errors) {
+          console.log(result.errors);
+          projectsView.status = result.errors;
+          return;
+        }
+        projectsView.projects = result.data.projects.entries;
+        projectsView.nextPageToken = result.data.projects.nextPageToken;
+        console.log("nextPageToken:");
+        console.log(result.data.projects.nextPageToken);
+      })
+      .fail(function (error) {
+        console.log(error);
+        projectsView.status = error;
+
+      });
+  });
+</script>
 
 </html>

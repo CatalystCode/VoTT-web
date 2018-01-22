@@ -2,7 +2,7 @@ const projectsGraphqlBasePath = '/v1/graphql/projects';
 function getProjects(callback) {
   return $.post(
     projectsGraphqlBasePath,
-    { query: "query { projects{ projectId name taskType objectClassNames instructionsText } }" }
+    { query: "query { projects{ nextPageToken entries { projectId name taskType objectClassNames instructionsText } } }" }
   );
 }
 
@@ -10,7 +10,7 @@ function getImages(projectId, callback) {
   return $.post(
     projectsGraphqlBasePath,
     {
-      query: 'query { images(projectId: "+JSON.stringify(projectId)+"){ pageToken images {imageId imageURL} } }'
+      query: 'query { images(projectId: '+JSON.stringify(projectId)+'){ nextPageToken images {imageId imageURL} } }'
     }
   );
 }

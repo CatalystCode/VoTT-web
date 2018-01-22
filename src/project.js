@@ -136,12 +136,17 @@ module.exports = {
     projects: (args, request) => {
         return new Promise((resolve, reject) => {
             // TODO: Ensure user has project access to the app.
-            var query = new azure.TableQuery().top(256);
-            services.tableService.queryEntities(projectTableName, query, null, (error, results, response) => {
+            var query = new azure.TableQuery().top(4);
+            const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
+            services.tableService.queryEntities(projectTableName, query, nextPageToken, (error, results, response) => {
                 if (error) {
                     return reject(error);
                 }
-                resolve(results.entries.map(mapProject));
+                console.log(results.continuationToken);
+                resolve({
+                    nextPageToken: (results.continuationToken) ? JSON.stringify(results.continuationToken) : null,
+                    entries: results.entries.map(mapProject)
+                });
             });
         });
     },
@@ -219,9 +224,9 @@ module.exports = {
         return new Promise((resolve, reject) => {
             // TODO: Ensure user has project access to the project.
             const projectId = args.projectId;
-            const pageToken = (args.pageToken) ? JSON.parse(args.pageToken) : null;
+            const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
             var query = new azure.TableQuery().where("PartitionKey == ?", projectId).top(12);
-            services.tableService.queryEntities(imageTableName, query, pageToken, (error, results, response) => {
+            services.tableService.queryEntities(imageTableName, query, nextPageToken, (error, results, response) => {
                 if (error) {
                     reject(error);
                     return;
@@ -234,7 +239,7 @@ module.exports = {
                     };
                 });
                 resolve({
-                    pageToken: (results.continuationToken) ? JSON.stringify(results.continuationToken) : null,
+                    nextPageToken: (results.continuationToken) ? JSON.stringify(results.continuationToken) : null,
                     images: images
                 });
             });

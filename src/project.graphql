@@ -8,9 +8,14 @@ type Project {
   instructionsVideoURL: String
 }
 
+type ProjectList {
+  entries: [Project]
+  nextPageToken: String
+}
+
 type ImageList {
   images: [Image]
-  pageToken: String
+  nextPageToken: String
 }
 
 type TrainingSession {
@@ -19,9 +24,9 @@ type TrainingSession {
 }
 
 type Query {
-  projects: [Project]
+  projects(nextPageToken:String): ProjectList
   project(projectId: String!): Project
-  images(projectId: String!, pageToken: String): ImageList
+  images(projectId: String!, nextPageToken: String): ImageList
 }
 
 input ConfirmedImage {
