@@ -1,12 +1,14 @@
 const projectsGraphqlBasePath = '/v1/graphql/projects';
-function getProjects(callback) {
+
+function getProjects(nextPageToken) {
+  const query = nextPageToken ? `projects(nextPageToken:${JSON.stringify(nextPageToken)})` : 'projects';
   return $.post(
     projectsGraphqlBasePath,
-    { query: "query { projects{ nextPageToken entries { projectId name taskType objectClassNames instructionsText } } }" }
+    { query: "query { "+query+"{ nextPageToken entries { projectId name taskType objectClassNames instructionsText } } }" }
   );
 }
 
-function getImages(projectId, callback) {
+function getImages(projectId) {
   return $.post(
     projectsGraphqlBasePath,
     {

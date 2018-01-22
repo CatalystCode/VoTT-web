@@ -54,16 +54,16 @@
             </td>
           </tr>
         </tbody>
-        <tfoot v-if="nextPageToken">
+        <tfoot>
           <tr>
             <td colspan="100%">
               <nav aria-label="Page navigation example">
                 <ul class="pagination">
-                  <li class="page-item">
+                  <li v-if="projectPageTokens.length" class="page-item">
                     <a class="page-link" href="#" v-on:click="viewPreviousProjectsPage">Previous</a>
                   </li>
-                  <li class="page-item">
-                    <a class="page-link" href="#" v-on:click="viewNextProjectsPage">Next</a>
+                  <li v-if="nextPageToken" class="page-item">
+                    <a class="page-link" href="#page={{nextPageToken}}" v-on:click="viewNextProjectsPage">Next</a>
                   </li>
                 </ul>
               </nav>
@@ -137,10 +137,28 @@
     data: {
       status: "Loading...",
       projects: null,
+      projectPageTokens: [],
       nextPageToken: null,
       selectedProject: {}
     },
     methods: {
+      loadProjects: function (paginationToken) {
+        const view = this;
+        getProjects(paginationToken)
+          .done(function (result) {
+            if (result.errors) {
+              console.log(result.errors);
+              view.status = result.errors;
+              return;
+            }
+            view.projects = result.data.projects.entries;
+            view.nextPageToken = result.data.projects.nextPageToken;
+          })
+          .fail(function (error) {
+            console.log(error);
+            view.status = error;
+          });
+      },
       createProject: function () {
         this.selectedProject = {};
         $('#projectDetails').modal('show');
@@ -154,33 +172,24 @@
         console.log("Hello from saveProject");
         console.log(this.selectedProject);
       },
-      viewPreviousProjectsPage: function() {
-        console.log("Previous");
+      viewPreviousProjectsPage: function (event) {
+        event.preventDefault();
+        this.projectPageTokens.pop();
+        const previousPageToken = this.projectPageTokens.length ? this.projectPageTokens[this.projectPageTokens.length-1] : null;
+        this.loadProjects(previousPageToken);
       },
-      viewNextProjectsPage: function() {
-        console.log("Next");
+      viewNextProjectsPage: function (event) {
+        event.preventDefault();
+        if (this.nextPageToken) {
+          this.projectPageTokens.push(this.nextPageToken);
+      }
+        this.loadProjects(this.nextPageToken);
       }
     }
   });
 
   $(function () {
-    getProjects()
-      .done(function (result) {
-        if (result.errors) {
-          console.log(result.errors);
-          projectsView.status = result.errors;
-          return;
-        }
-        projectsView.projects = result.data.projects.entries;
-        projectsView.nextPageToken = result.data.projects.nextPageToken;
-        console.log("nextPageToken:");
-        console.log(result.data.projects.nextPageToken);
-      })
-      .fail(function (error) {
-        console.log(error);
-        projectsView.status = error;
-
-      });
+    projectsView.loadProjects();
   });
 </script>
 

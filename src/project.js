@@ -136,13 +136,12 @@ module.exports = {
     projects: (args, request) => {
         return new Promise((resolve, reject) => {
             // TODO: Ensure user has project access to the app.
-            var query = new azure.TableQuery().top(4);
+            var query = new azure.TableQuery().top(10);
             const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
             services.tableService.queryEntities(projectTableName, query, nextPageToken, (error, results, response) => {
                 if (error) {
                     return reject(error);
                 }
-                console.log(results.continuationToken);
                 resolve({
                     nextPageToken: (results.continuationToken) ? JSON.stringify(results.continuationToken) : null,
                     entries: results.entries.map(mapProject)
