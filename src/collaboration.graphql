@@ -9,7 +9,7 @@ type ImageTagTask {
 }
 
 type Query {
-  getNextImageTagTask(projectId: String!): ImageTagTask
+  imageTagTask(projectId: String!): ImageTagTask
 }
 
 input ImageTag {

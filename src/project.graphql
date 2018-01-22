@@ -19,8 +19,8 @@ type TrainingSession {
 }
 
 type Query {
-  getProjects: [Project]
-  getImages(projectId: String!, pageToken: String): ImageList
+  projects: [Project]
+  images(projectId: String!, pageToken: String): ImageList
 }
 
 input ConfirmedImage {

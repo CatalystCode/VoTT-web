@@ -1,39 +1,25 @@
 const projectsGraphqlBasePath = '/v1/graphql/projects';
 function getProjects(callback) {
-  $.post(
+  return $.post(
     projectsGraphqlBasePath,
-    { query: "query { getProjects{ projectId name taskType objectClassNames instructionsText } }" }
-  ).done(function (result) {
-    if (result.errors) {
-      return callback(result.errors, null);
-    }
-    callback(null, result.data.getProjects);
-  }).fail(function (error) {
-    callback(error);
-  });
+    { query: "query { projects{ projectId name taskType objectClassNames instructionsText } }" }
+  );
 }
 
 function getImages(projectId, callback) {
-  $.post(
+  return $.post(
     projectsGraphqlBasePath,
     {
-      query: 'query { getImages(projectId: "+JSON.stringify(projectId)+"){ pageToken images {imageId imageURL} } }'
-      }
-  ).done(function (result) {
-    if (result.errors) {
-      return callback(result.errors, null);
+      query: 'query { images(projectId: "+JSON.stringify(projectId)+"){ pageToken images {imageId imageURL} } }'
     }
-    callback(null, result.data.getImages);
-  }).fail(function (error) {
-    callback(error);
-  });
+  );
 }
 
 function createImages(projectId, files, callback) {
   $.post(
     projectsGraphqlBasePath,
     {
-      query: 'mutation { createImages(projectId: '+JSON.stringify(projectId)+', imageCount: '+JSON.stringify(files.length)+') { projectId imageId imageURL } }'
+      query: 'mutation { createImages(projectId: ' + JSON.stringify(projectId) + ', imageCount: ' + JSON.stringify(files.length) + ') { projectId imageId imageURL } }'
     }
   ).done(function (result) {
     if (result.errors) {
@@ -54,13 +40,13 @@ function commitImages(images, callback) {
   // }
 
   // TODO: Make variable substition work again.
-  var escapedImages = images.map(function(value){
+  var escapedImages = images.map(function (value) {
     return '{ projectId: ' + JSON.stringify(value.projectId) + ', imageId: ' + JSON.stringify(value.imageId) + ' } ';
   });
   $.post(
     projectsGraphqlBasePath,
     {
-      query: 'mutation { commitImages(images: ['+escapedImages.join()+'] ) }'
+      query: 'mutation { commitImages(images: [' + escapedImages.join() + '] ) }'
     }
   ).done(function (result) {
     if (result.errors) {
@@ -92,60 +78,6 @@ function uploadImage(imageFile, imageData, imageURL, callback) {
   });
 }
 
-function loadProjects() {
-  getProjects(function (error, projects) {
-    if (error) {
-      console.log("Unable to load projects.");
-      console.log(error);
-      return;
-    }
-
-    const tableBody = $("#projectsTable tbody")[0];
-    console.log(tableBody);
-
-    const dropdown = $("#projectId");
-    dropdown.html("");
-    $.each(projects, function () {
-      const projectId = this.projectId;
-      dropdown.append($("<option />").val(projectId).text(this.name + " (" + projectId + ")"));
-      console.log("Fetching images for: " + projectId);
-
-      const row = document.createElement("tr");
-      tableBody.append(row);
-
-      const projectIdCell = document.createElement("th");
-      projectIdCell.setAttribute("scope", "row");
-      projectIdCell.innerText = projectId;
-      row.appendChild(projectIdCell);
-
-      const projectNameCell = document.createElement("td");
-      projectNameCell.innerText = this.name;
-      row.appendChild(projectNameCell);
-
-      const projectTaskTypeCell = document.createElement("td");
-      projectTaskTypeCell.innerText = this.taskType;
-      row.appendChild(projectTaskTypeCell);
-
-      const editCell = document.createElement("td");
-      const editLink = document.createElement("a");
-      editLink.href = document.location + projectId;
-      editLink.innerText = "Edit";
-      editCell.appendChild(editLink);
-      row.appendChild(editCell);
-
-      getImages(projectId, function(error, imageList){
-        if (error) {
-          console.log("Unable to fetch images:");
-          console.log(error);
-          return;
-        }
-        console.log("imageList:");
-        console.log(imageList);
-      });
-    });    
-  });
-}
-
 function submitProjectForm(event) {
   event.preventDefault();
   const imageFile = $("#imageFile");
@@ -170,7 +102,7 @@ function submitProjectForm(event) {
       reader.onload = function (event) {
         if (event.target.readyState == FileReader.DONE) {
           const data = new Uint8Array(event.target.result);
-          uploadImage(currentFile, data, currentImage.imageURL, function(error, result, status){
+          uploadImage(currentFile, data, currentImage.imageURL, function (error, result, status) {
             if (error) {
               $("#errorModalBody").text("Unable to upload file.  " + error);
               $("#errorModal").modal("show");
@@ -178,18 +110,18 @@ function submitProjectForm(event) {
               return;
             }
 
-            commitImages([currentImage], function(error, result){
+            commitImages([currentImage], function (error, result) {
               if (error) {
                 $("#errorModalBody").text("Unable to commit file.  " + error);
                 $("#errorModal").modal("show");
                 console.log(error);
-                return;                  
+                return;
               }
 
-            console.log("Committed image successfully:");
-            console.log(currentImage);
-            console.log(result);
-          });
+              console.log("Committed image successfully:");
+              console.log(currentImage);
+              console.log(result);
+            });
           });
         }
       };

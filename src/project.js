@@ -112,7 +112,7 @@ module.exports = {
     getImageContainerName: getImageContainerName,
     getImageURL: getImageURL,
 
-    getProjects: (args, request) => {
+    projects: (args, request) => {
         return new Promise((resolve, reject) => {
             // TODO: Ensure user has project access to the app.
             var query = new azure.TableQuery().top(256);
@@ -196,7 +196,7 @@ module.exports = {
             ); /* async.series */
         });
     },
-    getImages: (args, res) => {
+    images: (args, res) => {
         return new Promise((resolve, reject) => {
             // TODO: Ensure user has project access to the project.
             const projectId = args.projectId;

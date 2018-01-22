@@ -16,7 +16,7 @@ module.exports = {
             resolve(configValues);
         });
     },
-    getNextImageTagTask:(args, res)=>{
+    imageTagTask:(args, res)=>{
         return new Promise((resolve, reject)=>{
             const projectId = args.projectId;
 

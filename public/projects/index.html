@@ -10,6 +10,7 @@
   <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
     crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
   <script src="index.js"></script>
 </head>
 
@@ -28,33 +29,30 @@
         </ul>
       </div>
     </nav>
-    <h2>Projects</h2>
-    <!-- <form id="projectForm">
-      <div class="form-group">
-        <label for="projectId">Project</label>
-        <select name="project" id="projectId" class="form-control"></select>
-      </div>
-      <div>
-        <label for="imageFile">Image</label>
-        <input type="file" id="imageFile" style="width: 50%;" />
-        <p class="help-block">Image to add to the project.</p>
-      </div>
-      <button type="submit" class="btn btn-default">Upload</button>
-    </form> -->
 
-    <table class="table" id="projectsTable">
-      <thead>
-        <tr>
-          <th scope="col">Id</th>
-          <th scope="col">Name</th>
-          <th scope="col">Type</th>
-          <th scope="col">&nbsp;</th>
-        </tr>
-      </thead>
-      <tbody>
-
-      </tbody>
-    </table>
+    <div id="projectsView">
+      <h2>Projects</h2>
+      <span v-if="projects == null">{{status}}</span>
+      <table v-if="projects != null" class="table" id="projectsTable">
+        <thead>
+          <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Name</th>
+            <th scope="col">Type</th>
+            <th scope="col">&nbsp;</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="project in projects">
+            <th scope="row">{{project.projectId}}</th>
+            <td>{{project.name}}</td>
+            <td>{{project.taskType}}</td>
+            <td>Edit</td>
+            <td>Delete</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel">
@@ -85,8 +83,28 @@
 
   <script>
     $(function () {
-      loadProjects();
-      // $("#projectForm").submit(submitProjectForm);
+      const projectsView = new Vue({
+        el: '#projectsView',
+        data: {
+          status: "Loading...",
+          projects: null
+        }
+      });
+
+      getProjects()
+        .done((result) => {
+          if (result.errors) {
+            console.log(result.errors);
+            projectsView.status = result.errors;
+            return;
+          }
+          projectsView.projects = result.data.projects;
+        })
+        .fail((error) => {
+          console.log(error);
+          projectsView.status = error;
+
+        });
     });
   </script>
 
