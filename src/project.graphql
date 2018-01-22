@@ -20,6 +20,7 @@ type TrainingSession {
 
 type Query {
   projects: [Project]
+  project(projectId: String!): Project
   images(projectId: String!, pageToken: String): ImageList
 }
 

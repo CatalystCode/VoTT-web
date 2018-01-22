@@ -87,6 +87,27 @@ function getImageURL(projectId, imageId) {
     return services.blobService.getUrl(containerName, imageId);
 }
 
+function mapColumnValue(columnValue) {
+    if (columnValue == null || columnValue == undefined) {
+        return null;
+    }
+    return (columnValue._) ? columnValue._ : columnValue;
+}
+
+function mapProject(value) {
+    const objectClassNamesValue = mapColumnValue(value.objectClassNames);
+    const objectClassNames = (objectClassNamesValue instanceof Array) ? objectClassNamesValue : JSON.parse(objectClassNamesValue);
+    return {
+        projectId: mapColumnValue(value.RowKey),
+        name: mapColumnValue(value.name),
+        taskType: mapColumnValue(value.taskType),
+        objectClassNames: objectClassNames,
+        instructionsText: mapColumnValue(value.instructionsText),
+        instructionsImageURL: mapColumnValue(value.instructionsImageURL),
+        instructionsVideoURL: mapColumnValue(value.instructionsVideoURL)
+    };
+}
+
 module.exports = {
     setServices: (configValues) => {
         return new Promise((resolve, reject) => {
@@ -118,20 +139,20 @@ module.exports = {
             var query = new azure.TableQuery().top(256);
             services.tableService.queryEntities(projectTableName, query, null, (error, results, response) => {
                 if (error) {
-                    reject(error);
-                    return;
+                    return reject(error);
                 }
-                resolve(results.entries.map((value) => {
-                    return {
-                        projectId: value.RowKey._,
-                        name: value.name._,
-                        taskType: value.taskType._,
-                        objectClassNames: JSON.parse(value.objectClassNames._),
-                        instructionsText: value.instructionsText._,
-                        instructionsImageURL: (value.instructionsImageURL) ? value.instructionsImageURL._ : null,
-                        instructionsVideoURL: (value.instructionsVideoURL) ? value.instructionsVideoURL._ : null
-                    };
-                }));
+                resolve(results.entries.map(mapProject));
+            });
+        });
+    },
+    project: (args, request) => {
+        return new Promise((resolve, reject) => {
+            const projectId = args.projectId;
+            services.tableService.retrieveEntity(projectTableName, projectId, projectId, (error, response)=>{
+                if (error) {
+                    return reject(error);
+                }
+                resolve(mapProject(response));
             });
         });
     },
@@ -164,9 +185,7 @@ module.exports = {
                     if (error) {
                         return reject(error);
                     }
-                    project.projectId = projectId;
-                    project.objectClassNames = args.objectClassNames;
-                    resolve(project);
+                    resolve(mapProject(project));
                 }
             ); /* async.series */
         });
