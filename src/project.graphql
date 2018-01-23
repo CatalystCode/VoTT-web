@@ -35,9 +35,18 @@ input ConfirmedImage {
 }
 
 type Mutation {
-  createProject(name: String!, taskType: TaskType!, objectClassNames:[String]!, instructionsText:String, instructionsImageURL:String, instructionsVideoURL:String):Project
+  createProject(name: String!, taskType: TaskType!, objectClassNames:[String]!, instructionsText:String):Project
+  updateProject(name: String, taskType: TaskType, objectClassNames:[String], instructionsText:String):Project
   removeProject(projectId: String!):String
+
+  createInstructionsImage(projectId: String!): Image
+  commitInstructionsImage(image:ConfirmedImage!): String
+
+  createInstructionsVideo(projectId: String!): Image
+  commitInstructionsVideo(video:ConfirmedImage!): String
+
   createImages(projectId: String!, imageCount:Int!): [Image]
   commitImages(images:[ConfirmedImage]!): String
+
   createTrainingSession(projectId: String!):String
 }

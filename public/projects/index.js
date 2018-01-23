@@ -8,6 +8,26 @@ function getProjects(nextPageToken) {
   );
 }
 
+/**
+ * Calls createProject(name: String!, taskType: TaskType!, objectClassNames:[String]!, instructionsText:String, instructionsImageURL:String, instructionsVideoURL:String):Project
+ * @param {object} project whose properties include the values passed to the createProject function.
+ */
+function createProject(project) {
+  const parameters = [
+    `name:${JSON.stringify(project.name)}`,
+    `taskType:${project.taskType}`,
+    `objectClassNames:${JSON.stringify(project.objectClassNames)}`,
+    `instructionsText:${JSON.stringify(project.instructionsText)}`
+  ].join(', ');
+  const query = `mutation { createProject (${parameters}) { projectId } }`;
+  console.log("Sending mutation query:");
+  console.log(query);
+  return $.post(
+    projectsGraphqlBasePath,
+    { query: query }
+  );
+}
+
 function getImages(projectId) {
   return $.post(
     projectsGraphqlBasePath,

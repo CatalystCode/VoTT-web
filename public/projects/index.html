@@ -164,25 +164,55 @@
         $('#projectDetails').modal('show');
       },
       editProject: function (project) {
-        // TODO: Create an editable copy of the project
-        this.selectedProject = project;
+        const objectClassNames = project.objectClassNames.map(function (value) { return value.replace(/\s+/g, '-') });
+        this.selectedProject = Object.create(project);
+        this.selectedProject.objectClassNames = objectClassNames.join(' ');
         $('#projectDetails').modal('show');
       },
       saveProject: function () {
-        console.log("Hello from saveProject");
-        console.log(this.selectedProject);
+        // Note that the project is converted to a object the backend will understand.
+        var project = {
+          projectId: this.selectedProject.projectId,
+          name: this.selectedProject.name,
+          taskType: this.selectedProject.taskType,
+          objectClassNames: this.selectedProject.objectClassNames.split(/\s+/),
+          instructionsText: this.selectedProject.instructionsText
+        };
+        console.log(project);
+        const view = this;
+        if (project.projectId) {
+          console.log("Update not yet implemented.");
+          $('#projectDetails').modal('hide');
+          return;
+        }
+        
+        createProject(project)
+          .done(function (result) {
+            if (result.errors) {
+              console.log(result.errors);
+              view.status = result.errors;
+              return;
+            }
+            view.loadProjects();
+            $('#projectDetails').modal('hide');
+          })
+          .fail(function (error) {
+            console.log("Unable to send save request:");
+            console.log(error);
+            view.status = error;
+          });
       },
       viewPreviousProjectsPage: function (event) {
         event.preventDefault();
         this.projectPageTokens.pop();
-        const previousPageToken = this.projectPageTokens.length ? this.projectPageTokens[this.projectPageTokens.length-1] : null;
+        const previousPageToken = this.projectPageTokens.length ? this.projectPageTokens[this.projectPageTokens.length - 1] : null;
         this.loadProjects(previousPageToken);
       },
       viewNextProjectsPage: function (event) {
         event.preventDefault();
         if (this.nextPageToken) {
           this.projectPageTokens.push(this.nextPageToken);
-      }
+        }
         this.loadProjects(this.nextPageToken);
       }
     }
