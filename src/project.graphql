@@ -36,7 +36,7 @@ input ConfirmedImage {
 
 type Mutation {
   createProject(name: String!, taskType: TaskType!, objectClassNames:[String]!, instructionsText:String):Project
-  updateProject(name: String, taskType: TaskType, objectClassNames:[String], instructionsText:String):Project
+  updateProject(projectId: String!, name: String, taskType: TaskType, objectClassNames:[String], instructionsText:String):Project
   removeProject(projectId: String!):String
 
   createInstructionsImage(projectId: String!): Image

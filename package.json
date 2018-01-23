@@ -8,7 +8,8 @@
   "description": "Visual Object Tagging Tool: A lightweight and collaborative tool for image tagging. Edit",
   "main": "server.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "postinstall": "node_modules/.bin/bower install"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,7 @@
     "async": "^2.6.0",
     "azure-storage": "^2.7.0",
     "body-parser": "^1.18.2",
+    "bower": "^1.8.2",
     "cookie-parser": "^1.4.3",
     "dotenv": "^4.0.0",
     "express": "^4.16.2",

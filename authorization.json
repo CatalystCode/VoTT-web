@@ -25,6 +25,16 @@
         "GET",
         "POST"
       ],
+      "path_prefix": "/vott",
+      "policies": {
+        "unauthenticated_action": "RedirectToLoginPage"
+      }
+    },
+    {
+      "http_methods": [
+        "GET",
+        "POST"
+      ],
       "path_prefix": "/v1/graphql/projects",
       "policies": {
         "unauthenticated_action": "RedirectToLoginPage"

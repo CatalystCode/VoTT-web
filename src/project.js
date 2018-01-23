@@ -222,6 +222,34 @@ module.exports = {
             ); /* async.series */
         });
     },
+    updateProject: (args, res) => {
+        return new Promise((resolve, reject) => {
+            const projectId = args.projectId;
+
+            const entityDescriptor = {
+                PartitionKey: { "_": projectId },
+                RowKey: { "_": projectId }
+            };
+            if (args.name) {
+                entityDescriptor.name = args.name;
+            }
+            if (args.taskType) {
+                entityDescriptor.taskType = args.taskType;
+            }
+            if (args.objectClassNames) {
+                entityDescriptor.objectClassNames = JSON.stringify(args.objectClassNames);
+            }
+            if (args.instructionsText) {
+                entityDescriptor.instructionsText = args.instructionsText;
+            }
+            services.tableService.mergeEntity(projectTableName, entityDescriptor, (error, project) => {
+                if (error) {
+                    return reject(error);
+                }
+                resolve("OK");
+            });
+        });
+    },
     removeProject: (args, res) => {
         return new Promise((resolve, reject) => {
             // TODO: Ensure user has access to projectId.
@@ -270,8 +298,8 @@ module.exports = {
             const projectId = args.projectId;
             const imageId = args.imageId;
             const entityDescriptor = {
-                PartitionKey: projectId,
-                PrimaryKey: projectId,
+                PartitionKey: { "_": projectId },
+                RowKey: { "_": projectId },
                 instructionsImageId, imageId
             };
 
@@ -305,8 +333,8 @@ module.exports = {
             const projectId = args.projectId;
             const imageId = args.imageId;
             const entityDescriptor = {
-                PartitionKey: projectId,
-                PrimaryKey: projectId,
+                PartitionKey: { "_": projectId },
+                RowKey: { "_": projectId },
                 instructionsVideoId, imageId
             };
 
