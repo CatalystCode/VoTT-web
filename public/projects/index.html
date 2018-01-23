@@ -130,7 +130,8 @@
 
 </body>
 
-<script src="index.js"></script>
+<script src="project-dao.js"></script>
+<script src="image-dao.js"></script>
 <script>
   const projectsView = new Vue({
     el: '#projectsView',
@@ -139,12 +140,13 @@
       projects: null,
       projectPageTokens: [],
       nextPageToken: null,
-      selectedProject: {}
+      selectedProject: {},
+      projectSource: null
     },
     methods: {
       loadProjects: function (paginationToken) {
         const view = this;
-        getProjects(paginationToken)
+        this.projectSource.getProjects(paginationToken)
           .done(function (result) {
             if (result.errors) {
               console.log(result.errors);
@@ -186,7 +188,7 @@
           return;
         }
         
-        createProject(project)
+        this.projectSource.createProject(project)
           .done(function (result) {
             if (result.errors) {
               console.log(result.errors);
@@ -219,6 +221,7 @@
   });
 
   $(function () {
+    projectsView.projectSource = new ProjectDAO();
     projectsView.loadProjects();
   });
 </script>
