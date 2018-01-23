@@ -5,6 +5,6 @@ type Image {
 }
 
 enum TaskType {
-  ANNOTATE
-  CLASSIFY
+  OBJECT_DETECTION
+  CLASSIFICATION
 }
