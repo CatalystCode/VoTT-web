@@ -1,16 +1,37 @@
 angular.module('vott.project-images', [
   'vott.factories'
-]).controller('ProjectImagesController', function ($scope, $location, $route, $routeParams, Projects) {
+]).controller('ProjectImagesController', function ($scope, $location, $route, $routeParams, ProjectService) {
+
   $scope.totalImageCount = 0;
   $scope.taggedImageCount = 0;
   $scope.conflictImageCount = 0;
 
+  $scope.isLoading = true;
+  $scope.isLoadingProject = true;
+  $scope.isLoadingImages = true;
+  $scope.$watchGroup(['isLoadingProject', 'isLoadingImages'], function(newValues, oldValues, scope) {
+    $scope.isLoading = $scope.isLoadingProject || $scope.isLoadingImages;
+  });
+  
   $scope.loadRecord = function () {
-    $scope.isLoading = true;
-    Projects.getProject($routeParams.projectId)
+
+    $scope.isLoadingProject = true;
+    ProjectService.getProject($routeParams.projectId)
       .then(function (response) {
         $scope.project = response.data.data.project;
-        $scope.isLoading = false;
+        $scope.isLoadingProject = false;
+      })
+      .catch(function (error) {
+        console.log(error);
+        $scope.error = error;
+      });
+
+    $scope.isLoadingImages = true;
+    ProjectService.images($routeParams.projectId)
+      .then(function (response) {
+        $scope.isLoadingImages = false;
+        $scope.nextPageToken = response.data.data.images.nextPageToken;
+        $scope.images = response.data.data.images.entries;
       })
       .catch(function (error) {
         console.log(error);
@@ -18,9 +39,14 @@ angular.module('vott.project-images', [
       });
   };
 
-  $scope.cancel = function () {
-    $location.path($location.path().split('/').pop());
-    $location.path('/projects');
+  $scope.back = function () {
+    const components = $location.path().split('/');
+    components.pop();
+    $location.path(components.join('/'));
+  };
+
+  $scope.upload = function() {
+    console.log("Hello from upload");
   };
 
   /**
@@ -38,7 +64,7 @@ angular.module('vott.project-images', [
     const projectId = $scope.project.projectId;
     const files = imageFile[0].files;
     const file = files[0];
-    Projects.createInstructionsImage(projectId).then(function (response) {
+    ProjectService.createInstructionsImage(projectId).then(function (response) {
       const imageRecord = response.data.data.createInstructionsImage;
       $scope.uploadInstructionsImage(imageRecord, file);
     }).catch(function (error) {
@@ -67,7 +93,7 @@ angular.module('vott.project-images', [
 
           $('#uploadProgressBar').attr('value', 100);
           $('#uploadProgressBar').attr('max', 100);
-          Projects.commitInstructionsImage(imageRecord).then(function (response) {
+          ProjectService.commitInstructionsImage(imageRecord).then(function (response) {
             $('#uploadProgressModal').modal('hide');
             $scope.loadRecord();
           }).catch(function (error) {
@@ -117,5 +143,5 @@ angular.module('vott.project-images', [
   };
 
   $scope.loadRecord();
-  
+
 });

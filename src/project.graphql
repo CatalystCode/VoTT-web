@@ -14,7 +14,7 @@ type ProjectList {
 }
 
 type ImageList {
-  images: [Image]
+  entries: [Image]
   nextPageToken: String
 }
 

@@ -5,7 +5,7 @@
     </div>
     <ul class="nav navbar-nav">
       <li class="active">
-        <a href="#/projects">Projects</a>
+        <a href="#">Projects</a>
       </li>
     </ul>
   </div>
@@ -15,5 +15,10 @@
   <h2>{{project.name}}</h2>
   <h3>Project Images</h3>
   <h4 ng-if="isLoading">Loading...</h4>
-
+  <button type="button" class="btn btn-default" ng-click="back()">Back To Project</button>
+  <button type="button" class="btn btn-primary" ng-click="upload()">Upload Images</button>
+  <h5 ng-if="!isLoading &amp;&amp; (images == null || images.length == 0)">No images have been uploaded - please upload some when you are ready.</h5>
+  <div ng-if="!isLoading &amp;&amp; (images == null &amp;&amp; images.length > 0)">
+    <img ng-repeat="image in images" />
+  </div>
 </div>

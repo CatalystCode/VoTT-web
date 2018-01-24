@@ -335,7 +335,7 @@ module.exports = {
                 });
                 resolve({
                     nextPageToken: (results.continuationToken) ? JSON.stringify(results.continuationToken) : null,
-                    images: images
+                    entries: images
                 });
             });
         });

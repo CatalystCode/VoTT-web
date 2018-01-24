@@ -1,6 +1,6 @@
 angular.module('vott.project-details', [
     'vott.factories'
-]).controller('ProjectDetailsController', function ($scope, $location, $route, $routeParams, Projects) {
+]).controller('ProjectDetailsController', function ($scope, $location, $route, $routeParams, ProjectService) {
     $scope.totalImageCount = 0;
     $scope.taggedImageCount = 0;
     $scope.conflictImageCount = 0;
@@ -15,7 +15,7 @@ angular.module('vott.project-details', [
         }
         else {
             $scope.isLoading = true;
-            Projects.getProject($routeParams.projectId)
+            ProjectService.getProject($routeParams.projectId)
                 .then(function (response) {
                     $scope.project = response.data.data.project;
                     $scope.isLoading = false;
@@ -30,7 +30,7 @@ angular.module('vott.project-details', [
         $location.path('/projects');
     }
     $scope.create = function () {
-        Projects.createProject($scope.project)
+        ProjectService.createProject($scope.project)
             .then(function (response) {
                 $location.path('/projects');
             })
@@ -39,7 +39,7 @@ angular.module('vott.project-details', [
             });
     };
     $scope.update = function () {
-        Projects.updateProject($scope.project)
+        ProjectService.updateProject($scope.project)
             .then(function (response) {
                 $location.path('/projects');
             })
@@ -82,7 +82,7 @@ angular.module('vott.project-details', [
         const projectId = $scope.project.projectId;
         const files = imageFile[0].files;
         const file = files[0];
-        Projects.createInstructionsImage(projectId).then(function (response) {
+        ProjectService.createInstructionsImage(projectId).then(function (response) {
             const imageRecord = response.data.data.createInstructionsImage;
             $scope.uploadInstructionsImage(imageRecord, file);
         }).catch(function (error) {
@@ -111,7 +111,7 @@ angular.module('vott.project-details', [
                     
                     $('#uploadProgressBar').attr('value', 100);
                     $('#uploadProgressBar').attr('max', 100);
-                    Projects.commitInstructionsImage(imageRecord).then(function(response){
+                    ProjectService.commitInstructionsImage(imageRecord).then(function(response){
                         $('#uploadProgressModal').modal('hide');
                         $scope.loadRecord();
                     }).catch(function(error){

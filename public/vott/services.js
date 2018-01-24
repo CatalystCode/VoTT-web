@@ -1,5 +1,5 @@
 angular.module('vott.factories', [])
-    .factory('Projects', function ($http) {
+    .factory('ProjectService', function ($http) {
         const baseUrl = '/v1/graphql/projects';
         return {
             getProjects: function (nextPageToken) {
@@ -52,14 +52,14 @@ angular.module('vott.factories', [])
                 });
             },
             //  createInstructionsImage(projectId: String!): Image
-            createInstructionsImage: function(projectId) {
+            createInstructionsImage: function (projectId) {
                 return $http({
                     method: 'POST',
                     url: baseUrl,
                     data: { query: `mutation { createInstructionsImage (projectId:${JSON.stringify(projectId)}) { projectId fileId fileURL } }` }
-                });                
+                });
             },
-            commitInstructionsImage: function(confirmedFile) {
+            commitInstructionsImage: function (confirmedFile) {
                 const parameters = [
                     `projectId:${JSON.stringify(confirmedFile.projectId)}`,
                     `fileId:${JSON.stringify(confirmedFile.fileId)}`
@@ -68,7 +68,17 @@ angular.module('vott.factories', [])
                     method: 'POST',
                     url: baseUrl,
                     data: { query: `mutation { commitInstructionsImage (image:{ ${parameters} }) }` }
-                });                
+                });
+            },
+            images: function (projectId, nextPageToken) {
+                const invocation = nextPageToken ?
+                    `images(projectId: ${JSON.stringify(projectId)}, nextPageToken:${JSON.stringify(nextPageToken)})` :
+                    `images(projectId: ${JSON.stringify(projectId)})`;
+                return $http({
+                    method: 'POST',
+                    url: baseUrl,
+                    data: { query: "query { " + invocation + "{ nextPageToken entries { projectId imageId imageURL } } }" }
+                });
             }
         };
     });
