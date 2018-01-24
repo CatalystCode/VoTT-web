@@ -12,7 +12,8 @@
 </nav>
 
 <div>
-    <h2>{{ isNewRecord() ? 'New Project' : 'Project Details' }}</h2>
+    <h2>{{project.name}}</h2>
+    <h3>{{ isNewRecord() ? 'New Project' : 'Project Details' }}</h3>
     <h4 ng-if="isLoading">Loading...</h4>
 
     <form ng-if="!isLoading">

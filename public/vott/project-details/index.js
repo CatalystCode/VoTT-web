@@ -56,7 +56,7 @@ angular.module('vott.project-details', [
     };
 
     $scope.manageImages = function () {
-        console.log("Hello from manageImages()");
+        $location.path($location.path() + '/images');
     };
 
     $scope.manageCollaborators = function () {
