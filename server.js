@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const async = require("async");
 const azure = require('azure-storage');
+const cors = require('cors');
 const express = require('express');
 const expressGraphql = require('express-graphql');
 const expressSession = require('express-session');
@@ -39,6 +40,21 @@ const projectSchema = graphiql.buildSchema(schemaFile + projectSchemaFile);
 const graphiqlEnabled = process.env.GRAPHIQL_ENABLED == 'true';
 const app = express();
 
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:8080,https://popspotsvott01.azurewebsites.net').split(',');
+app.use(cors({
+  origin: (origin, callback) => {
+    // allow requests with no origin 
+    // (like mobile apps or curl requests)
+    if(!origin) return callback(null, true);
+
+    if(allowedOrigins.indexOf(origin) === -1){
+      var msg = 'The CORS policy for this site does not ' +
+                'allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  }
+}));
 app.use(methodOverride());
 app.use(cookieParser());
 app.use(expressSession({ secret: 'keyboard gato', resave: true, saveUninitialized: false }));
