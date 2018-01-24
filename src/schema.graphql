@@ -4,6 +4,12 @@ type Image {
   imageURL: String!
 }
 
+type File {
+  projectId: String!
+  fileId: String!
+  fileURL: String!
+}
+
 enum TaskType {
   OBJECT_DETECTION
   CLASSIFICATION

@@ -14,7 +14,7 @@ angular.module('vott.factories', [])
                 return $http({
                     method: 'POST',
                     url: baseUrl,
-                    data: { query: `query { project (projectId:${JSON.stringify(projectId)} ) { projectId name taskType objectClassNames instructionsText } }` }
+                    data: { query: `query { project (projectId:${JSON.stringify(projectId)} ) { projectId name taskType objectClassNames instructionsText instructionsImageURL } }` }
                 });
             },
             createProject: function (project) {
@@ -50,6 +50,25 @@ angular.module('vott.factories', [])
                     url: baseUrl,
                     data: { query: `mutation { removeProject (projectId:${JSON.stringify(projectId)}) }` }
                 });
+            },
+            //  createInstructionsImage(projectId: String!): Image
+            createInstructionsImage: function(projectId) {
+                return $http({
+                    method: 'POST',
+                    url: baseUrl,
+                    data: { query: `mutation { createInstructionsImage (projectId:${JSON.stringify(projectId)}) { projectId fileId fileURL } }` }
+                });                
+            },
+            commitInstructionsImage: function(confirmedFile) {
+                const parameters = [
+                    `projectId:${JSON.stringify(confirmedFile.projectId)}`,
+                    `fileId:${JSON.stringify(confirmedFile.fileId)}`
+                ].join(', ');
+                return $http({
+                    method: 'POST',
+                    url: baseUrl,
+                    data: { query: `mutation { commitInstructionsImage (image:{ ${parameters} }) }` }
+                });                
             }
         };
     });

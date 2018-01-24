@@ -34,16 +34,21 @@ input ConfirmedImage {
   imageId: String!
 }
 
+input ConfirmedFile {
+  projectId: String!
+  fileId: String!
+}
+
 type Mutation {
   createProject(name: String!, taskType: TaskType!, objectClassNames:[String]!, instructionsText:String):Project
   updateProject(projectId: String!, name: String, taskType: TaskType, objectClassNames:[String], instructionsText:String):Project
   removeProject(projectId: String!):String
 
-  createInstructionsImage(projectId: String!): Image
-  commitInstructionsImage(image:ConfirmedImage!): String
+  createInstructionsImage(projectId: String!): File
+  commitInstructionsImage(image:ConfirmedFile!): String
 
-  createInstructionsVideo(projectId: String!): Image
-  commitInstructionsVideo(video:ConfirmedImage!): String
+  createInstructionsVideo(projectId: String!): File
+  commitInstructionsVideo(video:ConfirmedFile!): String
 
   createImages(projectId: String!, imageCount:Int!): [Image]
   commitImages(images:[ConfirmedImage]!): String

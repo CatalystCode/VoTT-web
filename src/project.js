@@ -125,14 +125,22 @@ function mapColumnValue(columnValue) {
 function mapProject(value) {
     const objectClassNamesValue = mapColumnValue(value.objectClassNames);
     const objectClassNames = (objectClassNamesValue instanceof Array) ? objectClassNamesValue : JSON.parse(objectClassNamesValue);
+    const projectId = mapColumnValue(value.RowKey);
+
+    const instructionsImageId = mapColumnValue(value.instructionsImageId);
+    const instructionsImageURL = (instructionsImageId) ? getImageURL(projectId, instructionsImageId) : null;
+
+    const instructionsVideoId = mapColumnValue(value.instructionsVideoId);
+    const instructionsVideoURL = (instructionsVideoId) ? getImageURL(projectId, instructionsVideoId) : null;
+    
     return {
         projectId: mapColumnValue(value.RowKey),
         name: mapColumnValue(value.name),
         taskType: mapColumnValue(value.taskType),
         objectClassNames: objectClassNames,
         instructionsText: mapColumnValue(value.instructionsText),
-        instructionsImageURL: mapColumnValue(value.instructionsImageURL),
-        instructionsVideoURL: mapColumnValue(value.instructionsVideoURL)
+        instructionsImageURL: instructionsImageURL,
+        instructionsVideoURL: instructionsVideoURL
     };
 }
 
@@ -184,6 +192,7 @@ module.exports = {
                 if (error) {
                     return reject(error);
                 }
+                console.log(mapProject(response));
                 resolve(mapProject(response));
             });
         });
@@ -287,8 +296,8 @@ module.exports = {
                 const file = createFileSAS(getImageContainerName(projectId), "jpg");
                 resolve({
                     projectId: projectId,
-                    imageId: file.fileId,
-                    imageURL: file.url
+                    fileId: file.fileId,
+                    fileURL: file.url
                 });
             });
         });
@@ -296,11 +305,11 @@ module.exports = {
     commitInstructionsImage: (args, res) => {
         return new Promise((resolve, reject) => {
             const projectId = args.projectId;
-            const imageId = args.imageId;
+            const fileId = args.fileId;
             const entityDescriptor = {
                 PartitionKey: { "_": projectId },
                 RowKey: { "_": projectId },
-                instructionsImageId, imageId
+                instructionsImageId: fileId
             };
 
             services.tableService.mergeEntity(projectTableName, entityDescriptor, (error, project) => {
@@ -322,8 +331,8 @@ module.exports = {
                 const file = createFileSAS(getImageContainerName(projectId), "m4v");
                 resolve({
                     projectId: projectId,
-                    imageId: file.fileId,
-                    imageURL: file.url
+                    fileId: file.fileId,
+                    fileURL: file.url
                 });
             });
         });
@@ -331,11 +340,11 @@ module.exports = {
     commitInstructionsVideo: (args, res) => {
         return new Promise((resolve, reject) => {
             const projectId = args.projectId;
-            const imageId = args.imageId;
+            const fileId = args.fileId;
             const entityDescriptor = {
                 PartitionKey: { "_": projectId },
                 RowKey: { "_": projectId },
-                instructionsVideoId, imageId
+                instructionsVideoId: fileId
             };
 
             services.tableService.mergeEntity(projectTableName, entityDescriptor, (error, project) => {

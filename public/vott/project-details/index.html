@@ -41,8 +41,41 @@
                 placeholder="Instructions for collaborators">
             <small id="instructionsTextHelp" class="form-text text-muted">Instructions for people performing the work of image tagging.</small>
         </div>
+        <div class="form-group" ng-if="!isNewRecord()">
+            <label for="instructionsImage">Instructions Image</label>
+            <img ng-if="project.instructionsImageURL" ng-src="project.instructionsImageURL">
+            <input type="file" onchange="angular.element(this).scope().instructionsImageFileDidChange(this.value)" class="form-control"
+                id="instructionsImage" aria-describedby="instructionsImageHelp">
+            <small id="instructionsImageHelp" class="form-text text-muted">Instructions image for people performing the work of image tagging.</small>
+        </div>
         <button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
         <button type="button" class="btn btn-primary" ng-click="save()">Save</button>
     </form>
 
+    <hr/>
+
+    <div ng-if="!isNewRecord() &amp;&amp; !isLoading">
+        <button type="button" class="btn btn-primary" ng-click="manageImages()">Manage Images</button>
+        <button type="button" class="btn btn-primary" ng-click="manageCollaborators()">Manage Collaborators</button>
+        <button type="button" class="btn btn-primary" ng-click="manageModels()">Manage Models</button>
+    </div>
+
 </div>
+
+<div id="uploadProgressModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="uploadProgressModalLabel" aria-hidden="true"
+    data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadProgressModalLabel">Uploading</h5>
+            </div>
+            <div class="modal-body">
+                <progress id="uploadProgressBar" value="0" max="100" style="width: 100%"></progress>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Delete confirmation -->
