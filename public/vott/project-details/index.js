@@ -18,7 +18,6 @@ angular.module('vott.project-details', [
             Projects.getProject($routeParams.projectId)
                 .then(function (response) {
                     $scope.project = response.data.data.project;
-                    console.log($scope.project);
                     $scope.isLoading = false;
                 })
                 .catch(function (error) {
@@ -40,7 +39,6 @@ angular.module('vott.project-details', [
             });
     };
     $scope.update = function () {
-        console.log("Hello from update()");
         Projects.updateProject($scope.project)
             .then(function (response) {
                 $location.path('/projects');
@@ -94,9 +92,6 @@ angular.module('vott.project-details', [
     };
 
     $scope.uploadInstructionsImage = function (imageRecord, file) {
-        console.log("uploadInstructionsImage:");
-        console.log(imageRecord);
-        console.log(file);
         const reader = new FileReader();
         reader.onload = function (event) {
             if (event.target.readyState != FileReader.DONE) {

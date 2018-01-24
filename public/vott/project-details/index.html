@@ -43,9 +43,8 @@
         </div>
         <div class="form-group" ng-if="!isNewRecord()">
             <label for="instructionsImage">Instructions Image</label>
-            <img ng-if="project.instructionsImageURL" ng-src="project.instructionsImageURL">
-            <input type="file" onchange="angular.element(this).scope().instructionsImageFileDidChange(this.value)" class="form-control"
-                id="instructionsImage" aria-describedby="instructionsImageHelp">
+            <img ng-if="project.instructionsImageURL" ng-src="{{project.instructionsImageURL}}" class="img-thumbnail" style="width: 128pt; height: 128pt; display: block;">
+            <input type="file" onchange="angular.element(this).scope().instructionsImageFileDidChange(this.value)" class="form-control" id="instructionsImage" aria-describedby="instructionsImageHelp">
             <small id="instructionsImageHelp" class="form-text text-muted">Instructions image for people performing the work of image tagging.</small>
         </div>
         <button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>

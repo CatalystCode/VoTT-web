@@ -102,7 +102,7 @@ function createFileSAS(containerName, extension) {
     };
 
     const fileId = uuid();
-    const blobName = `fileId.${extension}`;
+    const blobName = (extension) ? `${fileId}.${extension}` : fileId;
     const signature = services.blobService.generateSharedAccessSignature(
         containerName,
         blobName,
@@ -119,7 +119,7 @@ function mapColumnValue(columnValue) {
     if (columnValue == null || columnValue == undefined) {
         return null;
     }
-    return (columnValue._) ? columnValue._ : columnValue;
+    return (columnValue.hasOwnProperty('_')) ? columnValue._ : columnValue;
 }
 
 function mapProject(value) {
@@ -129,9 +129,6 @@ function mapProject(value) {
 
     const instructionsImageId = mapColumnValue(value.instructionsImageId);
     const instructionsImageURL = (instructionsImageId) ? getImageURL(projectId, instructionsImageId) : null;
-
-    const instructionsVideoId = mapColumnValue(value.instructionsVideoId);
-    const instructionsVideoURL = (instructionsVideoId) ? getImageURL(projectId, instructionsVideoId) : null;
     
     return {
         projectId: mapColumnValue(value.RowKey),
@@ -139,8 +136,7 @@ function mapProject(value) {
         taskType: mapColumnValue(value.taskType),
         objectClassNames: objectClassNames,
         instructionsText: mapColumnValue(value.instructionsText),
-        instructionsImageURL: instructionsImageURL,
-        instructionsVideoURL: instructionsVideoURL
+        instructionsImageURL: instructionsImageURL
     };
 }
 
@@ -155,7 +151,6 @@ module.exports = {
                     (callback) => { services.tableService.createTableIfNotExists(projectTableName, callback); }
                 ],
                 (err, results) => {
-                    console.log("Initialized project services.");
                     if (err) {
                         return reject(err);
                     }
@@ -192,7 +187,6 @@ module.exports = {
                 if (error) {
                     return reject(error);
                 }
-                console.log(mapProject(response));
                 resolve(mapProject(response));
             });
         });
@@ -202,8 +196,8 @@ module.exports = {
             // TODO: Ensure user has project access to the app.
             const projectId = uuid().toString();
 
-            // The instructionsImageURL and instructionsVideoURL properties are
-            // updated via createInstructionsImage() and createInstructionsVideo()
+            // The instructionsImageURL property is updated via
+            // createInstructionsImage()
             const project = {
                 PartitionKey: projectId,
                 RowKey: projectId,
@@ -293,7 +287,7 @@ module.exports = {
                     return reject(error);
                 }
 
-                const file = createFileSAS(getImageContainerName(projectId), "jpg");
+                const file = createFileSAS(getImageContainerName(projectId));
                 resolve({
                     projectId: projectId,
                     fileId: file.fileId,
@@ -304,47 +298,12 @@ module.exports = {
     },
     commitInstructionsImage: (args, res) => {
         return new Promise((resolve, reject) => {
-            const projectId = args.projectId;
-            const fileId = args.fileId;
+            const projectId = args.image.projectId;
+            const fileId = args.image.fileId;
             const entityDescriptor = {
                 PartitionKey: { "_": projectId },
                 RowKey: { "_": projectId },
                 instructionsImageId: fileId
-            };
-
-            services.tableService.mergeEntity(projectTableName, entityDescriptor, (error, project) => {
-                if (error) {
-                    return reject(error);
-                }
-                resolve("OK");
-            });
-        });
-    },
-
-    createInstructionsVideo: (args, res) => {
-        return new Promise((resolve, reject) => {
-            const projectId = args.projectId;
-            services.tableService.retrieveEntity("projects", projectId/*PartitionKey*/, projectId/*PrimaryKey*/, (error, project) => {
-                if (error) {
-                    return reject(error);
-                }
-                const file = createFileSAS(getImageContainerName(projectId), "m4v");
-                resolve({
-                    projectId: projectId,
-                    fileId: file.fileId,
-                    fileURL: file.url
-                });
-            });
-        });
-    },
-    commitInstructionsVideo: (args, res) => {
-        return new Promise((resolve, reject) => {
-            const projectId = args.projectId;
-            const fileId = args.fileId;
-            const entityDescriptor = {
-                PartitionKey: { "_": projectId },
-                RowKey: { "_": projectId },
-                instructionsVideoId: fileId
             };
 
             services.tableService.mergeEntity(projectTableName, entityDescriptor, (error, project) => {

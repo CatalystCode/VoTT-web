@@ -14,7 +14,8 @@
     <h2>Projects</h2>
     <h4 ng-if="isLoading">Loading...</h4>
     <button type="button" class="btn btn-primary" data-target=".bd-example-modal-lg" ng-click="createProject()">Create</button>
-    <table ng-if="projects != null" class="table">
+    <h5 ng-if="!isLoading &amp;&amp; projects == null || projects.length == 0">No projects have been created - please create one when you are ready.</h5>
+    <table ng-if="!isLoading &amp;&amp; projects != null &amp;&amp; projects.length > 0" class="table">
         <thead>
             <tr>
                 <th scope="col">Id</th>
