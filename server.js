@@ -2,7 +2,6 @@ require('dotenv').config();
 
 const async = require("async");
 const azure = require('azure-storage');
-const cors = require('cors');
 const express = require('express');
 const expressGraphql = require('express-graphql');
 const expressSession = require('express-session');
@@ -40,7 +39,6 @@ const projectSchema = graphiql.buildSchema(schemaFile + projectSchemaFile);
 const graphiqlEnabled = process.env.GRAPHIQL_ENABLED == 'true';
 const app = express();
 
-app.use(cors());
 app.use(methodOverride());
 app.use(cookieParser());
 app.use(expressSession({ secret: 'keyboard gato', resave: true, saveUninitialized: false }));
