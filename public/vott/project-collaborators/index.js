@@ -46,6 +46,11 @@ angular.module('vott.project-collaborators', [
       });
   };
 
+  $scope.invite = function(collaborator) {
+    $scope.selectedCollaborator = {};
+    $('#editDialog').modal('show');
+  };
+
   $scope.edit = function (collaborator) {
     console.log("Edit");
   };

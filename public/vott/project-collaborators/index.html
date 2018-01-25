@@ -43,8 +43,8 @@
     <tbody>
       <tr ng-repeat="collaborator in collaborators">
         <th scope="row">{{collaborator.name}}</th>
-        <td>{{collaborator.email}}</td>
-        <td>{{collaborator.profile}}</td>
+        <td>{{ collaborator.email }}</td>
+        <td>{{ collaborator.profile.replace('_', ' ') | lowercase }}</td>
         <td>
           <button type="button" class="btn btn-default" ng-click="reinvite(collaborator)">Reinvite</button>
           <button type="button" class="btn btn-warning" ng-click="delete(collaborator)">Edit</button>
@@ -71,3 +71,25 @@
   </table>
 
 </div>
+
+<div id="editDialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editDialogLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form>
+          <div class="modal-header">
+            <h5 class="modal-title" id="editDialogLabel">{{selectedCollaborator.collaboratorId ? 'Edit' : 'New Collaborator'}}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-success" data-dismiss="modal">Save</button>
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- Edit -->  
