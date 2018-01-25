@@ -1,24 +1,16 @@
-<nav class="navbar navbar-default">
-    <div class="container-fluid">
-        <div class="navbar-header">
-            <a class="navbar-brand" href="#/">VoTT</a>
-        </div>
-        <ul class="nav navbar-nav">
-            <li class="active">
-                <a href="#">Projects</a>
-            </li>
-        </ul>
+<div class="container-fluid">
+    <div class="container">
+        <h2>Projects</h2>
     </div>
-</nav>
-<div>
-    <h2>Projects</h2>
+</div>
+<div class="container">
+    <h3>All</h3>
     <h4 ng-if="isLoading">Loading...</h4>
-    <button type="button" class="btn btn-primary" data-target=".bd-example-modal-lg" ng-click="createProject()">Create</button>
+    <button type="button" class="btn btn-success" ng-click="createProject()">Create New Project</button>
     <h5 ng-if="!isLoading &amp;&amp; projects == null || projects.length == 0">No projects have been created - please create one when you are ready.</h5>
     <table ng-if="!isLoading &amp;&amp; projects != null &amp;&amp; projects.length > 0" class="table">
         <thead>
             <tr>
-                <th scope="col">Id</th>
                 <th scope="col">Name</th>
                 <th scope="col">Type</th>
                 <th scope="col">Action</th>
@@ -26,8 +18,7 @@
         </thead>
         <tbody>
             <tr ng-repeat="project in projects">
-                <th scope="row">{{project.projectId}}</th>
-                <td>{{project.name}}</td>
+                <th scope="row">{{project.name}}</th>
                 <td>{{project.taskType.replace('_', ' ') | lowercase}}</td>
                 <td>
                     <button type="button" class="btn btn-warning" ng-click="editProject(project)">Edit</button>
@@ -55,23 +46,23 @@
 </div>
 
 <div id="projectDeleteConfirmation" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="projectDeleteConfirmationLabel"
-aria-hidden="true">
-<div class="modal-dialog" role="document">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h5 class="modal-title" id="projectDeleteConfirmationLabel">Confirm Delete</h5>
-      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-      </button>
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="projectDeleteConfirmationLabel">Confirm Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Please confirm you would like to delete project {{selectedProject.name}} ({{selectedProject.projectId}}).
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" ng-click="confirmDeleteProject(selectedProject)">Delete</button>
+            </div>
+        </div>
     </div>
-    <div class="modal-body">
-      Please confirm you would like to delete project {{selectedProject.name}} ({{selectedProject.projectId}}).
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-      <button type="button" class="btn btn-danger" ng-click="confirmDeleteProject(selectedProject)">Delete</button>
-    </div>
-  </div>
-</div>
 </div>
 <!-- Delete confirmation -->

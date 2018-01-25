@@ -1,18 +1,9 @@
-<nav class="navbar navbar-default">
-  <div class="container-fluid">
-    <div class="navbar-header">
-      <a class="navbar-brand" href="#/">VoTT</a>
-    </div>
-    <ul class="nav navbar-nav">
-      <li class="active">
-        <a href="#">Projects</a>
-      </li>
-    </ul>
+<div class="container-fluid">
+  <div class="container">
+    <h2>{{project.name}}</h2>
   </div>
-</nav>
-
-<div>
-  <h2>{{project.name}}</h2>
+</div>
+<div class="container">
   <h3>Project Images</h3>
   <h4 ng-if="isLoading">Loading...</h4>
   <button type="button" class="btn btn-default" ng-click="back()">Back To Project</button>
@@ -22,7 +13,7 @@
   <div class="row list-group">
     <div class="item col-xs-12 col-lg-3" ng-repeat="image in images">
       <div class="thumbnail">
-        <img class="group list-group-image" ng-src="{{image.fileURL}}"  />
+        <img class="group list-group-image" ng-src="{{image.fileURL}}" />
       </div>
     </div>
   </div>

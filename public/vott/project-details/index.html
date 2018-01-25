@@ -1,18 +1,9 @@
-<nav class="navbar navbar-default">
-    <div class="container-fluid">
-        <div class="navbar-header">
-            <a class="navbar-brand" href="#/">VoTT</a>
-        </div>
-        <ul class="nav navbar-nav">
-            <li class="active">
-                <a href="#">Projects</a>
-            </li>
-        </ul>
+<div class="container-fluid">
+    <div class="container">
+        <h2>{{project.name}}</h2>
     </div>
-</nav>
-
-<div>
-    <h2>{{project.name}}</h2>
+</div>
+<div class="container">
     <h3>{{ isNewRecord() ? 'New Project' : 'Project Details' }}</h3>
     <h4 ng-if="isLoading">Loading...</h4>
 
@@ -45,19 +36,20 @@
         <div class="form-group" ng-if="!isNewRecord()">
             <label for="instructionsImage">Instructions Image</label>
             <img ng-if="project.instructionsImageURL" ng-src="{{project.instructionsImageURL}}" class="img-thumbnail" style="width: 128pt; height: 128pt; display: block;">
-            <input type="file" onchange="angular.element(this).scope().instructionsImageFileDidChange(this.value)" class="form-control" id="instructionsImage" aria-describedby="instructionsImageHelp">
+            <input type="file" onchange="angular.element(this).scope().instructionsImageFileDidChange(this.value)" class="form-control"
+                id="instructionsImage" aria-describedby="instructionsImageHelp">
             <small id="instructionsImageHelp" class="form-text text-muted">Instructions image for people performing the work of image tagging.</small>
         </div>
         <button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
-        <button type="button" class="btn btn-primary" ng-click="save()">Save</button>
+        <button type="button" class="btn btn-success" ng-click="save()">Save</button>
     </form>
 
     <hr/>
 
     <div ng-if="!isNewRecord() &amp;&amp; !isLoading">
-        <button type="button" class="btn btn-primary" ng-click="manageImages()">Manage Images</button>
-        <button type="button" class="btn btn-primary" ng-click="manageCollaborators()">Manage Collaborators</button>
-        <button type="button" class="btn btn-primary" ng-click="manageModels()">Manage Models</button>
+        <button type="button" class="btn btn-default" ng-click="manageImages()">Manage Images</button>
+        <button type="button" class="btn btn-default" ng-click="manageCollaborators()">Manage Collaborators</button>
+        <button type="button" class="btn btn-default" ng-click="manageModels()">Manage Models</button>
     </div>
 
 </div>

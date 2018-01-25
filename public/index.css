@@ -1,0 +1,8 @@
+body {
+  padding-top: 32pt;
+}
+
+div.welcome {
+  padding: 4pt 2pt;
+  text-align: center;
+}
