@@ -35,23 +35,28 @@ angular.module('vott.project-images', [
       });
   };
 
-  $scope.loadImages = function () {
+  $scope.loadImages = function (paginationToken) {
     $scope.isLoadingImages = true;
-    ProjectService.trainingImages($routeParams.projectId)
+    const requestedPaginationToken = paginationToken;
+    ProjectService.trainingImages($routeParams.projectId, paginationToken)
       .then(function (response) {
         const serviceData = response.data.data.trainingImages;
         $scope.isLoadingImages = false;
         $scope.nextPageToken = serviceData.nextPageToken;
-        $scope.images = serviceData.entries ? serviceData.entries : [];
+        if (requestedPaginationToken) {
+          if (serviceData.entries) {
+            for (var imageIndex = 0; imageIndex < serviceData.entries.length; imageIndex++) {
+              $scope.images.push(serviceData.entries[imageIndex]);
+            }
+          }
+        } else {
+          $scope.images = serviceData.entries ? serviceData.entries : [];
+        }
       })
       .catch(function (error) {
         console.log(error);
         $scope.error = error;
       });
-  };
-
-  $scope.moreImages = function() {
-    console.log("Hello from moreImages()");
   };
 
   $scope.back = function () {
