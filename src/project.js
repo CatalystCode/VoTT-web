@@ -363,12 +363,12 @@ module.exports = {
         });
     },
 
-    images: (args, res) => {
+    trainingImages: (args, res) => {
         return new Promise((resolve, reject) => {
             // TODO: Ensure user has project access to the project.
             const projectId = args.projectId;
             const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
-            var query = new azure.TableQuery().where("PartitionKey == ?", projectId).top(12);
+            var query = new azure.TableQuery().where("PartitionKey == ?", projectId).top(64);
             services.tableService.queryEntities(imageTableName, query, nextPageToken, (error, results, response) => {
                 if (error) {
                     reject(error);

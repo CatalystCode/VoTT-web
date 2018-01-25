@@ -70,10 +70,10 @@ angular.module('vott.factories', [])
                     data: { query: `mutation { commitInstructionsImage (image:{ ${parameters} }) }` }
                 });
             },
-            images: function (projectId, nextPageToken) {
+            trainingImages: function (projectId, nextPageToken) {
                 const invocation = nextPageToken ?
-                    `images(projectId: ${JSON.stringify(projectId)}, nextPageToken:${JSON.stringify(nextPageToken)})` :
-                    `images(projectId: ${JSON.stringify(projectId)})`;
+                    `trainingImages(projectId: ${JSON.stringify(projectId)}, nextPageToken:${JSON.stringify(nextPageToken)})` :
+                    `trainingImages(projectId: ${JSON.stringify(projectId)})`;
                 return $http({
                     method: 'POST',
                     url: baseUrl,

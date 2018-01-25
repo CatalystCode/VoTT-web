@@ -37,11 +37,12 @@ angular.module('vott.project-images', [
 
   $scope.loadImages = function () {
     $scope.isLoadingImages = true;
-    ProjectService.images($routeParams.projectId)
+    ProjectService.trainingImages($routeParams.projectId)
       .then(function (response) {
+        const serviceData = response.data.data.trainingImages;
         $scope.isLoadingImages = false;
-        $scope.nextPageToken = response.data.data.images.nextPageToken;
-        $scope.images = response.data.data.images.entries ? response.data.data.images.entries : [];
+        $scope.nextPageToken = serviceData.nextPageToken;
+        $scope.images = serviceData.entries ? serviceData.entries : [];
       })
       .catch(function (error) {
         console.log(error);
