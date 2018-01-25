@@ -1,20 +1,28 @@
 angular.module('vott.project-images', [
   'vott.factories'
-]).controller('ProjectImagesController', function ($scope, $location, $route, $routeParams, ProjectService) {
+]).controller('ProjectImagesController', function ($scope, $location, $route, $routeParams, $timeout, ProjectService) {
 
   $scope.totalImageCount = 0;
   $scope.taggedImageCount = 0;
   $scope.conflictImageCount = 0;
 
+  $scope.images = [];
+  $scope.isUploading = false;
+  $scope.uploadProgress = 0;
+
   $scope.isLoading = true;
   $scope.isLoadingProject = true;
   $scope.isLoadingImages = true;
-  $scope.$watchGroup(['isLoadingProject', 'isLoadingImages'], function(newValues, oldValues, scope) {
+  $scope.$watchGroup(['isLoadingProject', 'isLoadingImages'], function (newValues, oldValues, scope) {
     $scope.isLoading = $scope.isLoadingProject || $scope.isLoadingImages;
   });
-  
-  $scope.loadRecord = function () {
 
+  $scope.load = function () {
+    $scope.loadProject();
+    $scope.loadImages();
+  };
+
+  $scope.loadProject = function () {
     $scope.isLoadingProject = true;
     ProjectService.getProject($routeParams.projectId)
       .then(function (response) {
@@ -25,18 +33,24 @@ angular.module('vott.project-images', [
         console.log(error);
         $scope.error = error;
       });
+  };
 
+  $scope.loadImages = function () {
     $scope.isLoadingImages = true;
     ProjectService.images($routeParams.projectId)
       .then(function (response) {
         $scope.isLoadingImages = false;
         $scope.nextPageToken = response.data.data.images.nextPageToken;
-        $scope.images = response.data.data.images.entries;
+        $scope.images = response.data.data.images.entries ? response.data.data.images.entries : [];
       })
       .catch(function (error) {
         console.log(error);
         $scope.error = error;
       });
+  };
+
+  $scope.moreImages = function() {
+    console.log("Hello from moreImages()");
   };
 
   $scope.back = function () {
@@ -45,35 +59,63 @@ angular.module('vott.project-images', [
     $location.path(components.join('/'));
   };
 
-  $scope.upload = function() {
-    console.log("Hello from upload");
+  $scope.upload = function () {
+    $('#uploadDialog').modal('show');
   };
 
   /**
    * Quasi-angular handler for changes in the instructions image <input type="file"> element.
    */
-  $scope.instructionsImageFileDidChange = function () {
-    const imageFile = $("#instructionsImage");
-    if (!imageFile.val()) {
-      console.log("Please select an image to upload.");
+  $scope.imageFilesDidChange = function () {
+    const imageFiles = $("#imageFiles");
+    if (!imageFiles.val()) {
+      alert("Please select some images to upload.");
       return;
     }
 
-    $('#uploadProgressBar').attr('value', 0);
-    $('#uploadProgressModal').modal('show');
-    const projectId = $scope.project.projectId;
-    const files = imageFile[0].files;
-    const file = files[0];
-    ProjectService.createInstructionsImage(projectId).then(function (response) {
-      const imageRecord = response.data.data.createInstructionsImage;
-      $scope.uploadInstructionsImage(imageRecord, file);
-    }).catch(function (error) {
-      console.log(error);
-      $scope.error = error;
-    });
+    // File upload is queued using $timeout in order to let $scope catch up
+    // since this call was done outside the angular run loop.
+    const files = imageFiles[0].files;
+    $timeout(function () {
+      $scope.startImageFilesUpload(files);
+    }, 10);
   };
 
-  $scope.uploadInstructionsImage = function (imageRecord, file) {
+  $scope.refreshUploadProgress = function () {
+    if (!$scope.filesUploadProgress || !$scope.filesUploadProgress.length) {
+      $scope.uploadProgress = 0;
+      return;
+    }
+
+    $scope.uploadProgress = ($scope.filesUploadProgress.reduce(function (previous, current) { return previous + current; }) / (1.0 * $scope.filesUploadProgress.length));
+    if ($scope.uploadProgress >= 99.99) {
+      $('#uploadDialog').modal('hide');
+      $scope.isUploading = false;
+      $scope.loadImages();
+    }
+  }
+
+  $scope.startImageFilesUpload = function (files) {
+    $scope.isUploading = true;
+    $scope.filesUploadProgress = Array.apply(null, Array(files.length)).map(Number.prototype.valueOf, 0.0);
+    $scope.refreshUploadProgress();
+
+    const projectId = $scope.project.projectId;
+    for (var i = 0; i < files.length; i++) {
+      const currentFile = files[i];
+      const currentIndex = i;
+      ProjectService.createImages(projectId, 1).then(function (response) {
+        const imageRecord = response.data.data.createImages[0];
+        $scope.uploadImage(imageRecord, currentFile, currentIndex);
+      }).catch(function (error) {
+        console.log(error);
+        $scope.error = error;
+      });
+
+    }
+  };
+
+  $scope.uploadImage = function (imageRecord, file, index) {
     const reader = new FileReader();
     reader.onload = function (event) {
       if (event.target.readyState != FileReader.DONE) {
@@ -81,67 +123,48 @@ angular.module('vott.project-images', [
       }
 
       const data = new Uint8Array(event.target.result);
-      $scope.uploadImageToAzureStorageBlob(
+      ProjectService.uploadImageToAzureStorageBlob(
         file.type,
         data,
         imageRecord.fileURL,
         function (error, result, status) {
           if (error) {
             $scope.error = error;
+            alert(error);
             return;
           }
 
-          $('#uploadProgressBar').attr('value', 100);
-          $('#uploadProgressBar').attr('max', 100);
-          ProjectService.commitInstructionsImage(imageRecord).then(function (response) {
-            $('#uploadProgressModal').modal('hide');
-            $scope.loadRecord();
+          ProjectService.commitImages([imageRecord]).then(function (response) {
+            $scope.filesUploadProgress[index] = 100;
+            $scope.refreshUploadProgress();
           }).catch(function (error) {
+            console.log("Got commit error:");
+            console.log(error);
             $scope.error = error;
             console.log(error);
-            $('#uploadProgressModal').modal('hide');
+            alert(error);
           });
         },
         function (error) {
+          console.log("Got upload error:");
           console.log(error);
           $scope.error = error;
+          alert(error);
         },
         function (progressEvent) {
           if (!progressEvent.lengthComputable) {
             return;
           }
-          $("#uploadProgressBar").attr("value", progressEvent.loaded);
-          $("#uploadProgressBar").attr("max", progressEvent.total);
+          if (!progressEvent.total) {
+            return;
+          }
+          $scope.filesUploadProgress[index] = progressEvent.loaded / (1.0 * progressEvent.total);
         }
       );
     };
     reader.readAsArrayBuffer(file);
   };
 
-
-  $scope.uploadImageToAzureStorageBlob = function (contentType, data, url, successCallback, errorCallback, progressCallback) {
-    $.ajax({
-      url: url,
-      type: "PUT",
-      data: data,
-      $scope: $scope,
-      processData: false,
-      xhr: function () {
-        var request = new XMLHttpRequest();
-        request.upload.addEventListener("progress", progressCallback, false);
-        // request.addEventListener("progress", uploadProgress);
-        return request;
-      },
-      beforeSend: function (xhr) {
-        $scope.uploadXhr = xhr;
-        xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
-        xhr.setRequestHeader('x-ms-blob-content-type', contentType);
-      },
-      success: successCallback,
-      error: errorCallback
-    });
-  };
-
-  $scope.loadRecord();
+  $scope.load();
 
 });

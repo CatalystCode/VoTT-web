@@ -14,7 +14,7 @@ type ProjectList {
 }
 
 type ImageList {
-  entries: [Image]
+  entries: [File]
   nextPageToken: String
 }
 
@@ -27,11 +27,6 @@ type Query {
   projects(nextPageToken:String): ProjectList
   project(projectId: String!): Project
   images(projectId: String!, nextPageToken: String): ImageList
-}
-
-input ConfirmedImage {
-  projectId: String!
-  imageId: String!
 }
 
 input ConfirmedFile {
@@ -47,8 +42,8 @@ type Mutation {
   createInstructionsImage(projectId: String!): File
   commitInstructionsImage(image:ConfirmedFile!): String
 
-  createImages(projectId: String!, imageCount:Int!): [Image]
-  commitImages(images:[ConfirmedImage]!): String
+  createImages(projectId: String!, imageCount:Int!): [File]
+  commitImages(images:[ConfirmedFile]!): String
 
   createTrainingSession(projectId: String!):String
 }

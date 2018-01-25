@@ -18,7 +18,48 @@
   <button type="button" class="btn btn-default" ng-click="back()">Back To Project</button>
   <button type="button" class="btn btn-primary" ng-click="upload()">Upload Images</button>
   <h5 ng-if="!isLoading &amp;&amp; (images == null || images.length == 0)">No images have been uploaded - please upload some when you are ready.</h5>
-  <div ng-if="!isLoading &amp;&amp; (images == null &amp;&amp; images.length > 0)">
-    <img ng-repeat="image in images" />
+  <hr/>
+  <div class="row list-group">
+    <div class="item col-xs-12 col-lg-3" ng-repeat="image in images">
+      <div class="thumbnail">
+        <img class="group list-group-image" ng-src="{{image.fileURL}}"  />
+      </div>
+    </div>
+  </div>
+  <button type="button" class="btn btn-primary" ng-click="moreImages()">Load More Images</button>
+
+  <!-- <div ng-repeat="image in images" class="card">
+    <img ng-src="{{image.fileURL}}" class="card-img-top" style="max-width: 100%; max-height: 100%; " />
+  </div> -->
+</div>
+
+<div id="uploadDialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="uploadDialogLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form>
+        <div class="modal-header">
+          <h5 class="modal-title" id="uploadDialogLabel">Upload Images</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group" ng-if="!isUploading">
+            <label for="instructionsText">Image Files</label>
+            <input type="file" id="imageFiles" multiple accept="jpg" onchange="angular.element(this).scope().imageFilesDidChange(this.value)"
+              class="form-control" aria-describedby="imageFilesHelp" />
+            <small id="instructionsTextHelp" class="form-text text-muted">Select one or more files to upload.</small>
+          </div>
+          <div class="form-group" ng-if="isUploading">
+            <label for="uploadProgressBar">Uploading ...</label>
+            <progress id="uploadProgressBar" value="{{uploadProgress}}" max="100" style="width: 100%"></progress>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
+<!-- Delete confirmation -->

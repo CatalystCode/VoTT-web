@@ -77,7 +77,44 @@ angular.module('vott.factories', [])
                 return $http({
                     method: 'POST',
                     url: baseUrl,
-                    data: { query: "query { " + invocation + "{ nextPageToken entries { projectId imageId imageURL } } }" }
+                    data: { query: "query { " + invocation + "{ nextPageToken entries { projectId fileId fileURL } } }" }
+                });
+            },
+            createImages: function (projectId, imageCount) {
+                return $http({
+                    method: 'POST',
+                    url: baseUrl,
+                    data: { query: 'mutation { createImages(projectId: ' + JSON.stringify(projectId) + ', imageCount: ' + JSON.stringify(imageCount) + ') { projectId fileId fileURL } }' }
+                });
+            },
+            commitImages: function (images) {
+                const escapedImages = images.map(function (value) {
+                    return '{ projectId: ' + JSON.stringify(value.projectId) + ', fileId: ' + JSON.stringify(value.fileId) + ' } ';
+                });
+                return $http({
+                    method: 'POST',
+                    url: baseUrl,
+                    data: { query: 'mutation { commitImages(images: [' + escapedImages.join() + '] ) }' }
+                });
+            },
+            uploadImageToAzureStorageBlob: function (contentType, data, url, successCallback, errorCallback, progressCallback) {
+                $.ajax({
+                    url: url,
+                    type: "PUT",
+                    data: data,
+                    processData: false,
+                    xhr: function () {
+                        var request = new XMLHttpRequest();
+                        request.upload.addEventListener("progress", progressCallback, false);
+                        // request.addEventListener("progress", uploadProgress);
+                        return request;
+                    },
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
+                        xhr.setRequestHeader('x-ms-blob-content-type', contentType);
+                    },
+                    success: successCallback,
+                    error: errorCallback
                 });
             }
         };

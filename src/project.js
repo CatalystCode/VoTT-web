@@ -329,8 +329,8 @@ module.exports = {
                 const images = results.entries.map((value) => {
                     return {
                         projectId: value.PartitionKey._,
-                        imageId: value.RowKey._,
-                        imageURL: getImageURL(projectId, value.RowKey._),
+                        fileId: value.RowKey._,
+                        fileURL: getImageURL(projectId, value.RowKey._),
                     };
                 });
                 resolve({
@@ -373,8 +373,8 @@ module.exports = {
                     const result = [];
                     for (let i = 0; i < imageCount; i++) {
                         // Create a shared-access signature URI
-                        const imageId = uuid();
-                        const blobName = imageId;
+                        const fileId = uuid();
+                        const blobName = fileId;
                         const signature = services.blobService.generateSharedAccessSignature(
                             imageContainerName,
                             blobName,
@@ -383,8 +383,8 @@ module.exports = {
                         const url = services.blobService.getUrl(imageContainerName, blobName, signature);
                         result.push({
                             projectId: projectId,
-                            imageId: imageId,
-                            imageURL: url
+                            fileId: fileId,
+                            fileURL: url
                         });
                     }
                     resolve(result);
@@ -411,7 +411,7 @@ module.exports = {
                 const currentImage = images[imageIndex];
                 const imageRecord = {
                     PartitionKey: currentImage.projectId,
-                    RowKey: currentImage.imageId
+                    RowKey: currentImage.fileId
                 };
                 const taskQueueName = getTaskQueueName(currentImage.projectId);
                 imageTasks.push(
