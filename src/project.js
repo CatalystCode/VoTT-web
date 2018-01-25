@@ -129,7 +129,7 @@ function mapProject(value) {
 
     const instructionsImageId = mapColumnValue(value.instructionsImageId);
     const instructionsImageURL = (instructionsImageId) ? getImageURL(projectId, instructionsImageId) : null;
-    
+
     return {
         projectId: mapColumnValue(value.RowKey),
         name: mapColumnValue(value.name),
@@ -315,6 +315,54 @@ module.exports = {
         });
     },
 
+    createTrainingImage: (args, res) => {
+        return new Promise((resolve, reject) => {
+            const projectId = args.projectId;
+            const file = createFileSAS(getImageContainerName(projectId));
+            resolve({
+                projectId: projectId,
+                fileId: file.fileId,
+                fileURL: file.url
+            });
+        });
+    },
+    commitTrainingImage: (args, res) => {
+        return new Promise((resolve, reject) => {
+            const projectId = args.projectId;
+            const fileId = args.fileId;
+            const imageRecord = {
+                PartitionKey: projectId,
+                RowKey: fileId,
+                status: 'TAG_PENDING'
+            };
+            const imageQueueMessage = {
+                projectId: projectId,
+                fileId: fileId,
+            };
+
+            const taskQueueName = getTaskQueueName(projectId);
+            async.series(
+                [
+                    (callback) => { services.tableService.insertEntity(imageTableName, imageRecord, callback); },
+                    (callback) => { services.queueService.createMessage(taskQueueName, JSON.stringify(imageQueueMessage), callback) },
+                    (callback) => { services.queueService.createMessage(taskQueueName, JSON.stringify(imageQueueMessage), callback) },
+                    (callback) => { services.queueService.createMessage(taskQueueName, JSON.stringify(imageQueueMessage), callback) }
+                ],
+                (error) => {
+                    if (error) {
+                        return reject(error);
+                    }
+                    resolve({
+                        projectId: projectId,
+                        fileId: fileId,
+                        fileURL: getImageURL(projectId, fileId)
+                    });
+                }
+            );
+
+        });
+    },
+
     images: (args, res) => {
         return new Promise((resolve, reject) => {
             // TODO: Ensure user has project access to the project.
@@ -338,99 +386,6 @@ module.exports = {
                     entries: images
                 });
             });
-        });
-    },
-    createImages: (args, res) => {
-        return new Promise((resolve, reject) => {
-            // TODO: Ensure user has access to projectId.
-            const projectId = args.projectId;
-
-            services.tableService.retrieveEntity("projects", projectId/*PartitionKey*/, projectId/*PrimaryKey*/, (error, project) => {
-                if (error) {
-                    return reject(error);
-                }
-                const imageContainerName = getImageContainerName(projectId);
-                services.blobService.createContainerIfNotExists(imageContainerName, { publicAccessLevel: 'blob' }, (error) => {
-                    if (error) {
-                        return reject(error);
-                    }
-
-                    const startDate = new Date();
-                    const expiryDate = new Date(startDate);
-                    expiryDate.setMinutes(startDate.getMinutes() + 5);
-
-                    const BlobUtilities = azure.BlobUtilities;
-                    const sharedAccessPolicy = {
-                        AccessPolicy: {
-                            Permissions: BlobUtilities.SharedAccessPermissions.WRITE,
-                            Start: startDate,
-                            Expiry: expiryDate
-                        }
-                    };
-
-                    // Create imageCount pre-authenticated blob locations and return their URLs.
-                    const imageCount = args.imageCount;
-                    const result = [];
-                    for (let i = 0; i < imageCount; i++) {
-                        // Create a shared-access signature URI
-                        const fileId = uuid();
-                        const blobName = fileId;
-                        const signature = services.blobService.generateSharedAccessSignature(
-                            imageContainerName,
-                            blobName,
-                            sharedAccessPolicy
-                        );
-                        const url = services.blobService.getUrl(imageContainerName, blobName, signature);
-                        result.push({
-                            projectId: projectId,
-                            fileId: fileId,
-                            fileURL: url
-                        });
-                    }
-                    resolve(result);
-
-                }); /*createContainerIfNotExists*/
-            }); /*retrieveEntity*/
-        });
-    },
-    commitImages: (args, res) => {
-        return new Promise((resolve, reject) => {
-            // TODO: Ensure user has access to projectId.
-            const images = args.images;
-            if (images.size < 1) {
-                return reject("Parameter images must contain at least one element.");
-            }
-
-            const projectIds = new Set(images.map((image) => image.projectId));
-            if (projectIds.size > 1) {
-                return reject("All images must belong to the same project.");
-            }
-
-            const imageTasks = [];
-            for (var imageIndex in images) {
-                const currentImage = images[imageIndex];
-                const imageRecord = {
-                    PartitionKey: currentImage.projectId,
-                    RowKey: currentImage.fileId
-                };
-                const taskQueueName = getTaskQueueName(currentImage.projectId);
-                imageTasks.push(
-                    (callback) => { services.tableService.insertEntity(imageTableName, imageRecord, callback); },
-                    (callback) => { services.queueService.createMessage(taskQueueName, JSON.stringify(currentImage), callback) },
-                    (callback) => { services.queueService.createMessage(taskQueueName, JSON.stringify(currentImage), callback) },
-                    (callback) => { services.queueService.createMessage(taskQueueName, JSON.stringify(currentImage), callback) }
-                );
-            }
-            async.series(
-                imageTasks,
-                (error) => {
-                    if (error) {
-                        return reject(error);
-                    }
-                    resolve("OK");
-                }
-            );
-
         });
     },
     createTrainingSession: (args, response) => {

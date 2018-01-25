@@ -91,7 +91,7 @@ angular.module('vott.project-images', [
     if ($scope.uploadProgress >= 99.99) {
       $('#uploadDialog').modal('hide');
       $scope.isUploading = false;
-      $scope.loadImages();
+      // $scope.loadImages();
     }
   }
 
@@ -104,8 +104,8 @@ angular.module('vott.project-images', [
     for (var i = 0; i < files.length; i++) {
       const currentFile = files[i];
       const currentIndex = i;
-      ProjectService.createImages(projectId, 1).then(function (response) {
-        const imageRecord = response.data.data.createImages[0];
+      ProjectService.createTrainingImage(projectId).then(function (response) {
+        const imageRecord = response.data.data.createTrainingImage;
         $scope.uploadImage(imageRecord, currentFile, currentIndex);
       }).catch(function (error) {
         console.log(error);
@@ -134,9 +134,11 @@ angular.module('vott.project-images', [
             return;
           }
 
-          ProjectService.commitImages([imageRecord]).then(function (response) {
+          ProjectService.commitTrainingImage(imageRecord.projectId, imageRecord.fileId).then(function (response) {
+            const canonicalRecord = response.data.data.commitTrainingImage;
             $scope.filesUploadProgress[index] = 100;
             $scope.refreshUploadProgress();
+            $scope.images.push(canonicalRecord);
           }).catch(function (error) {
             console.log("Got commit error:");
             console.log(error);

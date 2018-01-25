@@ -80,21 +80,18 @@ angular.module('vott.factories', [])
                     data: { query: "query { " + invocation + "{ nextPageToken entries { projectId fileId fileURL } } }" }
                 });
             },
-            createImages: function (projectId, imageCount) {
+            createTrainingImage: function(projectId) {
                 return $http({
                     method: 'POST',
                     url: baseUrl,
-                    data: { query: 'mutation { createImages(projectId: ' + JSON.stringify(projectId) + ', imageCount: ' + JSON.stringify(imageCount) + ') { projectId fileId fileURL } }' }
+                    data: { query: `mutation { createTrainingImage (projectId:${JSON.stringify(projectId)}) { projectId fileId fileURL } }` }
                 });
             },
-            commitImages: function (images) {
-                const escapedImages = images.map(function (value) {
-                    return '{ projectId: ' + JSON.stringify(value.projectId) + ', fileId: ' + JSON.stringify(value.fileId) + ' } ';
-                });
+            commitTrainingImage: function(projectId, fileId) {
                 return $http({
                     method: 'POST',
                     url: baseUrl,
-                    data: { query: 'mutation { commitImages(images: [' + escapedImages.join() + '] ) }' }
+                    data: { query: `mutation { commitTrainingImage (projectId:${JSON.stringify(projectId)}, fileId:${JSON.stringify(fileId)}) { projectId fileId fileURL } }` }
                 });
             },
             uploadImageToAzureStorageBlob: function (contentType, data, url, successCallback, errorCallback, progressCallback) {

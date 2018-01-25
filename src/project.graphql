@@ -42,8 +42,8 @@ type Mutation {
   createInstructionsImage(projectId: String!): File
   commitInstructionsImage(image:ConfirmedFile!): String
 
-  createImages(projectId: String!, imageCount:Int!): [File]
-  commitImages(images:[ConfirmedFile]!): String
+  createTrainingImage(projectId: String!): File
+  commitTrainingImage(projectId: String!, fileId: String!): File
 
   createTrainingSession(projectId: String!):String
 }
