@@ -1,10 +1,31 @@
 <div class="container-fluid">
     <div class="container">
-        <h2>{{project.name}}</h2>
+        <h2>{{ isNewRecord() ? 'New Project' : project.name }}</h2>
     </div>
+    <nav>
+        <div class="container">
+            <ul class="nav navbar-nav">
+                <li class="active">
+                    <a href ng-click="loadRecord()">Details</a>
+                </li>
+                <li>
+                    <a href ng-click="manageImages()">Images</a>
+                </li>
+                <li>
+                    <a href ng-click="manageCollaborators()">Collaborators</a>
+                </li>
+                <li>
+                    <a href ng-click="manageModels()">Models</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
 </div>
+
 <div class="container">
-    <h3>{{ isNewRecord() ? 'New Project' : 'Project Details' }}</h3>
+    
+    <hr/>
+
     <h4 ng-if="isLoading">Loading...</h4>
 
     <form ng-if="!isLoading">
@@ -45,12 +66,6 @@
     </form>
 
     <hr/>
-
-    <div ng-if="!isNewRecord() &amp;&amp; !isLoading">
-        <button type="button" class="btn btn-default" ng-click="manageImages()">Manage Images</button>
-        <button type="button" class="btn btn-default" ng-click="manageCollaborators()">Manage Collaborators</button>
-        <button type="button" class="btn btn-default" ng-click="manageModels()">Manage Models</button>
-    </div>
 
 </div>
 

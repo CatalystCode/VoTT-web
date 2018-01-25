@@ -1,13 +1,31 @@
 <div class="container-fluid">
   <div class="container">
-    <h2>{{project.name}}</h2>
+    <h2>{{ isNewRecord() ? 'New Project' : project.name }}</h2>
   </div>
+  <nav>
+    <div class="container">
+      <ul class="nav navbar-nav">
+        <li>
+          <a href ng-click="back()">Details</a>
+        </li>
+        <li class="active">
+          <a href ng-click="load()">Images</a>
+        </li>
+        <li>
+          <a href ng-click="manageCollaborators()">Collaborators</a>
+        </li>
+        <li>
+          <a href ng-click="manageModels()">Models</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
 </div>
+
 <div class="container">
-  <h3>Project Images</h3>
+  <hr/>
   <h4 ng-if="isLoading">Loading...</h4>
-  <button type="button" class="btn btn-default" ng-click="back()">Back To Project</button>
-  <button type="button" class="btn btn-primary" ng-click="upload()">Upload Images</button>
+  <button type="button" class="btn btn-success" ng-click="upload()">Upload Images</button>
   <h5 ng-if="!isLoading &amp;&amp; (images == null || images.length == 0)">No images have been uploaded - please upload some when you are ready.</h5>
   <hr/>
   <div class="row list-group">
@@ -19,6 +37,8 @@
   </div>
 
   <button type="button" class="btn btn-primary" ng-if="nextPageToken" ng-click="loadImages(nextPageToken)">Load More Images</button>
+
+  <hr/>
 
 </div>
 
