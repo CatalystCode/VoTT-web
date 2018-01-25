@@ -33,6 +33,12 @@ function getUser(request) {
 const trainingQueueName = process.env.TRAINING_QUEUE_NAME || 'training';
 
 /**
+ * Global collaborators table that all projects share. The projectId is be used
+ * as the partition key and the collaborator's id as the primary key.
+ */
+const collaboratorsTableName = process.env.COLLABORATOR_TABLE_NAME || 'collaborators';
+
+/**
  * Global images table that all projects share. The projectId is be used as the
  * partition key and the image's id as the primary key.
  */
@@ -41,7 +47,7 @@ const imageTableName = process.env.IMAGE_TABLE_NAME || 'images';
 /**
  * Global projects table.
  */
-const projectTableName = process.env.IMAGE_TABLE_NAME || 'projects';
+const projectTableName = process.env.PROJECT_TABLE_NAME || 'projects';
 
 /**
  * @param {string} projectId containing the project primary key.
@@ -384,6 +390,33 @@ module.exports = {
                 resolve({
                     nextPageToken: (results.continuationToken) ? JSON.stringify(results.continuationToken) : null,
                     entries: images
+                });
+            });
+        });
+    },
+
+    collaborators: (args, response) => {
+        return new Promise((resolve, reject) => {
+            // TODO: Ensure user has project access to the project.
+            const projectId = args.projectId;
+            const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
+            var query = new azure.TableQuery().where("PartitionKey == ?", projectId).top(64);
+            services.tableService.queryEntities(collaboratorsTableName, query, nextPageToken, (error, results, response) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+                resolve({
+                    nextPageToken: (results.continuationToken) ? JSON.stringify(results.continuationToken) : null,
+                    entries: results.entries.map((value) => {
+                        return {
+                            projectId: value.PartitionKey._,
+                            collaboratorId: value.RowKey._,
+                            name: value.name._,
+                            email: value.email._,
+                            profile: value.profile._,
+                        };
+                    })
                 });
             });
         });

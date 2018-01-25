@@ -94,6 +94,16 @@ angular.module('vott.factories', [])
                     data: { query: `mutation { commitTrainingImage (projectId:${JSON.stringify(projectId)}, fileId:${JSON.stringify(fileId)}) { projectId fileId fileURL } }` }
                 });
             },
+            collaborators: function(projectId, paginationToken) {
+                const invocation = paginationToken ?
+                    `collaborators(projectId: ${JSON.stringify(projectId)}, paginationToken:${JSON.stringify(paginationToken)})` :
+                    `collaborators(projectId: ${JSON.stringify(projectId)})`;
+                return $http({
+                    method: 'POST',
+                    url: baseUrl,
+                    data: { query: "query { " + invocation + "{ nextPageToken entries { collaboratorId name email profile } } }" }
+                });
+            },
             uploadImageToAzureStorageBlob: function (contentType, data, url, successCallback, errorCallback, progressCallback) {
                 $.ajax({
                     url: url,

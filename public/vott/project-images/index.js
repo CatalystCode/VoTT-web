@@ -59,10 +59,20 @@ angular.module('vott.project-images', [
       });
   };
 
-  $scope.back = function () {
-    const components = $location.path().split('/');
-    components.pop();
-    $location.path(components.join('/'));
+  $scope.details = function() {
+    $location.path(`/projects/${$routeParams.projectId}`);
+  }
+
+  $scope.manageImages = function () {
+    $scope.load();
+  };
+
+  $scope.manageCollaborators = function () {
+    $location.path(`/projects/${$routeParams.projectId}/collaborators`);
+  };
+
+  $scope.manageModels = function () {
+    $location.path(`/projects/${$routeParams.projectId}/models`);
   };
 
   $scope.upload = function () {

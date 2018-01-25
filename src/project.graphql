@@ -18,6 +18,23 @@ type ImageList {
   nextPageToken: String
 }
 
+enum CollaboratorProfile {
+  PROJECT_MANAGER
+  IMAGE_TAGGER
+}
+
+type Collaborator {
+  collaboratorId: String!
+  name: String!
+  email: String!
+  profile: CollaboratorProfile!
+}
+
+type CollaboratorList {
+  entries: [Collaborator]
+  nextPageToken: String
+}
+
 type TrainingSession {
   trainingSessionId: String!
   projectId: String!
@@ -27,6 +44,7 @@ type Query {
   projects(nextPageToken:String): ProjectList
   project(projectId: String!): Project
   trainingImages(projectId: String!, nextPageToken: String): ImageList
+  collaborators(projectId: String!): CollaboratorList
 }
 
 input ConfirmedFile {

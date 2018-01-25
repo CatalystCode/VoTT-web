@@ -8,7 +8,7 @@ angular.module('vott.project-details', [
     $scope.isNewRecord = function () {
         return $routeParams.projectId == 'new';
     }
-    $scope.loadRecord = function() {
+    $scope.loadRecord = function () {
         if ($scope.isNewRecord()) {
             $scope.project = {};
             $scope.isLoading = false;
@@ -24,7 +24,7 @@ angular.module('vott.project-details', [
                     console.log(error);
                     $scope.error = error;
                 });
-        }    
+        }
     }
     $scope.cancel = function () {
         $location.path('/projects');
@@ -55,17 +55,21 @@ angular.module('vott.project-details', [
         }
     };
 
+    $scope.details = function () {
+        $location.loadRecord();
+    }
+
     $scope.manageImages = function () {
-        $location.path($location.path() + '/images');
+        $location.path(`/projects/${$routeParams.projectId}/images`);
     };
 
     $scope.manageCollaborators = function () {
-        console.log("Hello from manageCollaborators()");
+        $location.path(`/projects/${$routeParams.projectId}/collaborators`);
     };
 
     $scope.manageModels = function () {
-        console.log("Hello from manageModels()");
-    }
+        $location.path(`/projects/${$routeParams.projectId}/models`);
+    };
 
     /**
      * Quasi-angular handler for changes in the instructions image <input type="file"> element.
@@ -108,13 +112,13 @@ angular.module('vott.project-details', [
                         $scope.error = error;
                         return;
                     }
-                    
+
                     $('#uploadProgressBar').attr('value', 100);
                     $('#uploadProgressBar').attr('max', 100);
-                    ProjectService.commitInstructionsImage(imageRecord).then(function(response){
+                    ProjectService.commitInstructionsImage(imageRecord).then(function (response) {
                         $('#uploadProgressModal').modal('hide');
                         $scope.loadRecord();
-                    }).catch(function(error){
+                    }).catch(function (error) {
                         $scope.error = error;
                         console.log(error);
                         $('#uploadProgressModal').modal('hide');

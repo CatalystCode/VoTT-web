@@ -2,6 +2,7 @@ angular.module('vott', [
     'vott.project-list',
     'vott.project-details',
     'vott.project-images',
+    'vott.project-collaborators',
     'ngRoute'
 ]).config(function ($routeProvider) {
     $routeProvider.when('/projects', {
@@ -15,6 +16,10 @@ angular.module('vott', [
     .when('/projects/:projectId/images', {
         templateUrl: './project-images/index.html',
         controller: 'ProjectImagesController'
+    })
+    .when('/projects/:projectId/collaborators', {
+        templateUrl: './project-collaborators/index.html',
+        controller: 'ProjectCollaboratorsController'
     })
     .otherwise({
         redirectTo: '/projects'

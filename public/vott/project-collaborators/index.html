@@ -1,0 +1,73 @@
+<div class="container-fluid">
+  <div class="container">
+    <h2>{{ isNewRecord() ? 'New Project' : project.name }}</h2>
+  </div>
+  <nav>
+    <div class="container">
+      <ul class="nav navbar-nav">
+        <li>
+          <a href ng-click="details()">Details</a>
+        </li>
+        <li>
+          <a href ng-click="manageImages()">Images</a>
+        </li>
+        <li class="active">
+          <a href ng-click="manageCollaborators()">Collaborators</a>
+        </li>
+        <li>
+          <a href ng-click="manageModels()">Models</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</div>
+
+<div class="container">
+
+  <hr/>
+
+  <h4 ng-if="isLoading">Loading...</h4>
+  <button type="button" class="btn btn-success" ng-click="invite()">Invite Collaborator</button>
+
+  <hr />
+
+  <table ng-if="!isLoading &amp;&amp; collaborators != null &amp;&amp; collaborators.length > 0" class="table">
+    <thead>
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Email</th>
+        <th scope="col">Profile</th>
+        <th scope="col">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="collaborator in collaborators">
+        <th scope="row">{{collaborator.name}}</th>
+        <td>{{collaborator.email}}</td>
+        <td>{{collaborator.profile}}</td>
+        <td>
+          <button type="button" class="btn btn-default" ng-click="reinvite(collaborator)">Reinvite</button>
+          <button type="button" class="btn btn-warning" ng-click="delete(collaborator)">Edit</button>
+          <button type="button" class="btn btn-danger" ng-click="delete(collaborator)">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="100%">
+          <nav aria-label="Collaborator pagination">
+            <ul class="pagination">
+              <li ng-if="previousPageToken" class="page-item">
+                <a class="page-link" href="#" ng-click="viewPreviousPage()">Previous</a>
+              </li>
+              <li ng-if="nextPageToken" class="page-item">
+                <a class="page-link" href="#page={{nextPageToken}}" ng-click="viewNextPage()">Next</a>
+              </li>
+            </ul>
+          </nav>
+        </td>
+      </tr>
+    </tfoot>
+  </table>
+
+</div>
