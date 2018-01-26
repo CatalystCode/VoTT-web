@@ -42,6 +42,17 @@ type CollaboratorList {
   nextPageToken: String
 }
 
+type Model {
+  projectId: String!
+  modelId: String!
+  status: String!
+}
+
+type ModelList {
+  entries: [Model]
+  nextPageToken: String
+}
+
 type TrainingSession {
   trainingSessionId: String!
   projectId: String!
@@ -52,6 +63,7 @@ type Query {
   project(projectId: String!): Project
   trainingImages(projectId: String!, nextPageToken: String): ImageList
   collaborators(projectId: String!): CollaboratorList
+  models(projectId: String!): ModelList
 }
 
 input ConfirmedFile {

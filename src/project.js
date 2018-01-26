@@ -45,6 +45,12 @@ const collaboratorsTableName = process.env.COLLABORATOR_TABLE_NAME || 'collabora
 const invitesTableName = process.env.INVITE_TABLE_NAME || 'invites';
 
 /**
+ * Global models table that all projects share. The projectId is be used
+ * as the partition key.
+ */
+const modelsTableName = process.env.MODEL_TABLE_NAME || 'models';
+
+/**
  * Global images table that all projects share. The projectId is be used as the
  * partition key and the image's id as the primary key.
  */
@@ -208,6 +214,7 @@ module.exports = {
                 [
                     (callback) => { services.queueService.createQueueIfNotExists(trainingQueueName, callback); },
                     (callback) => { services.tableService.createTableIfNotExists(imagesTableName, callback); },
+                    (callback) => { services.tableService.createTableIfNotExists(modelsTableName, callback); },
                     (callback) => { services.tableService.createTableIfNotExists(collaboratorsTableName, callback); },
                     (callback) => { services.tableService.createTableIfNotExists(invitesTableName, callback); },
                     (callback) => { services.tableService.createTableIfNotExists(projectsTableName, callback); }
@@ -497,6 +504,30 @@ module.exports = {
                             name: value.name._,
                             email: value.email._,
                             profile: value.profile._,
+                        };
+                    })
+                });
+            });
+        });
+    },
+    models: (args, request) => {
+        return new Promise((resolve, reject) => {
+            // TODO: Ensure user has project access to the project.
+            const projectId = args.projectId;
+            const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
+            var query = new azure.TableQuery().where("PartitionKey == ?", projectId).top(64);
+            services.tableService.queryEntities(modelsTableName, query, nextPageToken, (error, results, response) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+                resolve({
+                    nextPageToken: (results.continuationToken) ? JSON.stringify(results.continuationToken) : null,
+                    entries: results.entries.map((value) => {
+                        return {
+                            projectId: value.PartitionKey._,
+                            modelId: value.RowKey._,
+                            status: value.status._
                         };
                     })
                 });
