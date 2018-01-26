@@ -58,7 +58,7 @@ app.use('/v1/graphql/collaboration', expressGraphql({
   pretty: true
 }));
 
-app.get('/vott/projects/:projectId/:modelId/annotations.csv', (request, response) => {
+app.get('/vott-training/projects/:projectId/:modelId/annotations.csv', (request, response) => {
   const projectId = request.params.projectId;
   const modelId = request.params.modelId;
   projectController.getTrainingImagesAnnotations(projectId, (error, images) => {

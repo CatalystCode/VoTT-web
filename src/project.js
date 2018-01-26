@@ -163,15 +163,15 @@ function getPublicBaseURL() {
 }
 
 function getModelAnnotationsURL(projectId, modelId) {
-    return `${getPublicBaseURL()}/vott/projects/${projectId}/${modelId}/annotations.csv`;
+    return `${getPublicBaseURL()}/vott-training/projects/${projectId}/${modelId}/annotations.csv`;
 }
 
 function getModelStatusURL(projectId, modelId) {
-    return `${getPublicBaseURL()}/vott/projects/${projectId}/${modelId}/status.json`;
+    return `${getPublicBaseURL()}/vott-training/projects/${projectId}/${modelId}/status.json`;
 }
 
 function getInviteURL(projectId, collaboratorId, inviteId) {
-    return `${getPublicBaseURL()}/vott/invites/${projectId}/${collaboratorId}/${inviteId}`;
+    return `${getPublicBaseURL()}/vott-training/invites/${projectId}/${collaboratorId}/${inviteId}`;
 }
 
 function getTrainingImagesAnnotations(projectId, callback) {
