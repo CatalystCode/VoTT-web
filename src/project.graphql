@@ -86,5 +86,7 @@ type Mutation {
   createCollaborator(projectId: String!, name: String!, email: String!, profile: CollaboratorProfile!): CollaboratorInvite
   reinviteCollaborator(projectId: String!, collaboratorId: String!): CollaboratorInvite
 
-  createModel(projectId: String!):Model
+  createModel(projectId: String!): Model
+  removeModel(projectId: String!, modelId: String!): String
+
 }

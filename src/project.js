@@ -302,6 +302,42 @@ function createModel(projectId, callback) {
     );
 }
 
+function removeModel(projectId, modelId, callback) {
+    if (!projectId) {
+        return callback("Parameter projectId must be present.");
+    }
+    if (!modelId) {
+        return callback("Parameter modelId must be present.");
+    }
+
+    services.tableService.retrieveEntity(modelsTableName, projectId, modelId, (error, model) => {
+        if (error) {
+            return callback(error);
+        }
+
+        async.series(
+            [
+                (callback) => { services.tableService.deleteEntity(modelsTableName, { PartitionKey: { "_": projectId }, RowKey: { "_": modelId } }, callback); }
+            ],
+            (error, results) => {
+                if (error) {
+                    return callback(error);
+                }
+
+                const queueMessageId = mapColumnValue(model.queueMessageId);
+                const queuePopReceipt = mapColumnValue(model.queuePopReceipt);
+                if (queueMessageId && queuePopReceipt) {
+                    services.queueService.deleteMessage(trainingQueueName, queueMessageId, queuePopReceipt, (error) => {
+                        callback(null, "OK");                        
+                    });
+                } else {
+                    callback(null, "OK");
+                }
+            }
+        );
+    });
+}
+
 module.exports = {
     setServices: (configValues) => {
         return new Promise((resolve, reject) => {
@@ -639,6 +675,18 @@ module.exports = {
                     return reject(error);
                 }
                 resolve(model);
+            });
+        });
+    },
+    removeModel: (args, response) => {
+        return new Promise((resolve, reject) => {
+            const projectId = args.projectId;
+            const modelId = args.modelId;
+            removeModel(projectId, modelId, (error, model) => {
+                if (error) {
+                    return reject(error);
+                }
+                resolve("OK");
             });
         });
     }
