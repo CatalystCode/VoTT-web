@@ -1,0 +1,113 @@
+<div class="container-fluid">
+  <div class="container">
+    <h2>{{ isNewRecord() ? 'New Project' : project.name }}</h2>
+  </div>
+  <nav>
+    <div class="container">
+      <ul class="nav navbar-nav">
+        <li>
+          <a href ng-click="details()">Details</a>
+        </li>
+        <li>
+          <a href ng-click="manageImages()">Images</a>
+        </li>
+        <li>
+          <a href ng-click="manageCollaborators()">Collaborators</a>
+        </li>
+        <li class="active">
+          <a href ng-click="manageModels()">Models</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</div>
+
+<div class="container">
+
+  <hr/>
+
+  <h4 ng-if="isLoading">Loading...</h4>
+  <button type="button" class="btn btn-success" ng-click="train()">Train New Model</button>
+
+  <hr />
+
+  <table ng-if="!isLoading &amp;&amp; models != null &amp;&amp; models.length > 0" class="table">
+    <thead>
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">Date</th>
+        <th scope="col">Status</th>
+        <th scope="col">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="model in models">
+        <th scope="row">{{model.modelId}}</th>
+        <td>{{new Date()}}</td>
+        <td>{{ model.status }}</td>
+        <td>
+          <button type="button" class="btn btn-default" ng-click="promote(model)">Promote</button>
+          <button type="button" class="btn btn-danger" ng-click="delete(model)">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="100%">
+          <nav aria-label="Model pagination">
+            <ul class="pagination">
+              <li ng-if="previousPageToken" class="page-item">
+                <a class="page-link" href="#" ng-click="viewPreviousPage()">Previous</a>
+              </li>
+              <li ng-if="nextPageToken" class="page-item">
+                <a class="page-link" href="#page={{nextPageToken}}" ng-click="viewNextPage()">Next</a>
+              </li>
+            </ul>
+          </nav>
+        </td>
+      </tr>
+    </tfoot>
+  </table>
+
+</div>
+
+<div id="editDialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editDialogLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form>
+        <div class="modal-header">
+          <h5 class="modal-title" id="editDialogLabel">{{selectedCollaborator.collaboratorId ? 'Edit' : 'New Collaborator'}}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" ng-model="selectedCollaborator.name" class="form-control" id="name" aria-describedby="nameHelp" placeholder="Collaborator name">
+            <small id="nameHelp" class="form-text text-muted">The name of the project collaborator.</small>
+          </div>
+          <div class="form-group">
+            <label for="name">Email</label>
+            <input type="email" ng-model="selectedCollaborator.email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="someone@example.com">
+            <small id="emailHelp" class="form-text text-muted">The email address of the project collaborator.</small>
+          </div>
+          <div class="form-group">
+            <label for="profile">Profile</label>
+            <select class="form-control" ng-model="selectedCollaborator.profile" id="profile" aria-describedby="profileHelp">
+              <option value="PROJECT_MANAGER">Project Manager</option>
+              <option value="TAGGER">Tagger</option>
+            </select>
+            <small id="profileHelp" class="form-text text-muted">Select wether the collaborator will be able to manager projects or if he or she will only be able to help with
+              the image tagging effort.</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-success" ng-click="save()">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- Edit -->
