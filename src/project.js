@@ -374,7 +374,7 @@ module.exports = {
             // TODO: Ensure user has project access to the project.
             const projectId = args.projectId;
             const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
-            var query = new azure.TableQuery().where("PartitionKey == ?", projectId).top(64);
+            var query = new azure.TableQuery().where("PartitionKey == ?", projectId).top(32);
             services.tableService.queryEntities(imageTableName, query, nextPageToken, (error, results, response) => {
                 if (error) {
                     reject(error);
@@ -395,6 +395,24 @@ module.exports = {
         });
     },
 
+    createCollaborator: (args, response) => {
+        return new Promise((resolve, reject)=>{
+            // TODO: Ensure user has project access to the project.
+            const projectId = args.projectId;
+            const name = args.name;
+            const email = args.email;
+            const profile = args.profile;
+            reject("Not yet implemented.");
+        });
+    },
+    reinviteCollaborator: (args, response) => {
+        return new Promise((resolve, reject)=>{
+            // TODO: Ensure user has project access to the project.
+            const projectId = args.projectId;
+            const collaboratorId = args.collaboratorId;
+            reject("Not yet implemented.");
+        });
+    },
     collaborators: (args, response) => {
         return new Promise((resolve, reject) => {
             // TODO: Ensure user has project access to the project.

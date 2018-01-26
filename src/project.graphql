@@ -24,10 +24,17 @@ enum CollaboratorProfile {
 }
 
 type Collaborator {
+  projectId: String!
   collaboratorId: String!
   name: String!
   email: String!
   profile: CollaboratorProfile!
+}
+
+type CollaboratorInvite {
+  inviteId: String!
+  inviteURL: String!
+  collaborator: Collaborator!
 }
 
 type CollaboratorList {
@@ -62,6 +69,9 @@ type Mutation {
 
   createTrainingImage(projectId: String!): File
   commitTrainingImage(projectId: String!, fileId: String!): File
+
+  createCollaborator(projectId: String!, name: String!, email: String!, profile: CollaboratorProfile!): CollaboratorInvite
+  reinviteCollaborator(projectId: String!, collaboratorId: String!): CollaboratorInvite
 
   createTrainingSession(projectId: String!):String
 }
