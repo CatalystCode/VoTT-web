@@ -39,6 +39,12 @@ const trainingQueueName = process.env.TRAINING_QUEUE_NAME || 'training';
 const collaboratorsTableName = process.env.COLLABORATOR_TABLE_NAME || 'collaborators';
 
 /**
+ * Global invites table that all projects share. The collaboratorId is be used
+ * as the partition key.
+ */
+const inviteTableName = process.env.INVITE_TABLE_NAME || 'invites';
+
+/**
  * Global images table that all projects share. The projectId is be used as the
  * partition key and the image's id as the primary key.
  */
@@ -396,20 +402,58 @@ module.exports = {
     },
 
     createCollaborator: (args, response) => {
-        return new Promise((resolve, reject)=>{
+        return new Promise((resolve, reject) => {
             // TODO: Ensure user has project access to the project.
             const projectId = args.projectId;
             const name = args.name;
             const email = args.email;
             const profile = args.profile;
-            reject("Not yet implemented.");
+
+            const collaboratorId = uuid();
+            const collaboratorRecord = {
+                PartitionKey: projectId,
+                RowKey: collaboratorId,
+                name: name,
+                email: email,
+                profile: profile
+            };
+
+            const inviteId = uuid();
+            const inviteRecord = {
+                PartitionKey: collaboratorId,
+                RowKey: inviteId,
+                status: 'ACTIVE'
+            };
+            async.series(
+                [
+                    (callback) => { services.tableService.insertEntity(collaboratorsTableName, collaboratorRecord, callback); },
+                    (callback) => { services.tableService.insertEntity(inviteTableName, inviteRecord, callback); }
+                ],
+                (error) => {
+                    if (error) {
+                        return reject(error);
+                    }
+                    resolve({
+                        inviteId: inviteId,
+                        inviteURL: getInviteURL(projectId, collaboratorId, inviteId),
+                        collaborator: {
+                            projectId: projectId,
+                            collaboratorId: collaboratorId,
+                            name: name,
+                            email: email,
+                            profile: profile
+                        }
+                    });
+                }
+            );
         });
     },
     reinviteCollaborator: (args, response) => {
-        return new Promise((resolve, reject)=>{
+        return new Promise((resolve, reject) => {
             // TODO: Ensure user has project access to the project.
             const projectId = args.projectId;
             const collaboratorId = args.collaboratorId;
+            // TODO: Consider de-activating all previous invites for that collaborator.
             reject("Not yet implemented.");
         });
     },
