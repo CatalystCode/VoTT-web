@@ -152,6 +152,54 @@ function mapProject(value) {
     };
 }
 
+function getInviteURL(projectId, collaboratorId, inviteId) {
+    return `http://localhost:8080/vott/invites/${projectId}/${collaboratorId}/${inviteId}`;
+}
+
+function createCollaborator(projectId, name, email, profile, callback) {
+    if (!name || !email || !profile) {
+        return callback("Missing one or more required argument.");
+    }
+
+    const collaboratorId = uuid();
+    const collaboratorRecord = {
+        PartitionKey: projectId,
+        RowKey: collaboratorId,
+        name: name,
+        email: email,
+        profile: profile
+    };
+
+    const inviteId = uuid();
+    const inviteRecord = {
+        PartitionKey: collaboratorId,
+        RowKey: inviteId,
+        status: 'ACTIVE'
+    };
+    async.series(
+        [
+            (callback) => { services.tableService.insertEntity(collaboratorsTableName, collaboratorRecord, callback); },
+            (callback) => { services.tableService.insertEntity(inviteTableName, inviteRecord, callback); }
+        ],
+        (error) => {
+            if (error) {
+                return callback(error);
+            }
+            callback(null, {
+                inviteId: inviteId,
+                inviteURL: getInviteURL(projectId, collaboratorId, inviteId),
+                collaborator: {
+                    projectId: projectId,
+                    collaboratorId: collaboratorId,
+                    name: name,
+                    email: email,
+                    profile: profile
+                }
+            });
+        }
+    );
+}
+
 module.exports = {
     setServices: (configValues) => {
         return new Promise((resolve, reject) => {
@@ -409,43 +457,13 @@ module.exports = {
             const email = args.email;
             const profile = args.profile;
 
-            const collaboratorId = uuid();
-            const collaboratorRecord = {
-                PartitionKey: projectId,
-                RowKey: collaboratorId,
-                name: name,
-                email: email,
-                profile: profile
-            };
-
-            const inviteId = uuid();
-            const inviteRecord = {
-                PartitionKey: collaboratorId,
-                RowKey: inviteId,
-                status: 'ACTIVE'
-            };
-            async.series(
-                [
-                    (callback) => { services.tableService.insertEntity(collaboratorsTableName, collaboratorRecord, callback); },
-                    (callback) => { services.tableService.insertEntity(inviteTableName, inviteRecord, callback); }
-                ],
-                (error) => {
-                    if (error) {
-                        return reject(error);
-                    }
-                    resolve({
-                        inviteId: inviteId,
-                        inviteURL: getInviteURL(projectId, collaboratorId, inviteId),
-                        collaborator: {
-                            projectId: projectId,
-                            collaboratorId: collaboratorId,
-                            name: name,
-                            email: email,
-                            profile: profile
-                        }
-                    });
+            createCollaborator(projectId, name, email, profile, (error, invite) => {
+                if (error) {
+                    return reject(error);
                 }
-            );
+                // TODO: Send invite email
+                resolve(invite);
+            });
         });
     },
     reinviteCollaborator: (args, response) => {

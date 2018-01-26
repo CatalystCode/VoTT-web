@@ -94,6 +94,33 @@ angular.module('vott.factories', [])
                     data: { query: `mutation { commitTrainingImage (projectId:${JSON.stringify(projectId)}, fileId:${JSON.stringify(fileId)}) { projectId fileId fileURL } }` }
                 });
             },
+            createCollaborator: function(projectId, name, email, profile) {
+                const parameters = [
+                    `projectId:${JSON.stringify(projectId)}`,
+                    `name:${JSON.stringify(name)}`,
+                    `email:${JSON.stringify(email)}`,
+                    `profile:${profile}`, /* profile is an enum constant, not a string */
+                ].join(', ');
+                return $http({
+                    method: 'POST',
+                    url: baseUrl,
+                    data: {
+                        query: `mutation {
+                            createCollaborator (${parameters}) {
+                                inviteId
+                                inviteURL
+                                collaborator {
+                                projectId
+                                collaboratorId
+                                name
+                                email
+                                profile
+                                }
+                            }
+                        }`
+                    }
+                });
+            },
             collaborators: function(projectId, paginationToken) {
                 const invocation = paginationToken ?
                     `collaborators(projectId: ${JSON.stringify(projectId)}, paginationToken:${JSON.stringify(paginationToken)})` :

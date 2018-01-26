@@ -47,7 +47,7 @@
         <td>{{ collaborator.profile.replace('_', ' ') | lowercase }}</td>
         <td>
           <button type="button" class="btn btn-default" ng-click="reinvite(collaborator)">Reinvite</button>
-          <button type="button" class="btn btn-warning" ng-click="delete(collaborator)">Edit</button>
+          <!-- <button type="button" class="btn btn-warning" ng-click="delete(collaborator)">Edit</button> -->
           <button type="button" class="btn btn-danger" ng-click="delete(collaborator)">Delete</button>
         </td>
       </tr>
@@ -83,10 +83,28 @@
             </button>
           </div>
           <div class="modal-body">
-          </div>
+              <div class="form-group">
+                  <label for="name">Name</label>
+                  <input type="text" ng-model="selectedCollaborator.name" class="form-control" id="name" aria-describedby="nameHelp" placeholder="Collaborator name">
+                  <small id="nameHelp" class="form-text text-muted">The name of the project collaborator.</small>
+              </div>
+              <div class="form-group">
+                  <label for="name">Email</label>
+                  <input type="email" ng-model="selectedCollaborator.email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="someone@example.com">
+                  <small id="emailHelp" class="form-text text-muted">The email address of the project collaborator.</small>
+              </div>
+              <div class="form-group">
+                  <label for="profile">Profile</label>
+                  <select class="form-control" ng-model="selectedCollaborator.profile" id="profile" aria-describedby="profileHelp">
+                      <option value="PROJECT_MANAGER">Project Manager</option>
+                      <option value="TAGGER">Tagger</option>
+                  </select>
+                  <small id="profileHelp" class="form-text text-muted">Select wether the collaborator will be able to manager projects or if he or she will only be able to help with the image tagging effort.</small>
+              </div>
+                </div>
           <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-              <button type="button" class="btn btn-success" data-dismiss="modal">Save</button>
+              <button type="button" class="btn btn-success" ng-click="save()">Save</button>
             </div>
         </form>
       </div>

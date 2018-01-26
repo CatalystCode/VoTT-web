@@ -59,6 +59,21 @@ angular.module('vott.project-collaborators', [
     console.log("Edit");
   };
 
+  $scope.save = function () {
+    ProjectService.createCollaborator(
+      $routeParams.projectId,
+      $scope.selectedCollaborator.name,
+      $scope.selectedCollaborator.email,
+      $scope.selectedCollaborator.profile
+    ).then(function(response){
+      $scope.selectedCollaborator = {};
+      $scope.loadCollaborators();
+    }).catch(function(error){
+      console.log(error);
+      $scope.error = error;
+  });
+  };
+
   $scope.details = function () {
     $location.path(`/projects/${$routeParams.projectId}`);
   };
