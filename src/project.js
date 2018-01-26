@@ -90,9 +90,9 @@ function getImageContainerName(projectId) {
  * @param {string} modelId containing the primary key of the model that is part of the given project.
  * @returns {string} containing the full URL for the blob of the model.
  */
-function getModelURL(projectId, modelId) {
+function getModelReadOnlyURL(projectId, modelId) {
     const containerName = getModelContainerName(projectId);
-    return services.blobService.getUrl(containerName, modelId);
+    return services.blobService.getUrl(containerName, `${modelId}.tgz`);
 }
 
 /**
@@ -252,13 +252,16 @@ function createModel(projectId, callback) {
     }
     const modelId = uuid();
     const status = "TRAINING_PENDING";
+    const modelURL = getModelReadOnlyURL(projectId, modelId);
     const modelRecord = {
         PartitionKey: projectId,
         RowKey: modelId,
-        status: status
+        status: status,
+        modelURL: modelURL,
     };
     const annotationsURL = getModelAnnotationsURL(projectId, modelId);
-    const modelURL = getModelURL(projectId, modelId);
+
+    // TODO: Send an SAS URL in the queue message
     const statusURL = getModelStatusURL(projectId, modelId);
     const trainingQueueMessage = {
         annotations: annotationsURL,
@@ -361,7 +364,7 @@ module.exports = {
         });
     },
     getModelContainerName: getModelContainerName,
-    getModelURL: getModelURL,
+    getModelURL: getModelReadOnlyURL,
     getImageContainerName: getImageContainerName,
     getImageURL: getImageURL,
 
@@ -660,6 +663,7 @@ module.exports = {
                             projectId: value.PartitionKey._,
                             modelId: value.RowKey._,
                             created: value.Timestamp._,
+                            modelURL: getModelReadOnlyURL(value.PartitionKey._, value.RowKey._),
                             status: value.status._
                         };
                     })

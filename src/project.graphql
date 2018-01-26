@@ -47,6 +47,7 @@ type Model {
   modelId: String!
   created: String!
   status: String!
+  modelURL: String
 }
 
 type ModelList {

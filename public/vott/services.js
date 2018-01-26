@@ -138,7 +138,7 @@ angular.module('vott.factories', [])
                 return $http({
                     method: 'POST',
                     url: baseUrl,
-                    data: { query: "query { " + invocation + "{ nextPageToken entries { modelId created status } } }" }
+                    data: { query: "query { " + invocation + "{ nextPageToken entries { modelId created status modelURL } } }" }
                 });
             },
             createModel: function (projectId) {

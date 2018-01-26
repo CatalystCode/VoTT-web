@@ -61,7 +61,7 @@ describe('Project graphql controller', () => {
 
   });
 
-  describe('#getModelURL()', () => {
+  describe('#getModelReadOnlyURL()', () => {
 
     it('should use the models container', () => {
       const projectId = 'someProjectId';
@@ -73,8 +73,8 @@ describe('Project graphql controller', () => {
           }
         }
       });
-      const modelURL = projectController.getModelURL(projectId, modelId);
-      assert.equal(modelURL, 'https://somestorageaccount.blob.core.windows.net/someProjectId.models/someModelId');
+      const modelURL = projectController.getModelReadOnlyURL(projectId, modelId);
+      assert.equal(modelURL, 'https://somestorageaccount.blob.core.windows.net/someProjectId.models/someModelId.tgz');
     });
 
   });

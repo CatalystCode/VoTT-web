@@ -37,6 +37,7 @@
         <th scope="col">Training ID</th>
         <th scope="col">Date</th>
         <th scope="col">Status</th>
+        <th scope="col">File</th>
         <th scope="col">Action</th>
       </tr>
     </thead>
@@ -45,6 +46,10 @@
         <th scope="row">{{model.modelId}}</th>
         <td>{{ model.created }}</td>
         <td>{{ model.status }}</td>
+        <td>
+          <a ng-if="model.status == 'READY' || model.status == 'PROMOTED'" ng-href="{{model.modelURL}}">{{model.modelURL.split('/').reverse()[0]}}</a>
+          <div ng-if="model.status != 'READY' &amp;&amp; model.status != 'PROMOTED'">Not yet available</div>
+        </td>
         <td>
           <button type="button" class="btn btn-default" ng-click="promote(model)">Promote</button>
           <button type="button" class="btn btn-danger" ng-click="delete(model)">Delete</button>
