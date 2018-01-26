@@ -159,11 +159,15 @@ function mapProject(value) {
 }
 
 function getPublicBaseURL() {
-    return 'http://localhost:8080';
+    return 'https://popspotsvott01.azurewebsites.net';
 }
 
 function getModelAnnotationsURL(projectId, modelId) {
     return `${getPublicBaseURL()}/vott/project/${projectId}/${modelId}/annotations.csv`;
+}
+
+function getModelStatusURL(projectId, modelId) {
+    return `${getPublicBaseURL()}/vott/project/${projectId}/${modelId}/status.json`;
 }
 
 function getInviteURL(projectId, collaboratorId, inviteId) {
@@ -253,11 +257,22 @@ function createModel(projectId, callback) {
         RowKey: modelId,
         status: status
     };
-
-    // TODO: Add queue message to training queue.
+    const annotationsURL = getModelAnnotationsURL(projectId, modelId);
+    const modelURL = getModelURL(projectId, modelId);
+    const statusURL = getModelStatusURL(projectId, modelId);
+    const trainingQueueMessage = {
+        annotations: annotationsURL,
+        model: modelURL,
+        status: statusURL,
+        plugin: 'retinanet'
+    };
+    const trainingQueueMessagePythonStyle = `{ "annotations": "${annotationsURL}", "model": "${modelURL}", "status": "${getModelStatusURL(projectId, modelId)}","plugin": "retinanet" }`;
+    console.log("trainingQueueMessagePythonStyle:");
+    console.log(trainingQueueMessagePythonStyle);
     async.series(
         [
-            (callback) => { services.tableService.insertEntity(modelsTableName, modelRecord, callback); }
+            (callback) => { services.tableService.insertEntity(modelsTableName, modelRecord, callback); },
+            (callback) => { services.queueService.createMessage(trainingQueueName, trainingQueueMessagePythonStyle, callback) }
         ],
         (error) => {
             if (error) {
