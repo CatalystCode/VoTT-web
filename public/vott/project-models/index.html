@@ -15,7 +15,7 @@
           <a href ng-click="manageCollaborators()">Collaborators</a>
         </li>
         <li class="active">
-          <a href ng-click="manageModels()">Models</a>
+          <a href ng-click="manageModels()">Trained Models</a>
         </li>
       </ul>
     </div>
@@ -27,14 +27,14 @@
   <hr/>
 
   <h4 ng-if="isLoading">Loading...</h4>
-  <button type="button" class="btn btn-success" ng-click="train()">Train New Model</button>
+  <button type="button" class="btn btn-success" ng-click="train()">Train Model</button>
 
   <hr />
 
   <table ng-if="!isLoading &amp;&amp; models != null &amp;&amp; models.length > 0" class="table">
     <thead>
       <tr>
-        <th scope="col">ID</th>
+        <th scope="col">Training ID</th>
         <th scope="col">Date</th>
         <th scope="col">Status</th>
         <th scope="col">Action</th>

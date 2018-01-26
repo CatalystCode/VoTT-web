@@ -266,13 +266,10 @@ function createModel(projectId, callback) {
         status: statusURL,
         plugin: 'retinanet'
     };
-    const trainingQueueMessagePythonStyle = `{ "annotations": "${annotationsURL}", "model": "${modelURL}", "status": "${getModelStatusURL(projectId, modelId)}","plugin": "retinanet" }`;
-    console.log("trainingQueueMessagePythonStyle:");
-    console.log(trainingQueueMessagePythonStyle);
     async.series(
         [
             (callback) => { services.tableService.insertEntity(modelsTableName, modelRecord, callback); },
-            (callback) => { services.queueService.createMessage(trainingQueueName, trainingQueueMessagePythonStyle, callback) }
+            (callback) => { services.queueService.createMessage(trainingQueueName, JSON.stringify(trainingQueueMessage), callback) }
         ],
         (error) => {
             if (error) {

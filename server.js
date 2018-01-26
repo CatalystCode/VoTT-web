@@ -14,6 +14,7 @@ const cookieParser = require('cookie-parser');
 
 const collaborationController = require('./src/collaboration');
 const projectController = require('./src/project');
+const queueFoundation = require('./src/queue-foundation');
 
 const blobService = azure.createBlobService();
 const queueService = azure.createQueueService();
@@ -25,6 +26,7 @@ const services = {
   tableService: tableService
 };
 
+queueService.messageEncoder = new queueFoundation.PassthroughEncoder();
 collaborationController.setServices(services);
 projectController.setServices(services);
 
