@@ -278,10 +278,12 @@ function createModel(projectId, callback) {
 
             const trainingQueueMessageResult = results[1][0];
             const queueMessageId = trainingQueueMessageResult.messageId;
+            const queuePopReceipt = trainingQueueMessageResult.popReceipt;
             const modelUpdateDescriptor = {
                 PartitionKey: { "_": projectId },
                 RowKey: { "_": modelId },
-                queueMessageId: queueMessageId
+                queueMessageId: queueMessageId,
+                queuePopReceipt: queuePopReceipt
             };
             services.tableService.mergeEntity(modelsTableName, modelUpdateDescriptor, (mergeError, updatedModel) => {
                 if (mergeError) {
