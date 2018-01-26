@@ -42,18 +42,18 @@ const collaboratorsTableName = process.env.COLLABORATOR_TABLE_NAME || 'collabora
  * Global invites table that all projects share. The collaboratorId is be used
  * as the partition key.
  */
-const inviteTableName = process.env.INVITE_TABLE_NAME || 'invites';
+const invitesTableName = process.env.INVITE_TABLE_NAME || 'invites';
 
 /**
  * Global images table that all projects share. The projectId is be used as the
  * partition key and the image's id as the primary key.
  */
-const imageTableName = process.env.IMAGE_TABLE_NAME || 'images';
+const imagesTableName = process.env.IMAGE_TABLE_NAME || 'images';
 
 /**
  * Global projects table.
  */
-const projectTableName = process.env.PROJECT_TABLE_NAME || 'projects';
+const projectsTableName = process.env.PROJECT_TABLE_NAME || 'projects';
 
 /**
  * @param {string} projectId containing the project primary key.
@@ -179,7 +179,7 @@ function createCollaborator(projectId, name, email, profile, callback) {
     async.series(
         [
             (callback) => { services.tableService.insertEntity(collaboratorsTableName, collaboratorRecord, callback); },
-            (callback) => { services.tableService.insertEntity(inviteTableName, inviteRecord, callback); }
+            (callback) => { services.tableService.insertEntity(invitesTableName, inviteRecord, callback); }
         ],
         (error) => {
             if (error) {
@@ -207,8 +207,10 @@ module.exports = {
             async.series(
                 [
                     (callback) => { services.queueService.createQueueIfNotExists(trainingQueueName, callback); },
-                    (callback) => { services.tableService.createTableIfNotExists(imageTableName, callback); },
-                    (callback) => { services.tableService.createTableIfNotExists(projectTableName, callback); }
+                    (callback) => { services.tableService.createTableIfNotExists(imagesTableName, callback); },
+                    (callback) => { services.tableService.createTableIfNotExists(collaboratorsTableName, callback); },
+                    (callback) => { services.tableService.createTableIfNotExists(invitesTableName, callback); },
+                    (callback) => { services.tableService.createTableIfNotExists(projectsTableName, callback); }
                 ],
                 (err, results) => {
                     if (err) {
@@ -229,7 +231,7 @@ module.exports = {
             // TODO: Ensure user has project access to the app.
             var query = new azure.TableQuery().top(10);
             const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
-            services.tableService.queryEntities(projectTableName, query, nextPageToken, (error, results, response) => {
+            services.tableService.queryEntities(projectsTableName, query, nextPageToken, (error, results, response) => {
                 if (error) {
                     return reject(error);
                 }
@@ -243,7 +245,7 @@ module.exports = {
     project: (args, request) => {
         return new Promise((resolve, reject) => {
             const projectId = args.projectId;
-            services.tableService.retrieveEntity(projectTableName, projectId, projectId, (error, response) => {
+            services.tableService.retrieveEntity(projectsTableName, projectId, projectId, (error, response) => {
                 if (error) {
                     return reject(error);
                 }
@@ -274,7 +276,7 @@ module.exports = {
                     (callback) => { services.queueService.createQueueIfNotExists(taskQueueName, callback); },
                     (callback) => { services.blobService.createContainerIfNotExists(imageContainerName, { publicAccessLevel: 'blob' }, callback); },
                     (callback) => { services.blobService.createContainerIfNotExists(modelContainerName, { publicAccessLevel: 'blob' }, callback); },
-                    (callback) => { services.tableService.insertEntity(projectTableName, project, callback); }
+                    (callback) => { services.tableService.insertEntity(projectsTableName, project, callback); }
                 ],
                 (error, results) => {
                     if (error) {
@@ -305,7 +307,7 @@ module.exports = {
             if (args.instructionsText) {
                 entityDescriptor.instructionsText = args.instructionsText;
             }
-            services.tableService.mergeEntity(projectTableName, entityDescriptor, (error, project) => {
+            services.tableService.mergeEntity(projectsTableName, entityDescriptor, (error, project) => {
                 if (error) {
                     return reject(error);
                 }
@@ -324,7 +326,7 @@ module.exports = {
 
             async.series(
                 [
-                    (callback) => { services.tableService.deleteEntity(projectTableName, { PartitionKey: { "_": projectId }, RowKey: { "_": projectId } }, callback); },
+                    (callback) => { services.tableService.deleteEntity(projectsTableName, { PartitionKey: { "_": projectId }, RowKey: { "_": projectId } }, callback); },
                     (callback) => { services.queueService.deleteQueueIfExists(taskQueueName, callback); },
                     (callback) => { services.blobService.deleteContainerIfExists(imageContainerName, null, callback); },
                     (callback) => { services.blobService.deleteContainerIfExists(modelContainerName, null, callback); }
@@ -342,7 +344,7 @@ module.exports = {
     createInstructionsImage: (args, res) => {
         return new Promise((resolve, reject) => {
             const projectId = args.projectId;
-            services.tableService.retrieveEntity(projectTableName, projectId/*PartitionKey*/, projectId/*PrimaryKey*/, (error, project) => {
+            services.tableService.retrieveEntity(projectsTableName, projectId/*PartitionKey*/, projectId/*PrimaryKey*/, (error, project) => {
                 if (error) {
                     return reject(error);
                 }
@@ -366,7 +368,7 @@ module.exports = {
                 instructionsImageId: fileId
             };
 
-            services.tableService.mergeEntity(projectTableName, entityDescriptor, (error, project) => {
+            services.tableService.mergeEntity(projectsTableName, entityDescriptor, (error, project) => {
                 if (error) {
                     return reject(error);
                 }
@@ -403,7 +405,7 @@ module.exports = {
             const taskQueueName = getTaskQueueName(projectId);
             async.series(
                 [
-                    (callback) => { services.tableService.insertEntity(imageTableName, imageRecord, callback); },
+                    (callback) => { services.tableService.insertEntity(imagesTableName, imageRecord, callback); },
                     (callback) => { services.queueService.createMessage(taskQueueName, JSON.stringify(imageQueueMessage), callback) },
                     (callback) => { services.queueService.createMessage(taskQueueName, JSON.stringify(imageQueueMessage), callback) },
                     (callback) => { services.queueService.createMessage(taskQueueName, JSON.stringify(imageQueueMessage), callback) }
@@ -429,7 +431,7 @@ module.exports = {
             const projectId = args.projectId;
             const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
             var query = new azure.TableQuery().where("PartitionKey == ?", projectId).top(32);
-            services.tableService.queryEntities(imageTableName, query, nextPageToken, (error, results, response) => {
+            services.tableService.queryEntities(imagesTableName, query, nextPageToken, (error, results, response) => {
                 if (error) {
                     reject(error);
                     return;
