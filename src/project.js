@@ -187,12 +187,12 @@ function getTrainingImagesAnnotations(projectId, callback) {
                 fileURL: getImageURL(projectId, value.RowKey._),
                 annotations: [
                     {
-                        objectClassName:'guitar-body',
-                        boundingBox:{
-                            x:0,
-                            y:0,
-                            width:128,
-                            height:128
+                        objectClassName: 'guitar-body',
+                        boundingBox: {
+                            x: 0,
+                            y: 0,
+                            width: 128,
+                            height: 128
                         }
                     }
                 ],
@@ -271,14 +271,30 @@ function createModel(projectId, callback) {
             (callback) => { services.tableService.insertEntity(modelsTableName, modelRecord, callback); },
             (callback) => { services.queueService.createMessage(trainingQueueName, JSON.stringify(trainingQueueMessage), callback) }
         ],
-        (error) => {
+        (error, results) => {
             if (error) {
                 return callback(error);
             }
-            callback(null, {
-                projectId: projectId,
-                modelId: modelId,
-                status: status
+
+            const trainingQueueMessageResult = results[1][0];
+            const queueMessageId = trainingQueueMessageResult.messageId;
+            const modelUpdateDescriptor = {
+                PartitionKey: { "_": projectId },
+                RowKey: { "_": modelId },
+                queueMessageId: queueMessageId
+            };
+            services.tableService.mergeEntity(modelsTableName, modelUpdateDescriptor, (mergeError, updatedModel) => {
+                if (mergeError) {
+                    console.log("mergeError:");
+                    console.log(mergeError);
+                    return callback(mergeError);
+                }
+                callback(null, {
+                    projectId: projectId,
+                    modelId: modelId,
+                    queueMessageId: queueMessageId,
+                    status: status
+                });
             });
         }
     );
@@ -616,7 +632,7 @@ module.exports = {
     createModel: (args, response) => {
         return new Promise((resolve, reject) => {
             const projectId = args.projectId;
-            createModel(projectId, (error, model)=>{
+            createModel(projectId, (error, model) => {
                 if (error) {
                     return reject(error);
                 }
