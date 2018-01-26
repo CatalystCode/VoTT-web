@@ -163,11 +163,11 @@ function getPublicBaseURL() {
 }
 
 function getModelAnnotationsURL(projectId, modelId) {
-    return `${getPublicBaseURL()}/vott/project/${projectId}/${modelId}/annotations.csv`;
+    return `${getPublicBaseURL()}/vott/projects/${projectId}/${modelId}/annotations.csv`;
 }
 
 function getModelStatusURL(projectId, modelId) {
-    return `${getPublicBaseURL()}/vott/project/${projectId}/${modelId}/status.json`;
+    return `${getPublicBaseURL()}/vott/projects/${projectId}/${modelId}/status.json`;
 }
 
 function getInviteURL(projectId, collaboratorId, inviteId) {
