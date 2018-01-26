@@ -45,6 +45,7 @@ type CollaboratorList {
 type Model {
   projectId: String!
   modelId: String!
+  created: String!
   status: String!
 }
 
@@ -85,5 +86,5 @@ type Mutation {
   createCollaborator(projectId: String!, name: String!, email: String!, profile: CollaboratorProfile!): CollaboratorInvite
   reinviteCollaborator(projectId: String!, collaboratorId: String!): CollaboratorInvite
 
-  createTrainingSession(projectId: String!):String
+  createModel(projectId: String!):Model
 }

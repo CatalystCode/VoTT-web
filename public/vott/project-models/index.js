@@ -4,18 +4,18 @@ angular.module('vott.project-models', [
 
   $scope.isLoading = true;
   $scope.isLoadingProject = true;
-  $scope.isLoadingImages = true;
+  $scope.isLoadingModels = true;
 
   $scope.collaborators = [];
   $scope.nextPageToken = null;
 
-  $scope.$watchGroup(['isLoadingProject', 'isLoadingCollaborators'], function (newValues, oldValues, scope) {
-    $scope.isLoading = $scope.isLoadingProject || $scope.isLoadingCollaborators;
+  $scope.$watchGroup(['isLoadingProject', 'isLoadingModels'], function (newValues, oldValues, scope) {
+    $scope.isLoading = $scope.isLoadingProject || $scope.isLoadingModels;
   });
 
   $scope.load = function () {
     $scope.loadProject();
-    $scope.loadCollaborators();
+    $scope.loadModels();
   };
 
   $scope.loadProject = function () {
@@ -31,14 +31,14 @@ angular.module('vott.project-models', [
       });
   };
 
-  $scope.loadCollaborators = function (paginationToken) {
-    $scope.isLoadingCollaborators = true;
-    ProjectService.collaborators($routeParams.projectId, paginationToken)
+  $scope.loadModels = function (paginationToken) {
+    $scope.isLoadingModels = true;
+    ProjectService.models($routeParams.projectId, paginationToken)
       .then(function (response) {
-        const collaboratorsData = response.data.data.collaborators;
-        $scope.collaborators = collaboratorsData.entries;
-        $scope.nextPageToken = collaboratorsData.nextPageToken;
-        $scope.isLoadingCollaborators = false;
+        const modelsData = response.data.data.models;
+        $scope.models = modelsData.entries;
+        $scope.nextPageToken = modelsData.nextPageToken;
+        $scope.isLoadingModels = false;
       })
       .catch(function (error) {
         console.log(error);
@@ -46,17 +46,30 @@ angular.module('vott.project-models', [
       });
   };
 
-  $scope.train = function(collaborator) {
+  $scope.train = function () {
+    console.log("Train");
+    ProjectService.createModel($routeParams.projectId)
+    .then(function(response){
+      const model = response.data.data.createModel;
+      console.log(model);
+      $scope.load();
+    })
+    .catch(function(error){
+      console.log(error);
+      $scope.error = error;
+    });
   };
 
-  $scope.promote = function(collaborator) {
+  $scope.promote = function (model) {
+    console.log("Promote");
   };
 
-  $scope.delete = function (collaborator) {
-    console.log("Edit");
+  $scope.delete = function (model) {
+    console.log("Delete");
   };
 
   $scope.save = function () {
+    console.log("Save");
   };
 
   $scope.details = function () {

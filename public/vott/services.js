@@ -131,6 +131,23 @@ angular.module('vott.factories', [])
                     data: { query: "query { " + invocation + "{ nextPageToken entries { collaboratorId name email profile } } }" }
                 });
             },
+            models: function(projectId, paginationToken) {
+                const invocation = paginationToken ?
+                    `models(projectId: ${JSON.stringify(projectId)}, paginationToken:${JSON.stringify(paginationToken)})` :
+                    `models(projectId: ${JSON.stringify(projectId)})`;
+                return $http({
+                    method: 'POST',
+                    url: baseUrl,
+                    data: { query: "query { " + invocation + "{ nextPageToken entries { modelId created status } } }" }
+                });
+            },
+            createModel: function(projectId) {
+                return $http({
+                    method: 'POST',
+                    url: baseUrl,
+                    data: { query: `mutation { createModel (projectId:${JSON.stringify(projectId)}) { projectId modelId status } }` }
+                });
+            },
             uploadImageToAzureStorageBlob: function (contentType, data, url, successCallback, errorCallback, progressCallback) {
                 $.ajax({
                     url: url,

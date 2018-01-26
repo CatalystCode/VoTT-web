@@ -163,7 +163,7 @@ function getInviteURL(projectId, collaboratorId, inviteId) {
 }
 
 function createCollaborator(projectId, name, email, profile, callback) {
-    if (!name || !email || !profile) {
+    if (!projectId || !name || !email || !profile) {
         return callback("Missing one or more required argument.");
     }
 
@@ -201,6 +201,36 @@ function createCollaborator(projectId, name, email, profile, callback) {
                     email: email,
                     profile: profile
                 }
+            });
+        }
+    );
+}
+
+function createModel(projectId, callback) {
+    if (!projectId) {
+        return callback("Parameter projectId must be present.");
+    }
+    const modelId = uuid();
+    const status = "TRAINING_PENDING";
+    const modelRecord = {
+        PartitionKey: projectId,
+        RowKey: modelId,
+        status: status
+    };
+
+    // TODO: Add queue message to training queue.
+    async.series(
+        [
+            (callback) => { services.tableService.insertEntity(modelsTableName, modelRecord, callback); }
+        ],
+        (error) => {
+            if (error) {
+                return callback(error);
+            }
+            callback(null, {
+                projectId: projectId,
+                modelId: modelId,
+                status: status
             });
         }
     );
@@ -527,6 +557,7 @@ module.exports = {
                         return {
                             projectId: value.PartitionKey._,
                             modelId: value.RowKey._,
+                            created: value.Timestamp._,
                             status: value.status._
                         };
                     })
@@ -534,9 +565,15 @@ module.exports = {
             });
         });
     },
-    createTrainingSession: (args, response) => {
+    createModel: (args, response) => {
         return new Promise((resolve, reject) => {
-            reject("Not yet implemented.");
+            const projectId = args.projectId;
+            createModel(projectId, (error, model)=>{
+                if (error) {
+                    return reject(error);
+                }
+                resolve(model);
+            });
         });
     }
 };
