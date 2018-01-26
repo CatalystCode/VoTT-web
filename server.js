@@ -56,7 +56,32 @@ app.use('/v1/graphql/collaboration', expressGraphql({
   rootValue: collaborationController,
   graphiql: graphiqlEnabled,
   pretty: true
-}));  
+}));
+
+app.get('/vott/projects/:projectId/:modelId/annotations.csv', (request, response) => {
+  const projectId = request.params.projectId;
+  const modelId = request.params.modelId;
+  projectController.getTrainingImagesAnnotations(projectId, (error, images) => {
+    if (error) {
+      console.log(error);
+      response.send(error);
+      return;
+    }
+
+    response.set('Content-Type', 'text/plain; charset=utf8');
+    response.set('Content-Disposition', 'attachment;filename=annotations.csv');
+    var csv = '';
+    for (var i = 0; i < images.length; i++) {
+      const image = images[i];
+
+      for (var annotationIndex = 0; annotationIndex < image.annotations.length; annotationIndex++) {
+        const annotation = image.annotations[annotationIndex];
+        csv += `${image.fileURL},${annotation.boundingBox.x},${annotation.boundingBox.y},${annotation.boundingBox.width},${annotation.boundingBox.height},${annotation.objectClassName}\n`;
+      }
+    }
+    response.send(csv);
+  });
+})
 
 app.use(express.static('public'));
 app.listen(process.env.PORT, () => console.log(`Started on port ${process.env.PORT}`));

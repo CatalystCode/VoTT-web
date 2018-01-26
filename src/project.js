@@ -158,8 +158,44 @@ function mapProject(value) {
     };
 }
 
+function getPublicBaseURL() {
+    return 'http://localhost:8080';
+}
+
+function getModelAnnotationsURL(projectId, modelId) {
+    return `${getPublicBaseURL()}/vott/project/${projectId}/${modelId}/annotations.csv`;
+}
+
 function getInviteURL(projectId, collaboratorId, inviteId) {
-    return `http://localhost:8080/vott/invites/${projectId}/${collaboratorId}/${inviteId}`;
+    return `${getPublicBaseURL()}/vott/invites/${projectId}/${collaboratorId}/${inviteId}`;
+}
+
+function getTrainingImagesAnnotations(projectId, callback) {
+    var query = new azure.TableQuery().where("PartitionKey == ?", projectId);
+    services.tableService.queryEntities(imagesTableName, query, null, (error, results, response) => {
+        if (error) {
+            return callback(error);
+        }
+        const images = results.entries.map((value) => {
+            return {
+                projectId: value.PartitionKey._,
+                fileId: value.RowKey._,
+                fileURL: getImageURL(projectId, value.RowKey._),
+                annotations: [
+                    {
+                        objectClassName:'guitar-body',
+                        boundingBox:{
+                            x:0,
+                            y:0,
+                            width:128,
+                            height:128
+                        }
+                    }
+                ],
+            };
+        });
+        callback(null, images);
+    });
 }
 
 function createCollaborator(projectId, name, email, profile, callback) {
@@ -461,7 +497,7 @@ module.exports = {
 
         });
     },
-
+    getTrainingImagesAnnotations: getTrainingImagesAnnotations,
     trainingImages: (args, res) => {
         return new Promise((resolve, reject) => {
             // TODO: Ensure user has project access to the project.
