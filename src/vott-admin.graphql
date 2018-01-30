@@ -76,7 +76,7 @@ input ConfirmedFile {
 type Mutation {
   createProject(name: String!, taskType: TaskType!, objectClassNames:[String]!, instructionsText:String):Project
   updateProject(projectId: String!, name: String, taskType: TaskType, objectClassNames:[String], instructionsText:String):Project
-  removeProject(projectId: String!):String
+  deleteProject(projectId: String!):String
 
   createInstructionsImage(projectId: String!): File
   commitInstructionsImage(image:ConfirmedFile!): String
@@ -89,6 +89,6 @@ type Mutation {
   deleteCollaborator(projectId: String!, collaboratorId: String!): String
 
   createModel(projectId: String!): Model
-  removeModel(projectId: String!, modelId: String!): String
+  deleteModel(projectId: String!, modelId: String!): String
 
 }

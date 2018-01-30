@@ -145,7 +145,7 @@ module.exports = {
     });
   },
 
-  removeModel: (projectId, modelId) => {
+  deleteModel: (projectId, modelId) => {
     return new Promise((resolve, reject)=>{
       // TODO: Make sure the queue message(s) for training this model are also deleted.
       // TODO: Consider only marking the model as deleted.

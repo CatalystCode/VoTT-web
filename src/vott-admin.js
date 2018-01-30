@@ -256,7 +256,7 @@ module.exports = {
             });
         });
     },
-    removeProject: (args, res) => {
+    deleteProject: (args, res) => {
         return new Promise((resolve, reject) => {
             // TODO: Ensure user has access to projectId.
             const projectId = args.projectId;
@@ -458,9 +458,9 @@ module.exports = {
         const projectId = args.projectId;
         return services.modelService.createModel(projectId);
     },
-    removeModel: (args, request) => {
+    deleteModel: (args, request) => {
         const projectId = args.projectId;
         const modelId = args.modelId;
-        return services.modelService.removeModel(projectId, modelId);
+        return services.modelService.deleteModel(projectId, modelId);
     },
 };

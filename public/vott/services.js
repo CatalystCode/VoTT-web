@@ -44,11 +44,11 @@ angular.module('vott.factories', [])
                     data: { query: `mutation { updateProject (${parameters}) { projectId } }` }
                 });
             },
-            removeProject: function (projectId) {
+            deleteProject: function (projectId) {
                 return $http({
                     method: 'POST',
                     url: baseUrl,
-                    data: { query: `mutation { removeProject (projectId:${JSON.stringify(projectId)}) }` }
+                    data: { query: `mutation { deleteProject (projectId:${JSON.stringify(projectId)}) }` }
                 });
             },
             //  createInstructionsImage(projectId: String!): Image
@@ -155,11 +155,11 @@ angular.module('vott.factories', [])
                     data: { query: `mutation { createModel (projectId:${JSON.stringify(projectId)}) { projectId modelId status } }` }
                 });
             },
-            removeModel: function (projectId, modelId) {
+            deleteModel: function (projectId, modelId) {
                 return $http({
                     method: 'POST',
                     url: baseUrl,
-                    data: { query: `mutation { removeModel (projectId:${JSON.stringify(projectId)}, modelId: ${JSON.stringify(modelId)}) }` }
+                    data: { query: `mutation { deleteModel (projectId:${JSON.stringify(projectId)}, modelId: ${JSON.stringify(modelId)}) }` }
                 });
             },
             uploadImageToAzureStorageBlob: function (contentType, data, url, successCallback, errorCallback, progressCallback) {

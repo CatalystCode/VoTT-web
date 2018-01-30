@@ -25,7 +25,7 @@ angular.module('vott.project-list', [
     };
     $scope.confirmDeleteProject = function(project) {
         $('#projectDeleteConfirmation').modal('hide');
-        ProjectService.removeProject(project.projectId).then(function(response){
+        ProjectService.deleteProject(project.projectId).then(function(response){
             $route.reload();
         }).catch(function(error){
             console.log(error);

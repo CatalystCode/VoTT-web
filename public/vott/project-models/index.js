@@ -74,7 +74,7 @@ angular.module('vott.project-models', [
   }
 
   $scope.deleteConfirmed = function () {
-    ProjectService.removeModel($routeParams.projectId, $scope.selectedModel.modelId)
+    ProjectService.deleteModel($routeParams.projectId, $scope.selectedModel.modelId)
       .then(function (response) {
         $('#modelDeleteConfirmation').modal('hide');
         $scope.load();
