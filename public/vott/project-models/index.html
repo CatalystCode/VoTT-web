@@ -15,7 +15,7 @@
           <a href ng-click="manageCollaborators()">Collaborators</a>
         </li>
         <li class="active">
-          <a href ng-click="manageModels()">Models</a>
+          <a href ng-click="manageModels()">Trained Models</a>
         </li>
       </ul>
     </div>
@@ -27,16 +27,17 @@
   <hr/>
 
   <h4 ng-if="isLoading">Loading...</h4>
-  <button type="button" class="btn btn-success" ng-click="train()">Train New Model</button>
+  <button type="button" class="btn btn-success" ng-click="train()">Train Model</button>
 
   <hr />
 
   <table ng-if="!isLoading &amp;&amp; models != null &amp;&amp; models.length > 0" class="table">
     <thead>
       <tr>
-        <th scope="col">ID</th>
+        <th scope="col">Training ID</th>
         <th scope="col">Date</th>
         <th scope="col">Status</th>
+        <th scope="col">File</th>
         <th scope="col">Action</th>
       </tr>
     </thead>
@@ -45,6 +46,10 @@
         <th scope="row">{{model.modelId}}</th>
         <td>{{ model.created }}</td>
         <td>{{ model.status }}</td>
+        <td>
+          <a ng-if="model.status == 'READY' || model.status == 'PROMOTED'" ng-href="{{model.modelURL}}">{{model.modelURL.split('/').reverse()[0]}}</a>
+          <div ng-if="model.status != 'READY' &amp;&amp; model.status != 'PROMOTED'">Not yet available</div>
+        </td>
         <td>
           <button type="button" class="btn btn-default" ng-click="promote(model)">Promote</button>
           <button type="button" class="btn btn-danger" ng-click="delete(model)">Delete</button>
@@ -70,3 +75,25 @@
   </table>
 
 </div>
+
+<div id="modelDeleteConfirmation" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modelDeleteConfirmationLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modelDeleteConfirmationLabel">Confirm Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Please confirm you would like to delete the model created on {{selectedModel.created}} ({{selectedModel.projectId}}).
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" ng-click="deleteConfirmed()">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Delete confirmation -->

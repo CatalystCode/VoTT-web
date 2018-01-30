@@ -49,15 +49,15 @@ angular.module('vott.project-models', [
   $scope.train = function () {
     console.log("Train");
     ProjectService.createModel($routeParams.projectId)
-    .then(function(response){
-      const model = response.data.data.createModel;
-      console.log(model);
-      $scope.load();
-    })
-    .catch(function(error){
-      console.log(error);
-      $scope.error = error;
-    });
+      .then(function (response) {
+        const model = response.data.data.createModel;
+        console.log(model);
+        $scope.load();
+      })
+      .catch(function (error) {
+        console.log(error);
+        $scope.error = error;
+      });
   };
 
   $scope.promote = function (model) {
@@ -66,8 +66,27 @@ angular.module('vott.project-models', [
 
   $scope.delete = function (model) {
     console.log("Delete");
+    $scope.selectedModel = model;
+    $('#modelDeleteConfirmation').modal('show');
   };
 
+  $scope.deleteCancelled = function() {
+    $scope.selectedModel = null;
+    $('#modelDeleteConfirmation').modal('hide');
+  }
+
+  $scope.deleteConfirmed = function () {
+    ProjectService.removeModel($routeParams.projectId, $scope.selectedModel.modelId)
+      .then(function (response) {
+        $('#modelDeleteConfirmation').modal('hide');
+        $scope.load();
+      })
+      .catch(function (error) {
+        console.log(error);
+        $scope.error = error;
+      });
+  };
+  
   $scope.save = function () {
     console.log("Save");
   };

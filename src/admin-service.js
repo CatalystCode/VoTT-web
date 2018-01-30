@@ -67,6 +67,19 @@ function getImageContainerName(projectId) {
 
 /**
  * @param {string} projectId containing the project primary key.
+<<<<<<< HEAD:src/admin-service.js
+=======
+ * @param {string} modelId containing the primary key of the model that is part of the given project.
+ * @returns {string} containing the full URL for the blob of the model.
+ */
+function getModelReadOnlyURL(projectId, modelId) {
+    const containerName = getModelContainerName(projectId);
+    return services.blobService.getUrl(containerName, `${modelId}.tgz`);
+}
+
+/**
+ * @param {string} projectId containing the project primary key.
+>>>>>>> 2c4e36079a9da6fc5423be493d6b6fe50f90768d:src/project.js
  * @param {string} imageId containing the primary key of the image that is part of the given project.
  * @returns {string} containing the full URL for the blob of the image.
  */

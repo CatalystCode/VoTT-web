@@ -80,21 +80,21 @@ angular.module('vott.factories', [])
                     data: { query: "query { " + invocation + "{ nextPageToken entries { projectId fileId fileURL } } }" }
                 });
             },
-            createTrainingImage: function(projectId) {
+            createTrainingImage: function (projectId) {
                 return $http({
                     method: 'POST',
                     url: baseUrl,
                     data: { query: `mutation { createTrainingImage (projectId:${JSON.stringify(projectId)}) { projectId fileId fileURL } }` }
                 });
             },
-            commitTrainingImage: function(projectId, fileId) {
+            commitTrainingImage: function (projectId, fileId) {
                 return $http({
                     method: 'POST',
                     url: baseUrl,
                     data: { query: `mutation { commitTrainingImage (projectId:${JSON.stringify(projectId)}, fileId:${JSON.stringify(fileId)}) { projectId fileId fileURL } }` }
                 });
             },
-            createCollaborator: function(projectId, name, email, profile) {
+            createCollaborator: function (projectId, name, email, profile) {
                 const parameters = [
                     `projectId:${JSON.stringify(projectId)}`,
                     `name:${JSON.stringify(name)}`,
@@ -121,7 +121,7 @@ angular.module('vott.factories', [])
                     }
                 });
             },
-            collaborators: function(projectId, paginationToken) {
+            collaborators: function (projectId, paginationToken) {
                 const invocation = paginationToken ?
                     `collaborators(projectId: ${JSON.stringify(projectId)}, paginationToken:${JSON.stringify(paginationToken)})` :
                     `collaborators(projectId: ${JSON.stringify(projectId)})`;
@@ -131,21 +131,28 @@ angular.module('vott.factories', [])
                     data: { query: "query { " + invocation + "{ nextPageToken entries { collaboratorId name email profile } } }" }
                 });
             },
-            models: function(projectId, paginationToken) {
+            models: function (projectId, paginationToken) {
                 const invocation = paginationToken ?
                     `models(projectId: ${JSON.stringify(projectId)}, paginationToken:${JSON.stringify(paginationToken)})` :
                     `models(projectId: ${JSON.stringify(projectId)})`;
                 return $http({
                     method: 'POST',
                     url: baseUrl,
-                    data: { query: "query { " + invocation + "{ nextPageToken entries { modelId created status } } }" }
+                    data: { query: "query { " + invocation + "{ nextPageToken entries { modelId created status modelURL } } }" }
                 });
             },
-            createModel: function(projectId) {
+            createModel: function (projectId) {
                 return $http({
                     method: 'POST',
                     url: baseUrl,
                     data: { query: `mutation { createModel (projectId:${JSON.stringify(projectId)}) { projectId modelId status } }` }
+                });
+            },
+            removeModel: function (projectId, modelId) {
+                return $http({
+                    method: 'POST',
+                    url: baseUrl,
+                    data: { query: `mutation { removeModel (projectId:${JSON.stringify(projectId)}, modelId: ${JSON.stringify(modelId)}) }` }
                 });
             },
             uploadImageToAzureStorageBlob: function (contentType, data, url, successCallback, errorCallback, progressCallback) {

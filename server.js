@@ -27,6 +27,7 @@ const services = {
   tableService: tableService
 };
 
+queueService.messageEncoder = new queueFoundation.PassthroughEncoder();
 collaborationController.setServices(services);
 modelService.setServices(services);
 adminService.setServices(services);
