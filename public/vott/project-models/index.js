@@ -47,11 +47,9 @@ angular.module('vott.project-models', [
   };
 
   $scope.train = function () {
-    console.log("Train");
     ProjectService.createModel($routeParams.projectId)
       .then(function (response) {
         const model = response.data.data.createModel;
-        console.log(model);
         $scope.load();
       })
       .catch(function (error) {
