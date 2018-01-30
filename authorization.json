@@ -35,7 +35,7 @@
         "GET",
         "POST"
       ],
-      "path_prefix": "/v1/graphql/projects",
+      "path_prefix": "/api/vott-admin",
       "policies": {
         "unauthenticated_action": "RedirectToLoginPage"
       }

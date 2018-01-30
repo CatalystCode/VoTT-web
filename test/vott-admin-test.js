@@ -1,5 +1,5 @@
 const assert = require('assert');
-const projectController = require('../src/admin-service');
+const projectController = require('../src/vott-admin');
 
 describe('Project graphql controller', () => {
 

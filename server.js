@@ -16,7 +16,7 @@ const collaborationController = require('./src/collaboration');
 const modelService = require('./src/model-service');
 const collaboratorService = require('./src/collaborator-service');
 const inviteService = require('./src/invite-service');
-const adminService = require('./src/admin-service');
+const vottAdmin = require('./src/vott-admin');
 const queueFoundation = require('./src/queue-foundation');
 
 const blobService = azure.createBlobService();
@@ -36,7 +36,7 @@ queueService.messageEncoder = new queueFoundation.PassthroughEncoder();
 collaboratorService.setServices(services);
 inviteService.setServices(services);
 modelService.setServices(services);
-adminService.setServices(services);
+vottAdmin.setServices(services);
 collaborationController.setServices(services);
 
 const schemaFile = fs.readFileSync("src/schema.graphql", "utf8");
@@ -44,8 +44,8 @@ const schemaFile = fs.readFileSync("src/schema.graphql", "utf8");
 const collaborationSchemaFile = fs.readFileSync("src/collaboration.graphql", "utf8");
 const collaborationSchema = graphiql.buildSchema(schemaFile + collaborationSchemaFile);
 
-const projectSchemaFile = fs.readFileSync("src/project.graphql", "utf8");
-const projectSchema = graphiql.buildSchema(schemaFile + projectSchemaFile);
+const vottAdminSchemaFile = fs.readFileSync("src/vott-admin.graphql", "utf8");
+const vottAdminSchema = graphiql.buildSchema(schemaFile + vottAdminSchemaFile);
 
 const graphiqlEnabled = process.env.GRAPHIQL_ENABLED == 'true';
 const app = express();
@@ -55,9 +55,9 @@ app.use(cookieParser());
 app.use(expressSession({ secret: 'keyboard gato', resave: true, saveUninitialized: false }));
 // app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use('/v1/graphql/projects', expressGraphql({
-  schema: projectSchema,
-  rootValue: adminService,
+app.use('/api/vott-admin', expressGraphql({
+  schema: vottAdminSchema,
+  rootValue: vottAdmin,
   graphiql: graphiqlEnabled,
   pretty: true
 }));
@@ -72,7 +72,7 @@ app.use('/v1/graphql/collaboration', expressGraphql({
 app.get('/vott-training/projects/:projectId/:modelId/annotations.csv', (request, response) => {
   const projectId = request.params.projectId;
   const modelId = request.params.modelId;
-  adminService.getTrainingImagesAnnotations(projectId, (error, images) => {
+  vottAdmin.getTrainingImagesAnnotations(projectId, (error, images) => {
     if (error) {
       console.log(error);
       response.send(error);

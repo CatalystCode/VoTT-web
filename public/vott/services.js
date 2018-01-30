@@ -1,6 +1,6 @@
 angular.module('vott.factories', [])
     .factory('ProjectService', function ($http) {
-        const baseUrl = '/v1/graphql/projects';
+        const baseUrl = '/api/vott-admin';
         return {
             getProjects: function (nextPageToken) {
                 const invocation = nextPageToken ? `projects(nextPageToken:${JSON.stringify(nextPageToken)})` : 'projects';
