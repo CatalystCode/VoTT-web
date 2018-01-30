@@ -12,32 +12,33 @@ const fs = require("fs");
 // const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
 
-const collaborationController = require('./src/collaboration');
-const modelService = require('./src/model-service');
-const collaboratorService = require('./src/collaborator-service');
-const inviteService = require('./src/invite-service');
-const vottAdmin = require('./src/vott-admin');
-const queueFoundation = require('./src/queue-foundation');
+const foundation = require('./src/vott-foundation');
 
-const blobService = azure.createBlobService();
-const queueService = azure.createQueueService();
-const tableService = azure.createTableService();
 const services = {
-  azure: azure,
-  modelService: modelService,
-  collaboratorService: collaboratorService,
-  inviteService: inviteService,
-  blobService: blobService,
-  queueService: queueService,
-  tableService: tableService
+  modelService: new (require('./src/model-service')).ModelService(),
+  collaboratorService: new (require('./src/collaborator-service')).CollaboratorService(),
+  inviteService: new (require('./src/invite-service')).InviteService(),
+  imageService: new (require('./src/image-service')).ImageService(),
+  projectService: new (require('./src/project-service')).ProjectService(),
+
+  blobService: azure.createBlobService(),
+  queueService: azure.createQueueService(),
+  tableService: azure.createTableService()
 };
 
-queueService.messageEncoder = new queueFoundation.PassthroughEncoder();
-collaboratorService.setServices(services);
-inviteService.setServices(services);
-modelService.setServices(services);
-vottAdmin.setServices(services);
-collaborationController.setServices(services);
+services.queueService.messageEncoder = new foundation.PassthroughEncoder();
+
+const vottAdmin = new (require('./src/vott-admin')).RequestHandler();
+const collaborationController = require('./src/collaboration');
+[
+  services.modelService,
+  services.collaboratorService,
+  services.inviteService,
+  services.imageService,
+  services.projectService,
+  collaborationController,
+  vottAdmin
+].forEach(value=>{value.setServices(services);})
 
 const schemaFile = fs.readFileSync("src/schema.graphql", "utf8");
 
@@ -72,13 +73,7 @@ app.use('/v1/graphql/collaboration', expressGraphql({
 app.get('/vott-training/projects/:projectId/:modelId/annotations.csv', (request, response) => {
   const projectId = request.params.projectId;
   const modelId = request.params.modelId;
-  vottAdmin.getTrainingImagesAnnotations(projectId, (error, images) => {
-    if (error) {
-      console.log(error);
-      response.send(error);
-      return;
-    }
-
+  imageService.getTrainingImagesAnnotations(projectId).then(images=>{
     response.set('Content-Type', 'text/plain; charset=utf8');
     response.set('Content-Disposition', 'attachment;filename=annotations.csv');
     var csv = '';
@@ -91,6 +86,9 @@ app.get('/vott-training/projects/:projectId/:modelId/annotations.csv', (request,
       }
     }
     response.send(csv);
+  }).catch(error=>{
+    console.log(error);
+    response.send(error);
   });
 })
 

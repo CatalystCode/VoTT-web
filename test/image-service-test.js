@@ -1,5 +1,5 @@
 const assert = require('assert');
-const projectController = require('../src/vott-admin');
+const imageService = new (require('../src/image-service')).ImageService();
 
 describe('Project graphql controller', () => {
 
@@ -9,7 +9,7 @@ describe('Project graphql controller', () => {
 
       const createdQueues = [];
       const createdTables = [];
-      return projectController.setServices({
+      return imageService.setServices({
         queueService: {
           createQueueIfNotExists: (queueName, callback) => {
             createdQueues.push(queueName);
@@ -24,7 +24,7 @@ describe('Project graphql controller', () => {
         }
       }).then(data => {
         assert.deepEqual(createdQueues, [ ]);
-        assert.deepEqual(createdTables, [ 'images', 'projects' ]);
+        assert.deepEqual(createdTables, [ 'images' ]);
       });
 
     });
@@ -35,7 +35,7 @@ describe('Project graphql controller', () => {
 
     it('should end with -images', () => {
       const projectId = 'someProjectId';
-      const containerName = projectController.getImageContainerName(projectId);
+      const containerName = imageService.getImageContainerName(projectId);
       assert.equal(containerName, `${projectId}-images`);
     });
 
@@ -46,14 +46,14 @@ describe('Project graphql controller', () => {
     it('should use the images container', () => {
       const projectId = 'someProjectId';
       const modelId = 'someImageId';
-      projectController.setServices({
+      imageService.setServices({
         blobService: {
           getUrl: (containerName, blobName)=>{
             return `https://somestorageaccount.blob.core.windows.net/${containerName}/${blobName}`;
           }
         }
       });
-      const imageURL = projectController.getImageURL(projectId, modelId);
+      const imageURL = imageService.getImageURL(projectId, modelId);
       assert.equal(imageURL, 'https://somestorageaccount.blob.core.windows.net/someProjectId-images/someImageId');
     });
 

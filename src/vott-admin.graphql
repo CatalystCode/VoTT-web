@@ -55,11 +55,6 @@ type ModelList {
   nextPageToken: String
 }
 
-type TrainingSession {
-  trainingSessionId: String!
-  projectId: String!
-}
-
 type Query {
   projects(nextPageToken:String): ProjectList
   project(projectId: String!): Project
