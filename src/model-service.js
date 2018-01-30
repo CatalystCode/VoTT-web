@@ -145,5 +145,20 @@ module.exports = {
     });
   },
 
+  removeModel: (projectId, modelId) => {
+    return new Promise((resolve, reject)=>{
+      // TODO: Make sure the queue message(s) for training this model are also deleted.
+      // TODO: Consider only marking the model as deleted.
+      const description = { PartitionKey: { "_": projectId }, RowKey: { "_": modelId } };
+      services.tableService.deleteEntity(modelsTableName, description, (error, results)=>{
+        if (error) {
+          return reject(error);
+        }
+        return resolve("OK");
+      });
+
+    });
+  }
+
 
 };

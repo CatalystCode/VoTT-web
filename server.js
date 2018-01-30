@@ -14,7 +14,10 @@ const cookieParser = require('cookie-parser');
 
 const collaborationController = require('./src/collaboration');
 const modelService = require('./src/model-service');
+const collaboratorService = require('./src/collaborator-service');
+const inviteService = require('./src/invite-service');
 const adminService = require('./src/admin-service');
+const queueFoundation = require('./src/queue-foundation');
 
 const blobService = azure.createBlobService();
 const queueService = azure.createQueueService();
@@ -22,15 +25,19 @@ const tableService = azure.createTableService();
 const services = {
   azure: azure,
   modelService: modelService,
+  collaboratorService: collaboratorService,
+  inviteService: inviteService,
   blobService: blobService,
   queueService: queueService,
   tableService: tableService
 };
 
 queueService.messageEncoder = new queueFoundation.PassthroughEncoder();
-collaborationController.setServices(services);
+collaboratorService.setServices(services);
+inviteService.setServices(services);
 modelService.setServices(services);
 adminService.setServices(services);
+collaborationController.setServices(services);
 
 const schemaFile = fs.readFileSync("src/schema.graphql", "utf8");
 

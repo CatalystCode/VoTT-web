@@ -34,7 +34,7 @@ type Collaborator {
 type CollaboratorInvite {
   inviteId: String!
   inviteURL: String!
-  collaborator: Collaborator!
+  collaborator: Collaborator
 }
 
 type CollaboratorList {
@@ -86,6 +86,7 @@ type Mutation {
 
   createCollaborator(projectId: String!, name: String!, email: String!, profile: CollaboratorProfile!): CollaboratorInvite
   reinviteCollaborator(projectId: String!, collaboratorId: String!): CollaboratorInvite
+  deleteCollaborator(projectId: String!, collaboratorId: String!): String
 
   createModel(projectId: String!): Model
   removeModel(projectId: String!, modelId: String!): String

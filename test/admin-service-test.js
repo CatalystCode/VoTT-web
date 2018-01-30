@@ -24,7 +24,7 @@ describe('Project graphql controller', () => {
         }
       }).then(data => {
         assert.deepEqual(createdQueues, [ ]);
-        assert.deepEqual(createdTables, [ 'images', 'collaborators', 'invites', 'projects' ]);
+        assert.deepEqual(createdTables, [ 'images', 'projects' ]);
       });
 
     });

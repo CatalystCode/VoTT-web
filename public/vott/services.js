@@ -131,6 +131,13 @@ angular.module('vott.factories', [])
                     data: { query: "query { " + invocation + "{ nextPageToken entries { collaboratorId name email profile } } }" }
                 });
             },
+            deleteCollaborator: function(projectId, collaboratorId) {
+                return $http({
+                    method: 'POST',
+                    url: baseUrl,
+                    data: { query: `mutation { deleteCollaborator (projectId:${JSON.stringify(projectId)}, collaboratorId: ${JSON.stringify(collaboratorId)}) }` }
+                });
+            },
             models: function (projectId, paginationToken) {
                 const invocation = paginationToken ?
                     `models(projectId: ${JSON.stringify(projectId)}, paginationToken:${JSON.stringify(paginationToken)})` :

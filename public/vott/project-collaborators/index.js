@@ -36,6 +36,7 @@ angular.module('vott.project-collaborators', [
     ProjectService.collaborators($routeParams.projectId, paginationToken)
       .then(function (response) {
         const collaboratorsData = response.data.data.collaborators;
+        console.log(collaboratorsData);
         $scope.collaborators = collaboratorsData.entries;
         $scope.nextPageToken = collaboratorsData.nextPageToken;
         $scope.isLoadingCollaborators = false;
@@ -51,12 +52,24 @@ angular.module('vott.project-collaborators', [
     $('#editDialog').modal('show');
   };
 
-  $scope.edit = function (collaborator) {
-    console.log("Edit");
+  $scope.delete = function (collaborator) {
+    $scope.selectedCollaborator = collaborator;
+    $('#deleteConfirmation').modal('show');
   };
 
-  $scope.delete = function (collaborator) {
+  $scope.deleteConfirmed = function (collaborator) {
     console.log("Edit");
+    ProjectService.deleteCollaborator(
+      $routeParams.projectId,
+      collaborator.collaboratorId
+    ).then(function(response){
+      $scope.selectedCollaborator = {};
+      $scope.loadCollaborators();
+      $('#deleteConfirmation').modal('hide');
+    }).catch(function(error){
+      console.log(error);
+      $scope.error = error;
+    });
   };
 
   $scope.save = function () {

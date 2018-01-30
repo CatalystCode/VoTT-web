@@ -8,6 +8,8 @@ const uuid = require('uuid/v4');
 const services = {
     authzService: null,
     modelService: null,
+    collaboratorService: null,
+    inviteService: null,
     blobService: null,
     queueService: null,
     tableService: null
@@ -25,18 +27,6 @@ function getUser(request) {
         idp: request.headers[CLIENT_PRINCIPAL_IDP_HEADER]
     };
 }
-
-/**
- * Global collaborators table that all projects share. The projectId is be used
- * as the partition key and the collaborator's id as the primary key.
- */
-const collaboratorsTableName = process.env.COLLABORATOR_TABLE_NAME || 'collaborators';
-
-/**
- * Global invites table that all projects share. The collaboratorId is be used
- * as the partition key.
- */
-const invitesTableName = process.env.INVITE_TABLE_NAME || 'invites';
 
 /**
  * Global images table that all projects share. The projectId is be used as the
@@ -128,10 +118,6 @@ function mapProject(value) {
     };
 }
 
-function getInviteURL(projectId, collaboratorId, inviteId) {
-    return `${services.modelService.getPublicBaseURL()}/vott-training/invites/${projectId}/${collaboratorId}/${inviteId}`;
-}
-
 function getTrainingImagesAnnotations(projectId, callback) {
     var query = new azure.TableQuery().where("PartitionKey == ?", projectId);
     services.tableService.queryEntities(imagesTableName, query, null, (error, results, response) => {
@@ -160,50 +146,6 @@ function getTrainingImagesAnnotations(projectId, callback) {
     });
 }
 
-function createCollaborator(projectId, name, email, profile, callback) {
-    if (!projectId || !name || !email || !profile) {
-        return callback("Missing one or more required argument.");
-    }
-
-    const collaboratorId = uuid();
-    const collaboratorRecord = {
-        PartitionKey: projectId,
-        RowKey: collaboratorId,
-        name: name,
-        email: email,
-        profile: profile
-    };
-
-    const inviteId = uuid();
-    const inviteRecord = {
-        PartitionKey: collaboratorId,
-        RowKey: inviteId,
-        status: 'ACTIVE'
-    };
-    async.series(
-        [
-            (callback) => { services.tableService.insertEntity(collaboratorsTableName, collaboratorRecord, callback); },
-            (callback) => { services.tableService.insertEntity(invitesTableName, inviteRecord, callback); }
-        ],
-        (error) => {
-            if (error) {
-                return callback(error);
-            }
-            callback(null, {
-                inviteId: inviteId,
-                inviteURL: getInviteURL(projectId, collaboratorId, inviteId),
-                collaborator: {
-                    projectId: projectId,
-                    collaboratorId: collaboratorId,
-                    name: name,
-                    email: email,
-                    profile: profile
-                }
-            });
-        }
-    );
-}
-
 module.exports = {
     setServices: (configValues) => {
         return new Promise((resolve, reject) => {
@@ -211,8 +153,6 @@ module.exports = {
             async.series(
                 [
                     (callback) => { services.tableService.createTableIfNotExists(imagesTableName, callback); },
-                    (callback) => { services.tableService.createTableIfNotExists(collaboratorsTableName, callback); },
-                    (callback) => { services.tableService.createTableIfNotExists(invitesTableName, callback); },
                     (callback) => { services.tableService.createTableIfNotExists(projectsTableName, callback); }
                 ],
                 (err, results) => {
@@ -460,13 +400,21 @@ module.exports = {
             const email = args.email;
             const profile = args.profile;
 
-            createCollaborator(projectId, name, email, profile, (error, invite) => {
-                if (error) {
-                    return reject(error);
-                }
-                // TODO: Send invite email
-                resolve(invite);
-            });
+            services.collaboratorService.createCollaborator(projectId, name, email, profile)
+                .then((collaborator) => {
+                    services.inviteService.createInvite(projectId, collaborator.collaboratorId)
+                        .then((invite) => {
+                            resolve({
+                                inviteId: invite.inviteId,
+                                inviteURL: invite.inviteURL,
+                                collaborator: collaborator
+                            });
+                        }).catch(error => {
+                            reject(error);
+                        });
+                }).catch(error => {
+                    reject(error);
+                });
         });
     },
     reinviteCollaborator: (args, response) => {
@@ -475,34 +423,30 @@ module.exports = {
             const projectId = args.projectId;
             const collaboratorId = args.collaboratorId;
             // TODO: Consider de-activating all previous invites for that collaborator.
-            reject("Not yet implemented.");
+            // TODO: Read the collaborator record, a) to get its email and b) to attach it to the response.
+            collaborator = null;
+            services.inviteService.createInvite(projectId, collaboratorId)
+                .then((invite) => {
+                    resolve({
+                        inviteId: invite.inviteId,
+                        inviteURL: invite.inviteURL,
+                        collaborator: collaborator
+                    });
+                }).catch(error => {
+                    reject(error);
+                });
         });
     },
     collaborators: (args, response) => {
-        return new Promise((resolve, reject) => {
-            // TODO: Ensure user has project access to the project.
-            const projectId = args.projectId;
-            const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
-            var query = new azure.TableQuery().where("PartitionKey == ?", projectId).top(64);
-            services.tableService.queryEntities(collaboratorsTableName, query, nextPageToken, (error, results, response) => {
-                if (error) {
-                    reject(error);
-                    return;
-                }
-                resolve({
-                    nextPageToken: (results.continuationToken) ? JSON.stringify(results.continuationToken) : null,
-                    entries: results.entries.map((value) => {
-                        return {
-                            projectId: value.PartitionKey._,
-                            collaboratorId: value.RowKey._,
-                            name: value.name._,
-                            email: value.email._,
-                            profile: value.profile._,
-                        };
-                    })
-                });
-            });
-        });
+        const projectId = args.projectId;
+        const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
+        return services.collaboratorService.readCollaborators(projectId, nextPageToken);
+    },
+    deleteCollaborator: (args, request) => {
+        // TODO: Remove invites for the collaborator.
+        const projectId = args.projectId;
+        const collaboratorId = args.collaboratorId;
+        return services.collaboratorService.deleteCollaborator(projectId, collaboratorId);
     },
     models: (args, request) => {
         // TODO: Ensure user has project access to the project.
@@ -513,5 +457,10 @@ module.exports = {
     createModel: (args, response) => {
         const projectId = args.projectId;
         return services.modelService.createModel(projectId);
-    }
+    },
+    removeModel: (args, request) => {
+        const projectId = args.projectId;
+        const modelId = args.modelId;
+        return services.modelService.removeModel(projectId, modelId);
+    },
 };
