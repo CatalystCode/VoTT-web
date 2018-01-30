@@ -95,49 +95,68 @@ RequestHandler.prototype.trainingImages = function (args, res) {
 }
 
 RequestHandler.prototype.createCollaborator = function (args, response) {
-    const self = this;
-    return new Promise((resolve, reject) => {
-        // TODO: Ensure user has project access to the project.
-        const projectId = args.projectId;
-        const name = args.name;
-        const email = args.email;
-        const profile = args.profile;
+    // TODO: Ensure user has project access to the project.
+    const projectId = args.projectId;
+    const name = args.name;
+    const email = args.email;
+    const profile = args.profile;
 
-        self.collaboratorService.createCollaborator(projectId, name, email, profile)
-            .then((collaborator) => {
-                self.inviteService.createInvite(projectId, collaborator.collaboratorId)
-                    .then((invite) => {
-                        resolve({
-                            inviteId: invite.inviteId,
-                            inviteURL: invite.inviteURL,
-                            collaborator: collaborator
-                        });
-                    }).catch(error => {
-                        reject(error);
-                    });
-            }).catch(error => {
-                reject(error);
+    const self = this;
+    return self.collaboratorService.createCollaborator(projectId, name, email, profile)
+        .then((collaborator) => {
+            return self.inviteService.createInvite(projectId, collaborator.collaboratorId)
+                .then((invite) => {
+                    return self.sendInviteEmail(collaborator, invite);
+                });
+        });
+}
+
+RequestHandler.prototype.sendInviteEmail = function (collaborator, invite) {
+    return new Promise((resolve, reject) => {
+        if (!this.emailService) {
+            return resolve({
+                inviteId: invite.inviteId,
+                inviteURL: invite.inviteURL,
+                collaborator: collaborator
             });
+        }
+        const from = process.env.EMAIL_FROM | 'noreply@localhost';
+        const to = `${collaborator.name} <${collaborator.email}>`
+        const vottLink = invite.inviteURL.replace(/^http/, 'vott');
+        const html = `
+                        <h3>You have been invited to collaborate on a VoTT project.</h3>
+                        <p>
+                        If you have VoTT installed, please click <a href='${vottLink}'>here</a>. Or click <a href='${invite.inviteURL}'>here</a> to get started from a web browser.</a>
+                        </p>
+                        <p>NOTE: This link is your password - DO NOT SHARE IT.</p>
+                    `;
+        const text = `You have been invited to collaborate on a VoTT project.\nClick <a href='${invite.inviteURL}'>here</a> to get started from a web browser.\nNOTE: This link is your password - DO NOT SHARE IT.`;
+        return this.emailService.send(
+            from,
+            to,
+            'VoTT collaboration',
+            html,
+            text
+        ).then(receipt=>{
+            return resolve({
+                inviteId: invite.inviteId,
+                inviteURL: invite.inviteURL,
+                collaborator: collaborator
+            });
+        });
     });
 }
+
 RequestHandler.prototype.reinviteCollaborator = function (args, response) {
+    // TODO: Ensure user has project access to the project.
+    const projectId = args.projectId;
+    const collaboratorId = args.collaboratorId;
     const self = this;
-    return new Promise((resolve, reject) => {
-        // TODO: Ensure user has project access to the project.
-        const projectId = args.projectId;
-        const collaboratorId = args.collaboratorId;
-        // TODO: Consider de-activating all previous invites for that collaborator.
-        // TODO: Read the collaborator record, a) to get its email and b) to attach it to the response.
-        collaborator = null;
-        self.inviteService.createInvite(projectId, collaboratorId)
-            .then((invite) => {
-                resolve({
-                    inviteId: invite.inviteId,
-                    inviteURL: invite.inviteURL,
-                    collaborator: collaborator
-                });
-            }).catch(error => {
-                reject(error);
+    return self.collaboratorService.readCollaborator(projectId, collaboratorId).then(collaborator => {
+        return self.inviteService.createInvite(projectId, collaboratorId)
+            .then(invite => {
+                // TODO: Consider de-activating all previous invites for that collaborator.
+                return self.sendInviteEmail(collaborator, invite);
             });
     });
 }

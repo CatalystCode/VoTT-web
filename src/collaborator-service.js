@@ -84,6 +84,18 @@ CollaboratorService.prototype.readCollaborators= function(projectId, nextPageTok
   });
 }
 
+CollaboratorService.prototype.readCollaborator= function(projectId, collaboratorId) {
+  const self = this;
+  return new Promise((resolve, reject) => {
+      self.tableService.retrieveEntity(collaboratorsTableName, projectId, collaboratorId, (error, response) => {
+          if (error) {
+              return reject(error);
+          }
+          resolve(mapCollaborator(response));
+      });
+  });
+}
+
 CollaboratorService.prototype.deleteCollaborator = function (projectId, collaboratorId) {
   const self = this;
   return new Promise((resolve, reject)=>{

@@ -46,10 +46,21 @@ angular.module('vott.project-collaborators', [
       });
   };
 
-  $scope.invite = function(collaborator) {
+  $scope.invite = function (collaborator) {
     $scope.selectedCollaborator = {};
     $('#editDialog').modal('show');
   };
+
+  $scope.reinvite = function (collaborator) {
+    ProjectService.reinviteCollaborator($routeParams.projectId, collaborator.collaboratorId)
+      .then(function (response) {
+        alert(`Reinvited ${collaborator.name}.`);
+      })
+      .catch(function (error) {
+        console.log(error);
+        $scope.error = error;
+      });
+  }
 
   $scope.delete = function (collaborator) {
     $scope.selectedCollaborator = collaborator;
@@ -60,11 +71,11 @@ angular.module('vott.project-collaborators', [
     ProjectService.deleteCollaborator(
       $routeParams.projectId,
       collaborator.collaboratorId
-    ).then(function(response){
+    ).then(function (response) {
       $scope.selectedCollaborator = {};
       $scope.loadCollaborators();
       $('#deleteConfirmation').modal('hide');
-    }).catch(function(error){
+    }).catch(function (error) {
       console.log(error);
       $scope.error = error;
     });
@@ -76,13 +87,13 @@ angular.module('vott.project-collaborators', [
       $scope.selectedCollaborator.name,
       $scope.selectedCollaborator.email,
       $scope.selectedCollaborator.profile
-    ).then(function(response){
+    ).then(function (response) {
       $scope.selectedCollaborator = {};
       $scope.loadCollaborators();
-    }).catch(function(error){
+    }).catch(function (error) {
       console.log(error);
       $scope.error = error;
-  });
+    });
   };
 
   $scope.details = function () {

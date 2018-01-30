@@ -121,6 +121,13 @@ angular.module('vott.factories', [])
                     }
                 });
             },
+            reinviteCollaborator: function(projectId, collaboratorId) {
+                return $http({
+                    method: 'POST',
+                    url: baseUrl,
+                    data: { query: `mutation { reinviteCollaborator (projectId:${JSON.stringify(projectId)}, collaboratorId:${JSON.stringify(collaboratorId)}) { inviteId inviteURL } }` }
+                });
+            },
             collaborators: function (projectId, paginationToken) {
                 const invocation = paginationToken ?
                     `collaborators(projectId: ${JSON.stringify(projectId)}, paginationToken:${JSON.stringify(paginationToken)})` :

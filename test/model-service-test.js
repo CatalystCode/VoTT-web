@@ -1,5 +1,5 @@
 const assert = require('assert');
-const modelService = require('../src/model-service');
+const modelService = new (require('../src/model-service')).ModelService();
 
 function mockServices() {
   const queues = [];
@@ -46,24 +46,10 @@ describe('Model Service', () => {
 
     it('should initialize queues and tables', () => {
 
-      const createdQueues = [];
-      const createdTables = [];
-      return modelService.setServices({
-        queueService: {
-          createQueueIfNotExists: (queueName, callback) => {
-            createdQueues.push(queueName);
-            callback();
-          }
-        },
-        tableService: {
-          createTableIfNotExists: (tableName, callback) => {
-            createdTables.push(tableName);
-            callback();
-          }
-        }
-      }).then(data => {
-        assert.deepEqual(createdQueues, ['training']);
-        assert.deepEqual(createdTables, ['models']);
+      const services = mockServices();
+      return modelService.setServices(services).then(data => {
+        assert.deepEqual(services.queueService.queues, ['training']);
+        assert.deepEqual(services.tableService.tables, ['models']);
       });
 
     });
