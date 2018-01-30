@@ -7,6 +7,7 @@ const uuid = require('uuid/v4');
 
 const services = {
     authzService: null,
+    modelService: null,
     blobService: null,
     queueService: null,
     tableService: null
@@ -26,13 +27,6 @@ function getUser(request) {
 }
 
 /**
- * Global training queue that is shared by all projects. A separate set of
- * workers that are able to handle messages from this queue will be listening
- * to this.
- */
-const trainingQueueName = process.env.TRAINING_QUEUE_NAME || 'training';
-
-/**
  * Global collaborators table that all projects share. The projectId is be used
  * as the partition key and the collaborator's id as the primary key.
  */
@@ -43,12 +37,6 @@ const collaboratorsTableName = process.env.COLLABORATOR_TABLE_NAME || 'collabora
  * as the partition key.
  */
 const invitesTableName = process.env.INVITE_TABLE_NAME || 'invites';
-
-/**
- * Global models table that all projects share. The projectId is be used
- * as the partition key.
- */
-const modelsTableName = process.env.MODEL_TABLE_NAME || 'models';
 
 /**
  * Global images table that all projects share. The projectId is be used as the
@@ -71,28 +59,10 @@ function getTaskQueueName(projectId) {
 
 /**
  * @param {string} projectId containing the project primary key.
- * @returns {string} containing the name of the container where all the models for the given project are stored.
- */
-function getModelContainerName(projectId) {
-    return `${projectId}-models`;
-}
-
-/**
- * @param {string} projectId containing the project primary key.
  * @returns {string} containing the name of the container where all the images for the given project are stored.
  */
 function getImageContainerName(projectId) {
     return `${projectId}-images`;
-}
-
-/**
- * @param {string} projectId containing the project primary key.
- * @param {string} modelId containing the primary key of the model that is part of the given project.
- * @returns {string} containing the full URL for the blob of the model.
- */
-function getModelURL(projectId, modelId) {
-    const containerName = getModelContainerName(projectId);
-    return services.blobService.getUrl(containerName, modelId);
 }
 
 /**
@@ -158,20 +128,8 @@ function mapProject(value) {
     };
 }
 
-function getPublicBaseURL() {
-    return 'https://popspotsvott01.azurewebsites.net';
-}
-
-function getModelAnnotationsURL(projectId, modelId) {
-    return `${getPublicBaseURL()}/vott-training/projects/${projectId}/${modelId}/annotations.csv`;
-}
-
-function getModelStatusURL(projectId, modelId) {
-    return `${getPublicBaseURL()}/vott-training/projects/${projectId}/${modelId}/status.json`;
-}
-
 function getInviteURL(projectId, collaboratorId, inviteId) {
-    return `${getPublicBaseURL()}/vott-training/invites/${projectId}/${collaboratorId}/${inviteId}`;
+    return `${services.modelService.getPublicBaseURL()}/vott-training/invites/${projectId}/${collaboratorId}/${inviteId}`;
 }
 
 function getTrainingImagesAnnotations(projectId, callback) {
@@ -187,12 +145,12 @@ function getTrainingImagesAnnotations(projectId, callback) {
                 fileURL: getImageURL(projectId, value.RowKey._),
                 annotations: [
                     {
-                        objectClassName:'guitar-body',
-                        boundingBox:{
-                            x:0,
-                            y:0,
-                            width:128,
-                            height:128
+                        objectClassName: 'guitar-body',
+                        boundingBox: {
+                            x: 0,
+                            y: 0,
+                            width: 128,
+                            height: 128
                         }
                     }
                 ],
@@ -246,56 +204,13 @@ function createCollaborator(projectId, name, email, profile, callback) {
     );
 }
 
-function createModel(projectId, callback) {
-    if (!projectId) {
-        return callback("Parameter projectId must be present.");
-    }
-    const modelId = uuid();
-    const status = "TRAINING_PENDING";
-    const modelRecord = {
-        PartitionKey: projectId,
-        RowKey: modelId,
-        status: status
-    };
-    const annotationsURL = getModelAnnotationsURL(projectId, modelId);
-    const modelURL = getModelURL(projectId, modelId);
-    const statusURL = getModelStatusURL(projectId, modelId);
-    const trainingQueueMessage = {
-        annotations: annotationsURL,
-        model: modelURL,
-        status: statusURL,
-        plugin: 'retinanet'
-    };
-    const trainingQueueMessagePythonStyle = `{ "annotations": "${annotationsURL}", "model": "${modelURL}", "status": "${getModelStatusURL(projectId, modelId)}","plugin": "retinanet" }`;
-    console.log("trainingQueueMessagePythonStyle:");
-    console.log(trainingQueueMessagePythonStyle);
-    async.series(
-        [
-            (callback) => { services.tableService.insertEntity(modelsTableName, modelRecord, callback); },
-            (callback) => { services.queueService.createMessage(trainingQueueName, trainingQueueMessagePythonStyle, callback) }
-        ],
-        (error) => {
-            if (error) {
-                return callback(error);
-            }
-            callback(null, {
-                projectId: projectId,
-                modelId: modelId,
-                status: status
-            });
-        }
-    );
-}
-
 module.exports = {
     setServices: (configValues) => {
         return new Promise((resolve, reject) => {
             for (var k in configValues) services[k] = configValues[k];
             async.series(
                 [
-                    (callback) => { services.queueService.createQueueIfNotExists(trainingQueueName, callback); },
                     (callback) => { services.tableService.createTableIfNotExists(imagesTableName, callback); },
-                    (callback) => { services.tableService.createTableIfNotExists(modelsTableName, callback); },
                     (callback) => { services.tableService.createTableIfNotExists(collaboratorsTableName, callback); },
                     (callback) => { services.tableService.createTableIfNotExists(invitesTableName, callback); },
                     (callback) => { services.tableService.createTableIfNotExists(projectsTableName, callback); }
@@ -309,8 +224,6 @@ module.exports = {
             );
         });
     },
-    getModelContainerName: getModelContainerName,
-    getModelURL: getModelURL,
     getImageContainerName: getImageContainerName,
     getImageURL: getImageURL,
 
@@ -357,7 +270,7 @@ module.exports = {
                 instructionsText: args.instructionsText
             };
             const imageContainerName = getImageContainerName(projectId);
-            const modelContainerName = getModelContainerName(projectId);
+            const modelContainerName = services.modelService.getModelContainerName(projectId);
             const taskQueueName = getTaskQueueName(projectId);
             async.series(
                 [
@@ -409,7 +322,7 @@ module.exports = {
             const projectId = args.projectId;
 
             const imageContainerName = getImageContainerName(projectId);
-            const modelContainerName = getModelContainerName(projectId);
+            const modelContainerName = services.modelService.getModelContainerName(projectId);
             const taskQueueName = getTaskQueueName(projectId);
 
             async.series(
@@ -592,39 +505,13 @@ module.exports = {
         });
     },
     models: (args, request) => {
-        return new Promise((resolve, reject) => {
-            // TODO: Ensure user has project access to the project.
-            const projectId = args.projectId;
-            const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
-            var query = new azure.TableQuery().where("PartitionKey == ?", projectId).top(64);
-            services.tableService.queryEntities(modelsTableName, query, nextPageToken, (error, results, response) => {
-                if (error) {
-                    reject(error);
-                    return;
-                }
-                resolve({
-                    nextPageToken: (results.continuationToken) ? JSON.stringify(results.continuationToken) : null,
-                    entries: results.entries.map((value) => {
-                        return {
-                            projectId: value.PartitionKey._,
-                            modelId: value.RowKey._,
-                            created: value.Timestamp._,
-                            status: value.status._
-                        };
-                    })
-                });
-            });
-        });
+        // TODO: Ensure user has project access to the project.
+        const projectId = args.projectId;
+        const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
+        return services.modelService.readModels(projectId, nextPageToken);
     },
     createModel: (args, response) => {
-        return new Promise((resolve, reject) => {
-            const projectId = args.projectId;
-            createModel(projectId, (error, model)=>{
-                if (error) {
-                    return reject(error);
-                }
-                resolve(model);
-            });
-        });
+        const projectId = args.projectId;
+        return services.modelService.createModel(projectId);
     }
 };

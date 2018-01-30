@@ -13,20 +13,23 @@ const fs = require("fs");
 const cookieParser = require('cookie-parser');
 
 const collaborationController = require('./src/collaboration');
-const projectController = require('./src/project');
+const modelService = require('./src/model-service');
+const adminService = require('./src/admin-service');
 
 const blobService = azure.createBlobService();
 const queueService = azure.createQueueService();
 const tableService = azure.createTableService();
 const services = {
   azure: azure,
+  modelService: modelService,
   blobService: blobService,
   queueService: queueService,
   tableService: tableService
 };
 
 collaborationController.setServices(services);
-projectController.setServices(services);
+modelService.setServices(services);
+adminService.setServices(services);
 
 const schemaFile = fs.readFileSync("src/schema.graphql", "utf8");
 
@@ -46,7 +49,7 @@ app.use(expressSession({ secret: 'keyboard gato', resave: true, saveUninitialize
 
 app.use('/v1/graphql/projects', expressGraphql({
   schema: projectSchema,
-  rootValue: projectController,
+  rootValue: adminService,
   graphiql: graphiqlEnabled,
   pretty: true
 }));
@@ -61,7 +64,7 @@ app.use('/v1/graphql/collaboration', expressGraphql({
 app.get('/vott-training/projects/:projectId/:modelId/annotations.csv', (request, response) => {
   const projectId = request.params.projectId;
   const modelId = request.params.modelId;
-  projectController.getTrainingImagesAnnotations(projectId, (error, images) => {
+  adminService.getTrainingImagesAnnotations(projectId, (error, images) => {
     if (error) {
       console.log(error);
       response.send(error);
