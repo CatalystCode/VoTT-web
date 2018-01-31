@@ -15,7 +15,19 @@ function InviteService() {
 }
 
 InviteService.prototype.getInviteURL = function (projectId, collaboratorId, inviteId) {
-  return `${this.modelService.getPublicBaseURL()}/vott-training/invites/${projectId}/${collaboratorId}/${inviteId}`;
+  return `${this.modelService.getPublicBaseURL()}/v1/vott-training/invites/${projectId}/${collaboratorId}/${inviteId}`;
+}
+
+InviteService.prototype.mapInvite = function (invite) {
+  const inviteId = invite.RowKey._;
+  const collaboratorId = invite.PartitionKey._;
+  const projectId = invite.projectId._;
+  return {
+    inviteId: inviteId,
+    collaboratorId: collaboratorId,
+    projectId: projectId,
+    inviteURL: this.getInviteURL(projectId, collaboratorId, inviteId)
+  };
 }
 
 InviteService.prototype.setServices = function (configuration) {
@@ -37,6 +49,7 @@ InviteService.prototype.createInvite = function (projectId, collaboratorId) {
     const inviteRecord = {
       PartitionKey: collaboratorId,
       RowKey: inviteId,
+      projectId: projectId,
       status: 'ACTIVE'
     };
     self.tableService.insertEntity(invitesTableName, inviteRecord, (error, results) => {
@@ -45,8 +58,27 @@ InviteService.prototype.createInvite = function (projectId, collaboratorId) {
       }
       return resolve({
         inviteId: inviteId,
+        collaboratorId: collaboratorId,
+        projectId: projectId,
         inviteURL: self.getInviteURL(projectId, collaboratorId, inviteId)
       });
+    });
+  });
+}
+
+InviteService.prototype.readInvite = function (projectId, collaboratorId, inviteId) {
+  const self = this;
+  return new Promise((resolve, reject) => {
+    self.tableService.retrieveEntity(invitesTableName, collaboratorId, inviteId, (error, record) => {
+      if (error) {
+        return reject(error);
+      }
+
+      const invite = self.mapInvite(record);
+      if (invite.projectId != projectId) {
+        return reject("Not found.");
+      }
+      resolve(invite);
     });
   });
 }
