@@ -38,6 +38,7 @@
     "method-override": "^2.3.10",
     "mocha": "^4.1.0",
     "passport-azure-ad": "^3.0.9",
+    "qrcode": "^1.2.0",
     "qs": "^6.5.1"
   }
 }

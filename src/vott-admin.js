@@ -4,6 +4,7 @@ const async = require("async");
 const azure = require('azure-storage');
 const qs = require('qs');
 const uuid = require('uuid/v4');
+var qrcode = require('qrcode');
 
 const foundation = require('./vott-foundation');
 
@@ -111,6 +112,15 @@ RequestHandler.prototype.createCollaborator = function (args, response) {
         });
 }
 
+RequestHandler.prototype.qrcodeForInvite = function (collaborator, invite) {
+    return new Promise((resolve, reject) => {
+        const urlQR = qrcode.toDataURL(invite.inviteURL, (error, url) => {
+            if (error) return reject(error);
+            resolve(url);
+        });
+    });
+}
+
 RequestHandler.prototype.sendInviteEmail = function (collaborator, invite) {
     return new Promise((resolve, reject) => {
         if (!this.emailService) {
@@ -121,28 +131,31 @@ RequestHandler.prototype.sendInviteEmail = function (collaborator, invite) {
             });
         }
         const from = { name: "VoTT", email: (process.env.EMAIL_FROM || 'noreply@example.com') };
-        const to = { email:collaborator.email, name: collaborator.name };
-        const vottLink = invite.inviteURL.replace(/^http/, 'vott');
+        const to = { email: collaborator.email, name: collaborator.name };
+        const text = `You have been invited to collaborate on a VoTT project.\nClick <a href='${invite.inviteURL}'>here</a> to get started from a web browser.\nNOTE: This link is your password - DO NOT SHARE IT.`;
         const html = `
                         <h3>You have been invited to collaborate on a VoTT project.</h3>
                         <p>
-                        If you have VoTT installed, please click <a href='${vottLink}'>here</a>. Or click <a href='${invite.inviteURL}'>here</a> to get started from a web browser.</a>
+                        Click <a href='${invite.inviteURL}'>here</a> to get started from a web browser.</a>
                         </p>
                         <p>NOTE: This link is your password - DO NOT SHARE IT.</p>
                     `;
-        const text = `You have been invited to collaborate on a VoTT project.\nClick <a href='${invite.inviteURL}'>here</a> to get started from a web browser.\nNOTE: This link is your password - DO NOT SHARE IT.`;
-        return this.emailService.send(
-            from,
-            to,
-            'VoTT collaboration',
-            html,
-            text
-        ).then(receipt=>{
-            return resolve({
-                inviteId: invite.inviteId,
-                inviteURL: invite.inviteURL,
-                collaborator: collaborator
-            });
+        this.qrcodeForInvite(collaborator, invite).then(url=>{
+            const qrimage = `<p>If you have VoTT installed, scan the QR code for convenience:</p><p><img src='${url}'></p>`;
+            const htmlWithQR = html + qrimage;
+            return this.emailService.send(
+                from,
+                to,
+                'VoTT collaboration',
+                htmlWithQR,
+                text
+            ).then(receipt => {
+                return resolve({
+                    inviteId: invite.inviteId,
+                    inviteURL: invite.inviteURL,
+                    collaborator: collaborator
+                });
+            });    
         });
     });
 }
