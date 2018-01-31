@@ -21,6 +21,8 @@ const services = {
   imageService: new (require('./src/image-service')).ImageService(),
   projectService: new (require('./src/project-service')).ProjectService(),
 
+  emailService: new (require('./src/email-service')).EmailService(),
+
   blobService: azure.createBlobService(),
   queueService: azure.createQueueService(),
   tableService: azure.createTableService()

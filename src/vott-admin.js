@@ -120,8 +120,8 @@ RequestHandler.prototype.sendInviteEmail = function (collaborator, invite) {
                 collaborator: collaborator
             });
         }
-        const from = process.env.EMAIL_FROM | 'noreply@localhost';
-        const to = `${collaborator.name} <${collaborator.email}>`
+        const from = { name: "VoTT", email: (process.env.EMAIL_FROM || 'noreply@example.com') };
+        const to = { email:collaborator.email, name: collaborator.name };
         const vottLink = invite.inviteURL.replace(/^http/, 'vott');
         const html = `
                         <h3>You have been invited to collaborate on a VoTT project.</h3>

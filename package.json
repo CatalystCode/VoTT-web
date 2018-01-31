@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/jcjimenez/VoTT-web#readme",
   "dependencies": {
+    "@sendgrid/mail": "^6.2.1",
     "async": "^2.6.0",
     "azure-storage": "^2.7.0",
     "body-parser": "^1.18.2",
