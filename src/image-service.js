@@ -147,7 +147,6 @@ ImageService.prototype.getTrainingImagesAnnotations = function (projectId) {
 }
 
 module.exports = {
-    ImageService: ImageService,
     createImageService: function() {
         return new ImageService();
     }

@@ -25,7 +25,6 @@ EmailService.prototype.send = function (from, to, subject, html, text) {
 }
 
 module.exports = {
-  EmailService: EmailService,
   createEmailService: function() {
     return new EmailService();
   }

@@ -1,6 +1,5 @@
 require('dotenv').config();
 
-const async = require("async");
 const azure = require('azure-storage');
 const express = require('express');
 const expressGraphql = require('express-graphql');
@@ -9,8 +8,8 @@ const methodOverride = require('method-override');
 const helmet = require('helmet');
 const graphiql = require('graphql');
 const fs = require("fs");
-// const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
+// const bodyParser = require("body-parser");
 
 const modelService = require('./src/model-service');
 const collaboratorService = require('./src/collaborator-service');
@@ -21,7 +20,10 @@ const emailService = require('./src/email-service');
 
 const jwt = require('./src/vott-jwt');
 const foundation = require('./src/vott-foundation');
+const admin = require('./src/vott-admin');
+const collaborationController = require('./src/collaboration');
 
+const adminRoot = admin.createGraphqlRoot();
 const services = {
   modelService: modelService.createModelService(),
   collaboratorService: collaboratorService.createCollaboratorService(),
@@ -37,18 +39,6 @@ const services = {
 };
 
 services.queueService.messageEncoder = new foundation.PassthroughEncoder();
-
-const vottAdmin = new (require('./src/vott-admin')).RequestHandler();
-const collaborationController = require('./src/collaboration');
-[
-  services.modelService,
-  services.collaboratorService,
-  services.inviteService,
-  services.imageService,
-  services.projectService,
-  collaborationController,
-  vottAdmin
-].forEach(value => { value.setServices(services); })
 
 const schemaFile = fs.readFileSync("src/schema.graphql", "utf8");
 
@@ -68,7 +58,7 @@ app.use(expressSession({ secret: 'keyboard gato', resave: true, saveUninitialize
 
 app.use('/api/vott-admin', expressGraphql({
   schema: vottAdminSchema,
-  rootValue: vottAdmin,
+  rootValue: adminRoot,
   graphiql: graphiqlEnabled,
   pretty: true
 }));
@@ -119,4 +109,20 @@ app.get(
 );
 
 app.use(express.static('public'));
-app.listen(process.env.PORT, () => console.log(`Started on port ${process.env.PORT}`));
+
+Promise.all([
+  services.modelService.setServices(services),
+  services.collaboratorService.setServices(services),
+  services.inviteService.setServices(services),
+  services.imageService.setServices(services),
+  services.projectService.setServices(services),
+  adminRoot.setServices(services)
+])
+.then(results=>{
+  const websiteURL = foundation.websiteBaseURL();
+  app.listen(process.env.PORT, () => console.log(`Started ${websiteURL}`));
+})
+.catch(error=>{
+  console.log(error);
+  process.exit(-10);
+});

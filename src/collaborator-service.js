@@ -112,7 +112,6 @@ CollaboratorService.prototype.deleteCollaborator = function (projectId, collabor
 }
 
 module.exports = {
-  CollaboratorService: CollaboratorService,
   createCollaboratorService: function() {
     return new CollaboratorService();
   }

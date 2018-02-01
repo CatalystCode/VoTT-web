@@ -13,6 +13,7 @@ function RequestHandler() {
 
 RequestHandler.prototype.setServices = function (configuration) {
     Object.assign(this, configuration);
+    return Promise.resolve(configuration);
 }
 
 function getUser(request) {
@@ -125,7 +126,7 @@ RequestHandler.prototype.sendInviteEmail = function (collaborator, invite) {
                 collaborator: collaborator
             });
         }
-        const vottInviteURL = invite.inviteURL.replace(/^http/i,'vott');
+        const vottInviteURL = invite.inviteURL.replace(/^http/i, 'vott');
         const from = { name: "VoTT", email: (process.env.EMAIL_FROM || 'noreply@example.com') };
         const to = { email: collaborator.email, name: collaborator.name };
         const text = `You have been invited to collaborate on a VoTT project.\nClick on this link ${invite.inviteURL} to get started.\nNOTE: This link is your password - DO NOT SHARE IT.`;
@@ -135,7 +136,7 @@ RequestHandler.prototype.sendInviteEmail = function (collaborator, invite) {
                         Click <a href='${invite.inviteURL}'>here</a> to get started.</a>
                         </p>
                     `;
-        this.qrcodeForInvite(collaborator, invite).then(url=>{
+        this.qrcodeForInvite(collaborator, invite).then(url => {
             const qrimage = `<p>If you have VoTT installed, scan the QR code for convenience:</p><p><img src='${url}'></p>`;
             const warning = '<p>NOTE: This link is your password - DO NOT SHARE IT.</p>';
             const htmlWithQR = html + qrimage + warning;
@@ -151,7 +152,7 @@ RequestHandler.prototype.sendInviteEmail = function (collaborator, invite) {
                     inviteURL: invite.inviteURL,
                     collaborator: collaborator
                 });
-            });    
+            });
         });
     });
 }
@@ -189,13 +190,15 @@ RequestHandler.prototype.models = function (args, request) {
 RequestHandler.prototype.createModel = function (args, response) {
     const projectId = args.projectId;
     return this.modelService.createModel(projectId);
-},
-    RequestHandler.prototype.deleteModel = function (args, request) {
-        const projectId = args.projectId;
-        const modelId = args.modelId;
-        return this.modelService.deleteModel(projectId, modelId);
-    }
+}
+RequestHandler.prototype.deleteModel = function (args, request) {
+    const projectId = args.projectId;
+    const modelId = args.modelId;
+    return this.modelService.deleteModel(projectId, modelId);
+}
 
 module.exports = {
-    RequestHandler: RequestHandler
+    createGraphqlRoot: function () {
+        return new RequestHandler();
+    }
 };
