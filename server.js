@@ -103,7 +103,7 @@ app.get('/vott-training/projects/:projectId/:modelId/annotations.csv', (request,
 });
 
 app.get(
-  '/v1/vott-training/invites/:projectId/:collaboratorId/:inviteId',
+  services.inviteService.getInviteURLPattern(),
   (request, response) => {
     const projectId = request.params.projectId;
     const collaboratorId = request.params.collaboratorId;

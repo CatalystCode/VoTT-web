@@ -1,9 +1,9 @@
 'use strict';
 
-const async = require("async");
 const azure = require('azure-storage');
-const qs = require('qs');
 const uuid = require('uuid/v4');
+
+const foundation = require('./vott-foundation');
 
 /**
  * Global invites table that all projects share. The collaboratorId is be used
@@ -15,7 +15,13 @@ function InviteService() {
 }
 
 InviteService.prototype.getInviteURL = function (projectId, collaboratorId, inviteId) {
-  return `${this.modelService.getPublicBaseURL()}/v1/vott-training/invites/${projectId}/${collaboratorId}/${inviteId}`;
+  // Remember to ensure getInviteURLPattern is in sync with the result of this function.
+  return `${foundation.websiteBaseURL()}/v1/vott-training/invites/${projectId}/${collaboratorId}/${inviteId}`;
+}
+
+InviteService.prototype.getInviteURLPattern = function () {
+  // Remember to ensure getInviteURL is in sync with the result of this function.
+  return '/v1/vott-training/invites/:projectId/:collaboratorId/:inviteId';
 }
 
 InviteService.prototype.mapInvite = function (invite) {

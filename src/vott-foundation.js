@@ -15,6 +15,15 @@ PassthroughEncoder.prototype.decode = function (textToDecode) {
 module.exports = {
   PassthroughEncoder: PassthroughEncoder,
 
+  websiteBaseURL: () => {
+    const hostname = process.env.WEBSITE_HOSTNAME || 'localhost';
+    if (hostname == 'localhost') {
+      const port = process.env.PORT || '8080';
+      return `http://${hostname}:${port}`;
+    }
+    return `https://${hostname}`;
+  },
+
   createFileSAS: (blobService, containerName, extension) => {
     const startDate = new Date();
     const expiryDate = new Date(startDate);

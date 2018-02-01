@@ -1,11 +1,6 @@
 'use strict';
 
-const async = require("async");
-const azure = require('azure-storage');
-const qs = require('qs');
-const uuid = require('uuid/v4');
-var qrcode = require('qrcode');
-
+const qrcode = require('qrcode');
 const foundation = require('./vott-foundation');
 
 // NOTE: The raw headers are in uppercase but are lowercased by express. 
@@ -130,19 +125,20 @@ RequestHandler.prototype.sendInviteEmail = function (collaborator, invite) {
                 collaborator: collaborator
             });
         }
+        const vottInviteURL = invite.inviteURL.replace(/^http/i,'vott');
         const from = { name: "VoTT", email: (process.env.EMAIL_FROM || 'noreply@example.com') };
         const to = { email: collaborator.email, name: collaborator.name };
-        const text = `You have been invited to collaborate on a VoTT project.\nClick <a href='${invite.inviteURL}'>here</a> to get started from a web browser.\nNOTE: This link is your password - DO NOT SHARE IT.`;
+        const text = `You have been invited to collaborate on a VoTT project.\nClick on this link ${invite.inviteURL} to get started.\nNOTE: This link is your password - DO NOT SHARE IT.`;
         const html = `
                         <h3>You have been invited to collaborate on a VoTT project.</h3>
                         <p>
-                        Click <a href='${invite.inviteURL}'>here</a> to get started from a web browser.</a>
+                        Click <a href='${invite.inviteURL}'>here</a> to get started.</a>
                         </p>
-                        <p>NOTE: This link is your password - DO NOT SHARE IT.</p>
                     `;
         this.qrcodeForInvite(collaborator, invite).then(url=>{
             const qrimage = `<p>If you have VoTT installed, scan the QR code for convenience:</p><p><img src='${url}'></p>`;
-            const htmlWithQR = html + qrimage;
+            const warning = '<p>NOTE: This link is your password - DO NOT SHARE IT.</p>';
+            const htmlWithQR = html + qrimage + warning;
             return this.emailService.send(
                 from,
                 to,
