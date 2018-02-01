@@ -27,6 +27,68 @@ ProjectService.prototype.setServices = function (configuration) {
     });
 }
 
+/**
+ * Temporary decoder since the node storage queue client was automatically XML-escaping all outgoing messages.
+ */
+function decodeXml(textToDecode) {
+    return textToDecode.replace(/&amp;/gm, '&')
+        .replace(/&lt;/gm, '<')
+        .replace(/&gt;/gm, '>')
+        .replace(/&quot;/gm, '"')
+        .replace(/&apos;/gm, '\'');
+};
+
+ProjectService.prototype.getTaskQueueName = function (projectId) {
+    return this.imageService.getTaskQueueName(projectId);
+}
+
+ProjectService.prototype.getNextTask = function (projectId) {
+    const self = this;
+    return this.readProject(projectId).then(project => {
+        return new Promise((resolve, reject) => {
+            const queueName = self.projectService.getTaskQueueName(projectId);
+            self.queueService.getMessage(queueName, (error, message) => {
+                if (error) {
+                    return reject(error);
+                }
+
+                const messageId = message.messageId;
+                const popReceipt = message.popReceipt;
+                const imageData = message.messageText.startsWith('{&quot;') ? JSON.parse(decodeXml(message.messageText)) : JSON.parse(message.messageText);
+                const imageURL = self.imageService.getImageURL(projectId, imageData.imageId);
+
+                resolve({
+                    taskId: projectId + ":" + messageId + ":" + popReceipt,
+                    projectId: projectId,
+                    messageId: messageId,
+                    popReceipt: popReceipt,
+                    imageURL: imageURL,
+                    taskType: project.taskType,
+                    objectClassNames: project.objectClassNames,
+                    instructionsText: project.instructionsText,
+                    instructionsImageURL: project.instructionsImageURL,
+                    instructionsVideoURL: project.instructionsVideoURL
+                });
+            });
+        });
+    });
+}
+
+ProjectService.prototype.submitImageTags = function (taksId, tags) {
+    const projectId = taskId.split(":")[0];
+    const messageId = taskId.split(":")[1];
+    const popReceipt = taskId.split(":")[2];
+    // TODO: Save annotations.
+    // TODO: Perform annotation cross-validation and pick the best ones, then cannonicalize them for training.
+    self.queueService.deleteMessage(projectId, messageId, popReceipt, (error) => {
+        if (error) {
+            return reject(error);
+        }
+        resolve(uuid());
+    });
+
+}
+
 ProjectService.prototype.createProject = function (name, taskType, objectClassNames, instructionsText) {
     const self = this;
     return new Promise((resolve, reject) => {
@@ -72,7 +134,7 @@ ProjectService.prototype.readProjects = function (nextPageToken) {
             }
             resolve({
                 nextPageToken: (results.continuationToken) ? JSON.stringify(results.continuationToken) : null,
-                entries: results.entries.map(entry=>{return self.mapProject(entry);})
+                entries: results.entries.map(entry => { return self.mapProject(entry); })
             });
         });
     });
@@ -177,7 +239,7 @@ ProjectService.prototype.mapProject = function (value) {
 }
 
 module.exports = {
-    createProjectService: function() {
+    createProjectService: function () {
         return new ProjectService();
     }
 };

@@ -15,17 +15,7 @@
         "GET",
         "POST"
       ],
-      "path_prefix": "/projects",
-      "policies": {
-        "unauthenticated_action": "RedirectToLoginPage"
-      }
-    },
-    {
-      "http_methods": [
-        "GET",
-        "POST"
-      ],
-      "path_prefix": "/vott",
+      "path_prefix": "/vott-admin",
       "policies": {
         "unauthenticated_action": "RedirectToLoginPage"
       }

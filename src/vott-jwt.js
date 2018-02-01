@@ -24,32 +24,76 @@ TokenService.prototype.verify = function (token, callback) {
     return jsonwebtoken.verify(token, this.secretOrPrivateKey, callback);
 }
 
-TokenService.prototype.createAuthorizationMiddleware = function () {
+TokenService.prototype.createAuthorizationPromise = function (request) {
     const self = this;
-    return function (request, response, next) {
+    return new Promise((resolve, reject) => {
         const authorization = request.headers['authorization'];
         if (!authorization) {
-            return response.status(401).send({ message: 'No authorization.' });
+            return reject({ status: 401, message: 'No authorization.' });
         }
 
         const bearer = authorization.match(/Bearer\s+(.+)/i);
         if (!bearer) {
-            return response.status(401).send({ message: 'Unsupported authorization type.' });
+            return reject({ status: 401, message: 'Unsupported authorization type.' });
         }
 
         const token = bearer[1];
         self.verify(token, function (error, decoded) {
             if (error) {
-                return response.status(401).send({ message: 'Unauthorized.' });
+                return reject({ status: 401, message: 'Unauthorized.' });
             }
-            next();
+            resolve(decoded);
         });
+    });
+}
+
+TokenService.prototype.createCookiePromise = function (request) {
+    const self = this;
+    return new Promise((resolve, reject) => {
+        if (!request.cookies.hasOwnProperty('token')) {
+            return reject({ status: 401, message: 'No token.' });
+        }
+
+        const token = request.cookies.token;
+        self.verify(token, function (error, decoded) {
+            if (error) {
+                return reject({ status: 401, message: 'Unauthorized.' });
+            }
+            resolve(decoded);
+        });
+    });
+}
+
+TokenService.prototype.createMiddleware = function () {
+    const self = this;
+    return function (request, response, next) {
+        if (request.vottSession) {
+            return next();
+        }
+        self.createCookiePromise(request)
+            .then(decoded => {
+                request.vottSession = decoded;
+                next();
+            }).catch(error => {
+                if (request.vottSession) {
+                    // The decoding did succeed, but the call to 'next()'
+                    // resulted in an error.
+                    return Promise.reject(error);
+                }
+                self.createAuthorizationPromise(request)
+                    .then(decoded => {
+                        request.locals.vottSession = decoded;
+                        next();
+                    })
+                    .catch(error => {
+                        return response.status(401).send({ message: 'Unauthorized.' });
+                    });
+            });
     }
 }
 
 module.exports = {
-    TokenService: TokenService,
-    createTokenService: function(secretOrPrivateKey) {
+    createTokenService: function (secretOrPrivateKey) {
         return new TokenService(secretOrPrivateKey);
     }
 };

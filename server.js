@@ -21,9 +21,10 @@ const emailService = require('./src/email-service');
 const jwt = require('./src/vott-jwt');
 const foundation = require('./src/vott-foundation');
 const admin = require('./src/vott-admin');
-const collaborationController = require('./src/collaboration');
+const collab = require('./src/vott-collab');
 
 const adminRoot = admin.createGraphqlRoot();
+const collabRoot = collab.createGraphqlRoot();
 const services = {
   modelService: modelService.createModelService(),
   collaboratorService: collaboratorService.createCollaboratorService(),
@@ -42,7 +43,7 @@ services.queueService.messageEncoder = new foundation.PassthroughEncoder();
 
 const schemaFile = fs.readFileSync("src/schema.graphql", "utf8");
 
-const collaborationSchemaFile = fs.readFileSync("src/collaboration.graphql", "utf8");
+const collaborationSchemaFile = fs.readFileSync("src/vott-collab.graphql", "utf8");
 const collaborationSchema = graphiql.buildSchema(schemaFile + collaborationSchemaFile);
 
 const vottAdminSchemaFile = fs.readFileSync("src/vott-admin.graphql", "utf8");
@@ -55,20 +56,6 @@ app.use(methodOverride());
 app.use(cookieParser());
 app.use(expressSession({ secret: 'keyboard gato', resave: true, saveUninitialized: false }));
 // app.use(bodyParser.urlencoded({ extended: true }));
-
-app.use('/api/vott-admin', expressGraphql({
-  schema: vottAdminSchema,
-  rootValue: adminRoot,
-  graphiql: graphiqlEnabled,
-  pretty: true
-}));
-
-app.use('/v1/graphql/collaboration', expressGraphql({
-  schema: collaborationSchema,
-  rootValue: collaborationController,
-  graphiql: graphiqlEnabled,
-  pretty: true
-}));
 
 app.get('/vott-training/projects/:projectId/:modelId/annotations.csv', (request, response) => {
   const projectId = request.params.projectId;
@@ -93,20 +80,39 @@ app.get('/vott-training/projects/:projectId/:modelId/annotations.csv', (request,
 });
 
 app.get(
+  // The pattern looks something like /v1/vott-training/invites/:projectId/:collaboratorId/:inviteId
   services.inviteService.getInviteURLPattern(),
   (request, response) => {
     const projectId = request.params.projectId;
     const collaboratorId = request.params.collaboratorId;
     const inviteId = request.params.inviteId;
     services.inviteService.readInvite(projectId, collaboratorId, inviteId).then(invite => {
+      // TODO: Consider invalidating the invite.
       const token = services.tokenService.sign({ projectId: projectId, collaboratorId: collaboratorId });
-      response.status(200).send({ token: token });
+      response
+        .cookie('token', token)
+        .status(200)
+        .send({ token: token });
     }).catch(error => {
       console.log(error);
       response.send(error);
     });
   }
 );
+
+app.use('/api/vott-collab', services.tokenService.createMiddleware(), expressGraphql({
+  schema: collaborationSchema,
+  rootValue: collabRoot,
+  graphiql: graphiqlEnabled,
+  pretty: true
+}));
+
+app.use('/api/vott-admin', expressGraphql({
+  schema: vottAdminSchema,
+  rootValue: adminRoot,
+  graphiql: graphiqlEnabled,
+  pretty: true
+}));
 
 app.use(express.static('public'));
 
@@ -116,13 +122,14 @@ Promise.all([
   services.inviteService.setServices(services),
   services.imageService.setServices(services),
   services.projectService.setServices(services),
-  adminRoot.setServices(services)
+  adminRoot.setServices(services),
+  collabRoot.setServices(services)
 ])
-.then(results=>{
-  const websiteURL = foundation.websiteBaseURL();
-  app.listen(process.env.PORT, () => console.log(`Started ${websiteURL}`));
-})
-.catch(error=>{
-  console.log(error);
-  process.exit(-10);
-});
+  .then(results => {
+    const websiteURL = foundation.websiteBaseURL();
+    app.listen(process.env.PORT, () => console.log(`Started ${websiteURL}`));
+  })
+  .catch(error => {
+    console.log(error);
+    process.exit(-10);
+  });
