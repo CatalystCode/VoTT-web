@@ -12,16 +12,24 @@ const fs = require("fs");
 // const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
 
+const modelService = require('./src/model-service');
+const collaboratorService = require('./src/collaborator-service');
+const inviteService = require('./src/invite-service');
+const imageService = require('./src/image-service');
+const projectService = require('./src/project-service');
+const emailService = require('./src/email-service');
+
+const jwt = require('./src/vott-jwt');
 const foundation = require('./src/vott-foundation');
 
 const services = {
-  modelService: new (require('./src/model-service')).ModelService(),
-  collaboratorService: new (require('./src/collaborator-service')).CollaboratorService(),
-  inviteService: new (require('./src/invite-service')).InviteService(),
-  imageService: new (require('./src/image-service')).ImageService(),
-  projectService: new (require('./src/project-service')).ProjectService(),
-
-  emailService: new (require('./src/email-service')).EmailService(),
+  modelService: modelService.createModelService(),
+  collaboratorService: collaboratorService.createCollaboratorService(),
+  inviteService: inviteService.createInviteService(),
+  imageService: imageService.createImageService(),
+  projectService: projectService.createProjectService(),
+  emailService: emailService.createEmailService(),
+  tokenService: jwt.createTokenService(),
 
   blobService: azure.createBlobService(),
   queueService: azure.createQueueService(),
@@ -40,7 +48,7 @@ const collaborationController = require('./src/collaboration');
   services.projectService,
   collaborationController,
   vottAdmin
-].forEach(value=>{value.setServices(services);})
+].forEach(value => { value.setServices(services); })
 
 const schemaFile = fs.readFileSync("src/schema.graphql", "utf8");
 
@@ -75,7 +83,7 @@ app.use('/v1/graphql/collaboration', expressGraphql({
 app.get('/vott-training/projects/:projectId/:modelId/annotations.csv', (request, response) => {
   const projectId = request.params.projectId;
   const modelId = request.params.modelId;
-  imageService.getTrainingImagesAnnotations(projectId).then(images=>{
+  imageService.getTrainingImagesAnnotations(projectId).then(images => {
     response.set('Content-Type', 'text/plain; charset=utf8');
     response.set('Content-Disposition', 'attachment;filename=annotations.csv');
     var csv = '';
@@ -88,11 +96,27 @@ app.get('/vott-training/projects/:projectId/:modelId/annotations.csv', (request,
       }
     }
     response.send(csv);
-  }).catch(error=>{
+  }).catch(error => {
     console.log(error);
     response.send(error);
   });
-})
+});
+
+app.get(
+  '/v1/vott-training/invites/:projectId/:collaboratorId/:inviteId',
+  (request, response) => {
+    const projectId = request.params.projectId;
+    const collaboratorId = request.params.collaboratorId;
+    const inviteId = request.params.inviteId;
+    services.inviteService.readInvite(projectId, collaboratorId, inviteId).then(invite => {
+      const token = services.tokenService.sign({ projectId: projectId, collaboratorId: collaboratorId });
+      response.status(200).send({ token: token });
+    }).catch(error => {
+      console.log(error);
+      response.send(error);
+    });
+  }
+);
 
 app.use(express.static('public'));
 app.listen(process.env.PORT, () => console.log(`Started on port ${process.env.PORT}`));

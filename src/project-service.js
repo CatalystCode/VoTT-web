@@ -177,5 +177,8 @@ ProjectService.prototype.mapProject = function (value) {
 }
 
 module.exports = {
-    ProjectService: ProjectService
+    ProjectService: ProjectService,
+    createProjectService: function() {
+        return new ProjectService();
+    }
 };

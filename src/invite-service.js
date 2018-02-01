@@ -84,5 +84,8 @@ InviteService.prototype.readInvite = function (projectId, collaboratorId, invite
 }
 
 module.exports = {
-  InviteService: InviteService
+  InviteService: InviteService,
+  createInviteService: function() {
+    return new InviteService();
+  }
 }

@@ -4,10 +4,16 @@ const jsonwebtoken = require('jsonwebtoken');
 const bcryptjs = require('bcryptjs');
 
 function TokenService(secretOrPrivateKey) {
-    if (!secretOrPrivateKey) {
-        throw new Error("Parameter secretOrPrivateKey must be present.");
+    if (secretOrPrivateKey) {
+        this.secretOrPrivateKey = secretOrPrivateKey;
     }
-    this.secretOrPrivateKey = secretOrPrivateKey;
+    else {
+        const jwtSecret = process.env.JWT_SECRET;
+        if (!jwtSecret) {
+            throw new Error("Required environment variable JWT_SECRET is missing.");
+        }
+        this.secretOrPrivateKey = jwtSecret;
+    }
 }
 
 TokenService.prototype.sign = function (object, expiresIn) {
@@ -18,7 +24,7 @@ TokenService.prototype.verify = function (token, callback) {
     return jsonwebtoken.verify(token, this.secretOrPrivateKey, callback);
 }
 
-TokenService.prototype.createMiddleware = function () {
+TokenService.prototype.createAuthorizationMiddleware = function () {
     const self = this;
     return function (request, response, next) {
         const authorization = request.headers['authorization'];
@@ -42,5 +48,8 @@ TokenService.prototype.createMiddleware = function () {
 }
 
 module.exports = {
-    TokenService: TokenService
+    TokenService: TokenService,
+    createTokenService: function(secretOrPrivateKey) {
+        return new TokenService(secretOrPrivateKey);
+    }
 };

@@ -152,5 +152,8 @@ ModelService.prototype.deleteModel = function (projectId, modelId) {
 }
 
 module.exports = {
-  ModelService: ModelService
+  ModelService: ModelService,
+  createModelService: function() {
+    return new ModelService();
+  }
 };
