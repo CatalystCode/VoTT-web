@@ -197,6 +197,41 @@ RequestHandler.prototype.deleteModel = function (args, request) {
     return this.modelService.deleteModel(projectId, modelId);
 }
 
+/**
+ * Emits all valid image annotations for a given project as CSV.
+ * 
+ * NOTE: This is not a GraphQL-compatible method.
+ * 
+ * @param {*} request - Express request.
+ * @param {*} response - Express response.
+ */
+RequestHandler.prototype.annotationsCSV = function (request, response) {
+    const projectId = request.params.projectId;
+    const modelId = request.params.modelId;
+
+    return this.imageService.getTrainingImagesAnnotations(projectId).then(images => {
+        var csv = '';
+
+        for (var i = 0; i < images.length; i++) {
+            const image = images[i];
+
+            for (var annotationIndex = 0; annotationIndex < image.annotations.length; annotationIndex++) {
+                const annotation = image.annotations[annotationIndex];
+                csv += `${image.fileURL},${annotation.boundingBox.x},${annotation.boundingBox.y},${annotation.boundingBox.width},${annotation.boundingBox.height},${annotation.label}\n`;
+            }
+        }
+
+        response.set('Content-Type', 'text/plain; charset=utf8');
+        response.set('Content-Disposition', 'attachment;filename=annotations.csv');
+        response.send(csv);
+
+        return csv;
+    }).catch(error => {
+        console.log(error);
+        response.send(error);
+    });
+}
+
 module.exports = {
     createGraphqlRoot: function () {
         return new RequestHandler();

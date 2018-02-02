@@ -57,27 +57,13 @@ app.use(cookieParser());
 app.use(expressSession({ secret: 'keyboard gato', resave: true, saveUninitialized: false }));
 // app.use(bodyParser.urlencoded({ extended: true }));
 
-app.get('/vott-training/projects/:projectId/:modelId/annotations.csv', (request, response) => {
-  const projectId = request.params.projectId;
-  const modelId = request.params.modelId;
-  imageService.getTrainingImagesAnnotations(projectId).then(images => {
-    response.set('Content-Type', 'text/plain; charset=utf8');
-    response.set('Content-Disposition', 'attachment;filename=annotations.csv');
-    var csv = '';
-    for (var i = 0; i < images.length; i++) {
-      const image = images[i];
-
-      for (var annotationIndex = 0; annotationIndex < image.annotations.length; annotationIndex++) {
-        const annotation = image.annotations[annotationIndex];
-        csv += `${image.fileURL},${annotation.boundingBox.x},${annotation.boundingBox.y},${annotation.boundingBox.width},${annotation.boundingBox.height},${annotation.objectClassName}\n`;
-      }
-    }
-    response.send(csv);
-  }).catch(error => {
-    console.log(error);
-    response.send(error);
-  });
-});
+// TODO: Consider guarding this with a services.tokenService.createMiddleware()
+app.get(
+  services.modelService.getAnnotationsCsvUrlPattern(),
+  (request, response) => {
+    return adminRoot.annotationsCSV(request, response);
+  }
+);
 
 app.get(
   // The pattern looks something like /v1/vott-training/invites/:projectId/:collaboratorId/:inviteId

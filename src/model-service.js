@@ -4,6 +4,7 @@ const async = require("async");
 const azure = require('azure-storage');
 const qs = require('qs');
 const uuid = require('uuid/v4');
+const foundation = require('./vott-foundation');
 
 /**
  * Global models table that all projects share. The projectId is be used
@@ -41,6 +42,16 @@ ModelService.prototype.setServices = function (configuration) {
   });
 }
 
+ModelService.prototype.getAnnotationsCsvUrl = function (projectId, modelId) {
+  // Remember to ensure getAnnotationsCsvUrlPattern is in sync with the result of this function.
+  return `${foundation.websiteBaseURL()}/v1/vott-training/projects/${projectId}/${modelId}/annotations.csv`;
+}
+
+ModelService.prototype.getAnnotationsCsvUrlPattern = function () {
+  // Remember to ensure getAnnotationsCsvUrl is in sync with the result of this function.
+  return '/v1/vott-training/projects/:projectId/:modelId/annotations.csv';
+}
+
 /**
 * @param {string} projectId containing the project primary key.
 * @returns {string} containing the name of the container where all the models for the given project are stored.
@@ -51,10 +62,6 @@ ModelService.prototype.getModelContainerName = function (projectId) {
 
 ModelService.prototype.getPublicBaseURL = function () {
   return 'https://popspotsvott01.azurewebsites.net';
-}
-
-ModelService.prototype.getModelAnnotationsURL = function (projectId, modelId) {
-  return `${this.getPublicBaseURL()}/vott-training/projects/${projectId}/${modelId}/annotations.csv`;
 }
 
 ModelService.prototype.getModelStatusURL = function (projectId, modelId) {
@@ -84,7 +91,7 @@ ModelService.prototype.createModel = function (projectId) {
       RowKey: modelId,
       status: status
     };
-    const annotationsURL = self.getModelAnnotationsURL(projectId, modelId);
+    const annotationsURL = self.getAnnotationsCsvUrl(projectId, modelId);
     const modelURL = self.getModelURL(projectId, modelId);
     const statusURL = self.getModelStatusURL(projectId, modelId);
     const trainingQueueMessage = {

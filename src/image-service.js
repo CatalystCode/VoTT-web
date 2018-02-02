@@ -132,7 +132,7 @@ ImageService.prototype.getTrainingImagesAnnotations = function (projectId) {
                     fileURL: self.getImageURL(projectId, value.RowKey._),
                     annotations: [
                         {
-                            objectClassName: 'guitar-body',
+                            label: 'guitar-body',
                             boundingBox: {
                                 x: 0,
                                 y: 0,
@@ -149,7 +149,7 @@ ImageService.prototype.getTrainingImagesAnnotations = function (projectId) {
 }
 
 module.exports = {
-    createImageService: function() {
+    createImageService: function () {
         return new ImageService();
     }
 };
