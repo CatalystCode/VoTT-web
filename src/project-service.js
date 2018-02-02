@@ -58,7 +58,7 @@ ProjectService.prototype.getNextTask = function (projectId) {
                 const imageURL = self.imageService.getImageURL(projectId, imageData.imageId);
 
                 resolve({
-                    taskId: projectId + ":" + messageId + ":" + popReceipt,
+                    taskId: [projectId, imageData.imageId, messageId, popReceipt].join('.'),
                     projectId: projectId,
                     messageId: messageId,
                     popReceipt: popReceipt,
@@ -75,16 +75,14 @@ ProjectService.prototype.getNextTask = function (projectId) {
 }
 
 ProjectService.prototype.submitImageTags = function (taksId, tags) {
-    const projectId = taskId.split(":")[0];
-    const messageId = taskId.split(":")[1];
-    const popReceipt = taskId.split(":")[2];
+    const [projectId, imageId, messageId, popReceipt] = taskId.split('.');
     // TODO: Save annotations.
     // TODO: Perform annotation cross-validation and pick the best ones, then cannonicalize them for training.
     self.queueService.deleteMessage(projectId, messageId, popReceipt, (error) => {
         if (error) {
             return reject(error);
         }
-        resolve(uuid());
+        resolve("OK");
     });
 
 }

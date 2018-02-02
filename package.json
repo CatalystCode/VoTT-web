@@ -23,6 +23,7 @@
   "homepage": "https://github.com/jcjimenez/VoTT-web#readme",
   "dependencies": {
     "@sendgrid/mail": "^6.2.1",
+    "@turf/turf": "^5.1.6",
     "async": "^2.6.0",
     "azure-storage": "^2.7.0",
     "bcryptjs": "^2.4.3",
@@ -41,6 +42,7 @@
     "mocha": "^4.1.0",
     "passport-azure-ad": "^3.0.9",
     "qrcode": "^1.2.0",
-    "qs": "^6.5.1"
+    "qs": "^6.5.1",
+    "rbush": "^2.0.2"
   }
 }

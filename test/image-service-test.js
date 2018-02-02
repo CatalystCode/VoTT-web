@@ -1,5 +1,5 @@
 const assert = require('assert');
-const imageService = new (require('../src/image-service')).ImageService();
+const imageService = require('../src/image-service').createImageService();
 
 describe('Project graphql controller', () => {
 

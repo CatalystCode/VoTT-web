@@ -11,7 +11,9 @@ const foundation = require('./vott-foundation');
  * Global images table that all projects share. The projectId is be used as the
  * partition key and the image's id as the primary key.
  */
-const imagesTableName = process.env.IMAGE_TABLE_NAME || 'images';
+const imagesTableName = process.env.IMAGES_TABLE_NAME || 'images';
+
+const imageAnnotationsTableName = process.env.IMAGE_ANNOTATIONS_TABLE_NAME || 'image_annotations';
 
 function ImageService(configuration) {
 }

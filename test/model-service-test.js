@@ -1,5 +1,5 @@
 const assert = require('assert');
-const modelService = new (require('../src/model-service')).ModelService();
+const modelService = require('../src/model-service').createModelService();
 
 function mockServices() {
   const queues = [];
