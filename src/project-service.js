@@ -64,7 +64,7 @@ ProjectService.prototype.getNextTask = function (projectId) {
                     popReceipt: popReceipt,
                     imageURL: imageURL,
                     taskType: project.taskType,
-                    objectClassNames: project.objectClassNames,
+                    labels: project.labels,
                     instructionsText: project.instructionsText,
                     instructionsImageURL: project.instructionsImageURL,
                     instructionsVideoURL: project.instructionsVideoURL
@@ -87,7 +87,7 @@ ProjectService.prototype.submitImageTags = function (taksId, tags) {
 
 }
 
-ProjectService.prototype.createProject = function (name, taskType, objectClassNames, instructionsText) {
+ProjectService.prototype.createProject = function (name, taskType, labels, instructionsText) {
     const self = this;
     return new Promise((resolve, reject) => {
         const projectId = uuid().toString();
@@ -99,7 +99,7 @@ ProjectService.prototype.createProject = function (name, taskType, objectClassNa
             RowKey: projectId,
             name: name,
             taskType: taskType,
-            objectClassNames: JSON.stringify(objectClassNames),
+            labels: JSON.stringify(labels),
             instructionsText: instructionsText
         };
         const imageContainerName = self.imageService.getImageContainerName(projectId);
@@ -166,7 +166,7 @@ ProjectService.prototype.updateInstructionsImage = function (projectId, fileId) 
     });
 }
 
-ProjectService.prototype.updateProject = function (projectId, name, taskType, objectClassNames, instructionsText) {
+ProjectService.prototype.updateProject = function (projectId, name, taskType, labels, instructionsText) {
     const self = this;
     return new Promise((resolve, reject) => {
         const entityDescriptor = {
@@ -179,8 +179,8 @@ ProjectService.prototype.updateProject = function (projectId, name, taskType, ob
         if (taskType) {
             entityDescriptor.taskType = taskType;
         }
-        if (objectClassNames) {
-            entityDescriptor.objectClassNames = JSON.stringify(objectClassNames);
+        if (labels) {
+            entityDescriptor.labels = JSON.stringify(labels);
         }
         if (instructionsText) {
             entityDescriptor.instructionsText = instructionsText;
@@ -219,8 +219,8 @@ ProjectService.prototype.deleteProject = function (projectId) {
 }
 
 ProjectService.prototype.mapProject = function (value) {
-    const objectClassNamesValue = foundation.mapColumnValue(value.objectClassNames);
-    const objectClassNames = (objectClassNamesValue instanceof Array) ? objectClassNamesValue : JSON.parse(objectClassNamesValue);
+    const labelsValue = foundation.mapColumnValue(value.labels);
+    const labels = (labelsValue instanceof Array) ? labelsValue : JSON.parse(labelsValue);
     const projectId = foundation.mapColumnValue(value.RowKey);
 
     const instructionsImageId = foundation.mapColumnValue(value.instructionsImageId);
@@ -230,7 +230,7 @@ ProjectService.prototype.mapProject = function (value) {
         projectId: foundation.mapColumnValue(value.RowKey),
         name: foundation.mapColumnValue(value.name),
         taskType: foundation.mapColumnValue(value.taskType),
-        objectClassNames: objectClassNames,
+        labels: (labels) ? labels : [],
         instructionsText: foundation.mapColumnValue(value.instructionsText),
         instructionsImageURL: instructionsImageURL
     };

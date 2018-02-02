@@ -2,7 +2,7 @@ type Project {
   projectId: String!
   taskType: TaskType!
   name: String!
-  objectClassNames:[String]!
+  labels:[String]!
   instructionsText: String
   instructionsImageURL: String
   instructionsVideoURL: String
@@ -69,8 +69,8 @@ input ConfirmedFile {
 }
 
 type Mutation {
-  createProject(name: String!, taskType: TaskType!, objectClassNames:[String]!, instructionsText:String):Project
-  updateProject(projectId: String!, name: String, taskType: TaskType, objectClassNames:[String], instructionsText:String):Project
+  createProject(name: String!, taskType: TaskType!, labels:[String]!, instructionsText:String):Project
+  updateProject(projectId: String!, name: String, taskType: TaskType, labels:[String], instructionsText:String):Project
   deleteProject(projectId: String!):String
 
   createInstructionsImage(projectId: String!): File

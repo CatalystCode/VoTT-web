@@ -36,11 +36,11 @@ RequestHandler.prototype.project = function (args, request) {
 }
 RequestHandler.prototype.createProject = function (args, res) {
     // TODO: Ensure user has access to projectId.
-    return this.projectService.createProject(args.name, args.taskType, args.objectClassNames, args.instructionsText);
+    return this.projectService.createProject(args.name, args.taskType, args.labels, args.instructionsText);
 }
 RequestHandler.prototype.updateProject = function (args, res) {
     // TODO: Ensure user has access to projectId.
-    return this.projectService.updateProject(args.projectId, args.name, args.taskType, args.objectClassNames, args.instructionsText);
+    return this.projectService.updateProject(args.projectId, args.name, args.taskType, args.labels, args.instructionsText);
 }
 RequestHandler.prototype.deleteProject = function (args, res) {
     // TODO: Ensure user has access to projectId.

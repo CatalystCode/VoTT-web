@@ -2,7 +2,7 @@ type ImageTagTask {
   taskId: String!
   taskType: TaskType!
   imageURL: String!
-  objectClassNames: [String!]!
+  labels: [String!]!
   instructionsText: String!
   instructionsImageURL: String
   instructionsVideoURL: String

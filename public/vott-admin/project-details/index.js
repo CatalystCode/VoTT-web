@@ -56,7 +56,7 @@ angular.module('vott.project-details', [
     };
 
     $scope.details = function () {
-        $location.loadRecord();
+        $scope.loadRecord();
     }
 
     $scope.manageImages = function () {

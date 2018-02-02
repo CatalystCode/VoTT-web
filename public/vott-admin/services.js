@@ -14,14 +14,14 @@ angular.module('vott.factories', [])
                 return $http({
                     method: 'POST',
                     url: baseUrl,
-                    data: { query: `query { project (projectId:${JSON.stringify(projectId)} ) { projectId name taskType objectClassNames instructionsText instructionsImageURL } }` }
+                    data: { query: `query { project (projectId:${JSON.stringify(projectId)} ) { projectId name taskType labels instructionsText instructionsImageURL } }` }
                 });
             },
             createProject: function (project) {
                 const parameters = [
                     `name:${JSON.stringify(project.name)}`,
                     `taskType:${project.taskType}`,
-                    `objectClassNames:${JSON.stringify(project.objectClassNames)}`,
+                    `labels:${JSON.stringify(project.labels)}`,
                     `instructionsText:${JSON.stringify(project.instructionsText)}`
                 ].join(', ');
                 return $http({
@@ -35,7 +35,7 @@ angular.module('vott.factories', [])
                     `projectId:${JSON.stringify(project.projectId)}`,
                     `name:${JSON.stringify(project.name)}`,
                     `taskType:${project.taskType}`,
-                    `objectClassNames:${JSON.stringify(project.objectClassNames)}`,
+                    `labels:${JSON.stringify(project.labels)}`,
                     `instructionsText:${JSON.stringify(project.instructionsText)}`
                 ].join(', ');
                 return $http({
