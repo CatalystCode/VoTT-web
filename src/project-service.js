@@ -74,17 +74,29 @@ ProjectService.prototype.getNextTask = function (projectId) {
     });
 }
 
+ProjectService.prototype.deleteTaskMessage = function (projectId, messageId, popReceipt) {
+    const self = this;
+    return new Promise((resolve, reject) => {
+        const queueName = self.getTaskQueueName(projectId);
+        self.queueService.deleteMessage(queueName, messageId, popReceipt, (error) => {
+            if (error) {
+                return reject(error);
+            }
+            resolve("OK");
+        });
+    });
+}
+
 ProjectService.prototype.submitImageTags = function (taksId, tags) {
     const [projectId, imageId, messageId, popReceipt] = taskId.split('.');
-    // TODO: Save annotations.
-    // TODO: Perform annotation cross-validation and pick the best ones, then cannonicalize them for training.
-    self.queueService.deleteMessage(projectId, messageId, popReceipt, (error) => {
-        if (error) {
-            return reject(error);
-        }
-        resolve("OK");
+    const self = this;
+    return self.imageService.readTrainingImage(projectId, imageId).then(imageRecord => {
+        return self.imageService.createImageTag(imageId, tags).then(tagRecord => {
+            return self.imageService.updateTrainingImageWithTags(projectId, imageId).then(result => {
+                return self.deleteTaskMessage(projectId, messageId, popReceipt);
+            });
+        });
     });
-
 }
 
 ProjectService.prototype.createProject = function (name, taskType, labels, instructionsText) {

@@ -13,7 +13,7 @@ const foundation = require('./vott-foundation');
  */
 const imagesTableName = process.env.IMAGES_TABLE_NAME || 'images';
 
-const imageAnnotationsTableName = process.env.IMAGE_ANNOTATIONS_TABLE_NAME || 'image_annotations';
+const imageTagsTableName = process.env.IMAGE_TAGS_TABLE_NAME || 'imagetags';
 
 function ImageService(configuration) {
 }
@@ -23,10 +23,19 @@ ImageService.prototype.setServices = function (configuration) {
 
     const self = this;
     return new Promise((resolve, reject) => {
-        self.tableService.createTableIfNotExists(imagesTableName, (error, results) => {
-            if (error) return reject(error);
-            else return resolve(results);
-        });
+        async.series(
+            [
+                (callback) => { self.tableService.createTableIfNotExists(imagesTableName, callback); },
+                (callback) => { self.tableService.createTableIfNotExists(imageTagsTableName, callback); }
+            ],
+            (error) => {
+                if (error) {
+                    return reject(error);
+                }
+                console.log("Initialized image service.");
+                resolve(configuration);
+            }
+        );
     });
 }
 
@@ -93,6 +102,33 @@ ImageService.prototype.createTrainingImage = function (projectId, fileId) {
     });
 }
 
+ImageService.prototype.updateTrainingImageWithTags = function (projectId, imageId) {
+    return Promise.resolve("OK");
+}
+
+ImageService.prototype.mapTrainingImage = function (value) {
+    const projectId = value.PartitionKey._;
+    const imageId = value.RowKey._;
+    return {
+        projectId: projectId,
+        imageId: imageId,
+        fileId: imageId,
+        fileURL: this.getImageURL(projectId, imageId)
+    };
+}
+
+ImageService.prototype.readTrainingImage = function (projectId, imageId) {
+    const self = this;
+    return new Promise((resolve, reject) => {
+        self.tableService.retrieveEntity(imagesTableName, projectId, imageId, (error, record) => {
+            if (error) {
+                return reject(error);
+            }
+            resolve(self.mapTrainingImage(record));
+        });
+    });
+}
+
 ImageService.prototype.readTrainingImages = function (projectId, nextPageToken) {
     const self = this;
     return new Promise((resolve, reject) => {
@@ -101,17 +137,52 @@ ImageService.prototype.readTrainingImages = function (projectId, nextPageToken) 
             if (error) {
                 return reject(error);
             }
-            const images = results.entries.map((value) => {
-                return {
-                    projectId: value.PartitionKey._,
-                    fileId: value.RowKey._,
-                    fileURL: self.getImageURL(projectId, value.RowKey._),
-                };
-            });
+            const images = results.entries.map(value => self.mapTrainingImage(value));
             resolve({
                 nextPageToken: (results.continuationToken) ? JSON.stringify(results.continuationToken) : null,
                 entries: images
             });
+        });
+    });
+}
+
+ImageService.prototype.mapImageTag = function (value) {
+    const imageId = value.PartitionKey._;
+    const tagId = value.RowKey._;
+    return {
+        imageId: imageId,
+        tagId: tagId,
+        tags: JSON.parse(value.tags._)
+    };
+}
+
+ImageService.prototype.createImageTag = function (imageId, tags) {
+    const self = this;
+    return new Promise((resolve, reject) => {
+        const tagId = uuid();
+        const tagRecord = {
+            PartitionKey: imageId,
+            RowKey: tagId,
+            tags: JSON.stringify(tags)
+        };
+        self.tableService.insertEntity(imageTagsTableName, tagRecord, (error, tag) => {
+            if (error) {
+                return reject(error);
+            }
+            return resolve(self.mapImageTag(tag));
+        });
+    });
+}
+
+ImageService.prototype.readImageTags = function (imageId) {
+    const self = this;
+    return new Promise((resolve, reject) => {
+        var query = new azure.TableQuery().where("PartitionKey == ?", imageId);
+        self.tableService.queryEntities(imageTagsTableName, query, null, (error, results, response) => {
+            if (error) {
+                return reject(error);
+            }
+            resolve(results.entries.map(value => self.mapImageTag(value)));
         });
     });
 }
