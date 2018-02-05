@@ -18,7 +18,7 @@ describe('Image Service', () => {
 
       return imageService.setServices(services).then(data => {
         assert.deepEqual(services.queueService.queues, []);
-        assert.deepEqual(services.tableService.tables, ['images', "imagetags"]);
+        assert.deepEqual(services.tableService.tables, ['images', "imagetagcontributions"]);
       });
 
     });
@@ -48,25 +48,313 @@ describe('Image Service', () => {
 
   });
 
-  describe('#createImageTag()', () => {
+  describe('#createImageTagContribution()', () => {
     it('should insert entity and return mapped object.', () => {
-      const tag = {
-        objectClass: 'guitar-body',
-        objectBoundingBox: {
-          x: 20,
-          y: 90,
-          width: 70,
-          height: 100
+      const tags = [
+        {
+          label: 'guitar-body',
+          boundingBox: {
+            x: 20,
+            y: 90,
+            width: 70,
+            height: 100
+          }
         }
-      };
-      return imageService.setServices(services).then(data=>{
-        return imageService.createImageTag("someimageid", tag).then(record=>{
+      ];
+      return imageService.setServices(services).then(data => {
+        return imageService.createImageTagContribution("someimageid", tags).then(record => {
           assert.deepEqual(record.imageId, "someimageid");
-          assert.deepEqual(record.tags, tag);
+          assert.deepEqual(record.tags, tags);
           return record;
-        });  
+        });
       });
     });
+  });
+
+  describe('#updateTrainingImageWithTagContributions()', () => {
+
+    it('should update images record stats with two object detection contributions in agreement', () => {
+      const contributions = [
+        {
+          PartitionKey: { _: 'someImageId' },
+          RowKey: { _: 'contribution00' },
+          tags: {
+            _: JSON.stringify([{
+              label: 'guitar-body',
+              boundingBox: {
+                x: 20,
+                y: 90,
+                width: 70,
+                height: 100
+              }
+            }])
+          }
+        },
+        {
+          PartitionKey: { _: 'someImageId' },
+          RowKey: { _: 'contribution01' },
+          tags: {
+            _: JSON.stringify([{
+              label: 'guitar-body',
+              boundingBox: {
+                x: 21,
+                y: 88,
+                width: 72,
+                height: 99
+              }
+            }])
+          }
+        }
+      ];
+
+      services.tableService.queryEntities = (tableName, query, paginationToken, callback) => {
+        if (tableName == 'imagetagcontributions') {
+          return callback(null, {
+            entries: contributions
+          });
+        }
+
+        return callback("Missing query support.", null);
+      };
+
+      return imageService.setServices(services).then(data => {
+        return imageService.updateTrainingImageWithTagContributions('someProjectId', 'someImageId').then(result => {
+          assert.deepEqual(
+            services.tableService.mergedRecords,
+            [{
+              tableName: 'images',
+              entityDescriptor: {
+                PartitionKey: 'someProjectId',
+                RowKey: 'someImageId',
+                status: 'READY_FOR_TRAINING',
+                tags: '[{"label":"guitar-body","boundingBox":{"x":21,"y":88,"width":72,"height":99}},{"label":"guitar-body","boundingBox":{"x":20,"y":90,"width":70,"height":100}}]'
+              }
+            }]
+          );
+        });
+      });
+    });
+
+    it('should update images record stats with two object detection contributions in conflict', () => {
+      const contributions = [
+        {
+          PartitionKey: { _: 'someImageId' },
+          RowKey: { _: 'contribution00' },
+          tags: {
+            _: JSON.stringify([{
+              label: 'guitar-body',
+              boundingBox: {
+                x: 20,
+                y: 90,
+                width: 70,
+                height: 100
+              }
+            }])
+          }
+        },
+        {
+          PartitionKey: { _: 'someImageId' },
+          RowKey: { _: 'contribution01' },
+          tags: {
+            _: JSON.stringify([{
+              label: 'guitar-body',
+              boundingBox: {
+                x: 21,
+                y: 88,
+                width: 30,
+                height: 40
+              }
+            }])
+          }
+        }
+      ];
+
+      services.tableService.queryEntities = (tableName, query, paginationToken, callback) => {
+        if (tableName == 'imagetagcontributions') {
+          return callback(null, {
+            entries: contributions
+          });
+        }
+
+        return callback("Missing query support.", null);
+      };
+
+      return imageService.setServices(services).then(data => {
+        return imageService.updateTrainingImageWithTagContributions('someProjectId', 'someImageId').then(result => {
+          assert.deepEqual(
+            services.tableService.mergedRecords,
+            [{
+              tableName: 'images',
+              entityDescriptor: {
+                PartitionKey: 'someProjectId',
+                RowKey: 'someImageId',
+                status: 'IN_CONFLICT',
+                tags: '[]'
+              }
+            }]
+          );
+        });
+      });
+    });
+
+
+
+    it('should update images record stats with three object detection contributions with a tie-breaker', () => {
+      const contributions = [
+        {
+          PartitionKey: { _: 'someImageId' },
+          RowKey: { _: 'contribution00' },
+          tags: {
+            _: JSON.stringify([{
+              label: 'guitar-body',
+              boundingBox: {
+                x: 20,
+                y: 90,
+                width: 70,
+                height: 100
+              }
+            }])
+          }
+        },
+        {
+          PartitionKey: { _: 'someImageId' },
+          RowKey: { _: 'contribution01' },
+          tags: {
+            _: JSON.stringify([{
+              label: 'guitar-body',
+              boundingBox: {
+                x: 22,
+                y: 89,
+                width: 30,
+                height: 40
+              }
+            }])
+          }
+        },        {
+          PartitionKey: { _: 'someImageId' },
+          RowKey: { _: 'contribution02' },
+          tags: {
+            _: JSON.stringify([{
+              label: 'guitar-body',
+              boundingBox: {
+                x: 21,
+                y: 88,
+                width: 72,
+                height: 99
+              }
+            }])
+          }
+        }
+      ];
+
+      services.tableService.queryEntities = (tableName, query, paginationToken, callback) => {
+        if (tableName == 'imagetagcontributions') {
+          return callback(null, {
+            entries: contributions
+          });
+        }
+
+        return callback("Missing query support.", null);
+      };
+
+      return imageService.setServices(services).then(data => {
+        return imageService.updateTrainingImageWithTagContributions('someProjectId', 'someImageId').then(result => {
+          assert.deepEqual(
+            services.tableService.mergedRecords,
+            [{
+              tableName: 'images',
+              entityDescriptor: {
+                PartitionKey: 'someProjectId',
+                RowKey: 'someImageId',
+                status: 'READY_FOR_TRAINING',
+                tags: '[{"label":"guitar-body","boundingBox":{"x":21,"y":88,"width":72,"height":99}},{"label":"guitar-body","boundingBox":{"x":20,"y":90,"width":70,"height":100}}]'
+              }
+            }]
+          );
+        });
+      });
+    });
+
+
+
+    it('should update images record stats with three object detection contributions in disagreement', () => {
+      const contributions = [
+        {
+          PartitionKey: { _: 'someImageId' },
+          RowKey: { _: 'contribution00' },
+          tags: {
+            _: JSON.stringify([{
+              label: 'guitar-body',
+              boundingBox: {
+                x: 20,
+                y: 90,
+                width: 70,
+                height: 100
+              }
+            }])
+          }
+        },
+        {
+          PartitionKey: { _: 'someImageId' },
+          RowKey: { _: 'contribution01' },
+          tags: {
+            _: JSON.stringify([{
+              label: 'guitar-body',
+              boundingBox: {
+                x: 22,
+                y: 89,
+                width: 30,
+                height: 40
+              }
+            }])
+          }
+        },        {
+          PartitionKey: { _: 'someImageId' },
+          RowKey: { _: 'contribution02' },
+          tags: {
+            _: JSON.stringify([{
+              label: 'guitar-body',
+              boundingBox: {
+                x: 0,
+                y: 0,
+                width: 72,
+                height: 99
+              }
+            }])
+          }
+        }
+      ];
+
+      services.tableService.queryEntities = (tableName, query, paginationToken, callback) => {
+        if (tableName == 'imagetagcontributions') {
+          return callback(null, {
+            entries: contributions
+          });
+        }
+
+        return callback("Missing query support.", null);
+      };
+
+      return imageService.setServices(services).then(data => {
+        return imageService.updateTrainingImageWithTagContributions('someProjectId', 'someImageId').then(result => {
+          assert.deepEqual(
+            services.tableService.mergedRecords,
+            [{
+              tableName: 'images',
+              entityDescriptor: {
+                PartitionKey: 'someProjectId',
+                RowKey: 'someImageId',
+                status: 'IN_CONFLICT',
+                tags: '[]'
+              }
+            }]
+          );
+        });
+      });
+    });
+
+
+
   });
 
 });

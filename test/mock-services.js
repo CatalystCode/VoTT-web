@@ -5,6 +5,7 @@ module.exports = {
     const deletedMessages = [];
     const tables = [];
     const inserts = [];
+    const mergedRecords = [];
     const queries = [];
     return {
       blobService: {
@@ -46,11 +47,19 @@ module.exports = {
         queries: queries,
         retrieveEntity: (tableName, partitionKey, primaryKey, callback) => {
           queries.push({ tableName: tableName, query: { partitionKey: partitionKey, primaryKey: primaryKey } });
-          callback("Not implemented.", null);
+          callback(null, {
+            PartitionKey: { _: partitionKey },
+            RowKey: { _: primaryKey }
+          });
         },
         queryEntities: (tableName, query, nextPageToken, callback) => {
           queries.push({ tableName: tableName, query: query, nextPageToken: nextPageToken });
           callback(null, { entries: [] });
+        },
+        mergedRecords: mergedRecords,
+        mergeEntity: (tableName, entityDescriptor, callback) => {
+          mergedRecords.push({tableName: tableName, entityDescriptor: entityDescriptor});
+          callback(null, entityDescriptor);
         }
       }
     };

@@ -38,7 +38,7 @@ describe('Project Service', () => {
       readTrainingImage: function (projectId, imageId) {
         return Promise.resolve({});
       },
-      updateTrainingImageWithTags: function (projectId, imageId) {
+      updateTrainingImageWithTagContributions: function (projectId, imageId) {
         return Promise.resolve("OK");
       }
     };
@@ -84,37 +84,41 @@ describe('Project Service', () => {
   describe('#submitImageTags()', () => {
 
     it('should store image tag and remove queue message.', () => {
-      const taskId = "projectId.imageId.sampleMessageId.samplePopReceipt";
+      const taskId = "projectId.someImageId.sampleMessageId.samplePopReceipt";
       const tags = [
         {
-        objectClass: 'guitar-neck',
-        objectBoundingBox: {
-          x: 50,
-          y: 10,
-          width: 20,
-          height: 30
+          label: 'guitar-neck',
+          boundingBox: {
+            x: 50,
+            y: 10,
+            width: 20,
+            height: 30
+          }
+        },
+        {
+          label: 'guitar-body',
+          boundingBox: {
+            x: 20,
+            y: 90,
+            width: 70,
+            height: 100
+          }
         }
-      },
-      {
-        objectClass: 'guitar-body',
-        objectBoundingBox: {
-          x: 20,
-          y: 90,
-          width: 70,
-          height: 100
-        }
-      }
-    ];
+      ];
 
-      const createdImageTags = [];
-      services.imageService.createImageTag = function (projectId, imageTag) {
-        createdImageTags.push(imageTag);
-        return Promise.resolve(imageTag);
+      const createdContributions = [];
+      services.imageService.createImageTagContribution = function (imageId, tags) {
+        const contribution = {
+          imageId: imageId,
+          tags: tags
+        };
+        createdContributions.push(contribution);
+        return Promise.resolve(contribution);
       };
 
       return projectService.setServices(services).then(config => {
         return projectService.submitImageTags(taskId, tags).then(result => {
-          assert.deepEqual(createdImageTags, tags);
+          assert.deepEqual(createdContributions, [{ imageId: "someImageId", tags: tags }]);
           assert.deepEqual(services.queueService.deletedMessages, [{ messageId: "sampleMessageId", popReceipt: "samplePopReceipt" }]);
           return result;
         });

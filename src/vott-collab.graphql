@@ -13,8 +13,8 @@ type Query {
 }
 
 input ImageTag {
-  objectClass: String!
-  objectBoundingBox: BoundingBox
+  label: String!
+  boundingBox: BoundingBox
 }
 
 input BoundingBox {

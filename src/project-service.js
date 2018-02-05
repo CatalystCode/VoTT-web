@@ -92,12 +92,8 @@ ProjectService.prototype.submitImageTags = function (taskId, tags) {
     const [projectId, imageId, messageId, popReceipt] = taskId.split('.');
     const self = this;
     return self.imageService.readTrainingImage(projectId, imageId).then(imageRecord => {
-        return Promise.all(
-            tags.map(currenTag => {
-                return self.imageService.createImageTag(imageId, currenTag);
-            })
-        ).then(tagRecords => {
-            return self.imageService.updateTrainingImageWithTags(projectId, imageId).then(result => {
+        return self.imageService.createImageTagContribution(imageId, tags).then(contribution=>{
+            return self.imageService.updateTrainingImageWithTagContributions(projectId, imageId).then(result => {
                 return self.deleteTaskMessage(projectId, messageId, popReceipt);
             });
         });

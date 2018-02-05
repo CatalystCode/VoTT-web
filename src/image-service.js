@@ -13,7 +13,13 @@ const foundation = require('./vott-foundation');
  */
 const imagesTableName = process.env.IMAGES_TABLE_NAME || 'images';
 
-const imageTagsTableName = process.env.IMAGE_TAGS_TABLE_NAME || 'imagetags';
+const imageTagContributions = process.env.IMAGE_TAG_CONTRIBUTIONS_TABLE_NAME || 'imagetagcontributions';
+
+const trainingImageStates = {
+    TAG_PENDING: 'TAG_PENDING',
+    READY_FOR_TRAINING: 'READY_FOR_TRAINING',
+    IN_CONFLICT: 'IN_CONFLICT'
+};
 
 function ImageService(configuration) {
 }
@@ -26,13 +32,12 @@ ImageService.prototype.setServices = function (configuration) {
         async.series(
             [
                 (callback) => { self.tableService.createTableIfNotExists(imagesTableName, callback); },
-                (callback) => { self.tableService.createTableIfNotExists(imageTagsTableName, callback); }
+                (callback) => { self.tableService.createTableIfNotExists(imageTagContributions, callback); }
             ],
             (error) => {
                 if (error) {
                     return reject(error);
                 }
-                console.log("Initialized image service.");
                 resolve(configuration);
             }
         );
@@ -71,8 +76,8 @@ ImageService.prototype.createTrainingImage = function (projectId, fileId) {
         const imageRecord = {
             PartitionKey: projectId,
             RowKey: fileId,
-            status: 'TAG_PENDING',
-            annotations: '{}'
+            status: trainingImageStates.TAG_PENDING,
+            tags: '[]'
         };
         const imageQueueMessage = {
             projectId: projectId,
@@ -100,10 +105,6 @@ ImageService.prototype.createTrainingImage = function (projectId, fileId) {
         );
 
     });
-}
-
-ImageService.prototype.updateTrainingImageWithTags = function (projectId, imageId) {
-    return Promise.resolve("OK");
 }
 
 ImageService.prototype.mapTrainingImage = function (value) {
@@ -146,43 +147,121 @@ ImageService.prototype.readTrainingImages = function (projectId, nextPageToken) 
     });
 }
 
-ImageService.prototype.mapImageTag = function (value) {
-    const imageId = value.PartitionKey._;
-    const tagId = value.RowKey._;
-    return {
-        imageId: imageId,
-        tagId: tagId,
-        tags: JSON.parse(value.tags._)
-    };
-}
-
-ImageService.prototype.createImageTag = function (imageId, tags) {
+ImageService.prototype.updateTrainingImageStatus = function (projectId, imageId, status, tags) {
     const self = this;
     return new Promise((resolve, reject) => {
-        const tagId = uuid();
-        const tagRecord = {
-            PartitionKey: { _: imageId },
-            RowKey: { _: tagId },
-            tags: { _: JSON.stringify(tags) }
+        const entityDescriptor = {
+            PartitionKey: projectId,
+            RowKey: imageId,
+            status: status,
+            tags: (tags) ? JSON.stringify(tags) : null
         };
-        self.tableService.insertEntity(imageTagsTableName, tagRecord, (error, tag) => {
-            if (error) {
-                return reject(error);
+
+        self.tableService.mergeEntity(imagesTableName, entityDescriptor, (error, project) => {
+            if (error) return reject(error);
+            else return resolve("OK");
+        });
+    });
+};
+
+ImageService.prototype.updateTrainingImageWithTagContributions = function (projectId, imageId) {
+    const self = this;
+    return this.readTrainingImage(projectId, imageId).then(image => {
+        return self.readImageTagContributions(projectId, imageId).then(contributions => {
+            // Calculate the score for each contribution relative
+            if (contributions.length < 2) {
+                // Waiting for more contributions before marking as ANNOTATED.
+                return self.updateTrainingImageStatus(projectId, imageId, trainingImageStates.TAG_PENDING, []);
             }
-            return resolve(self.mapImageTag(tagRecord));
+
+            const referenceContribution = contributions.pop();
+            const secondContribution = contributions.pop();
+            if (referenceContribution.tags[0].boundingBox) {
+                const referenceTagCollection = referenceContribution.tags.map(t => self.mapTag(t));
+                const secondTagCollection = secondContribution.tags.map(t => self.mapTag(t));
+                const primaryAnalysis = foundation.rectAnalysis(referenceTagCollection, secondTagCollection);
+                if (primaryAnalysis.mismatches.length) {
+                    // Tie-breaker needed. If there aren't any other contributions, the image status is IN_CONFLICT
+                    if (contributions.length) {
+                        const thirdContribution = contributions.pop();
+                        const thirdTagCollection = thirdContribution.tags.map(t => self.mapTag(t));
+                        const secondaryAnalysis = foundation.rectAnalysis(referenceTagCollection, thirdTagCollection);
+                        if (secondaryAnalysis.mismatches.length) {
+                            return self.updateTrainingImageStatus(projectId, imageId, trainingImageStates.IN_CONFLICT, []);
+                        }
+                        else {
+                            return self.updateTrainingImageStatus(
+                                projectId,
+                                imageId,
+                                trainingImageStates.READY_FOR_TRAINING,
+                                referenceContribution.tags.concat(thirdContribution.tags)
+                            );
+                        }
+                    } else {
+                        // There aren't any more contributions to serve as a tie-breaker.
+                        return self.updateTrainingImageStatus(projectId, imageId, trainingImageStates.IN_CONFLICT, []);
+                    }
+                } else {
+                    // No mismatches, this is good, the image is now READY_FOR_TRAINING and the tags should be saved
+                    return self.updateTrainingImageStatus(
+                        projectId,
+                        imageId,
+                        trainingImageStates.READY_FOR_TRAINING,
+                        referenceContribution.tags.concat(secondContribution.tags)
+                    );
+                }
+            }
+
+            return Promise.resolve("OK");
         });
     });
 }
 
-ImageService.prototype.readImageTags = function (imageId) {
+ImageService.prototype.mapTag = function (tag) {
+    if (!tag.boundingBox) {
+        return tag.label;
+    }
+    return tag.boundingBox;
+}
+
+ImageService.prototype.mapContribution = function (value) {
+    const imageId = value.PartitionKey._;
+    const contributionId = value.RowKey._;
+    const tags = value.tags._;
+    return {
+        imageId: imageId,
+        contributionId: contributionId,
+        tags: JSON.parse(tags)
+    };
+}
+
+ImageService.prototype.createImageTagContribution = function (imageId, tags) {
     const self = this;
     return new Promise((resolve, reject) => {
-        var query = new azure.TableQuery().where("PartitionKey == ?", imageId);
-        self.tableService.queryEntities(imageTagsTableName, query, null, (error, results, response) => {
+        const contributionId = uuid();
+        const tagRecord = {
+            PartitionKey: { _: imageId },
+            RowKey: { _: contributionId },
+            tags: { _: JSON.stringify(tags) }
+        };
+        self.tableService.insertEntity(imageTagContributions, tagRecord, (error, tag) => {
             if (error) {
                 return reject(error);
             }
-            resolve(results.entries.map(value => self.mapImageTag(value)));
+            return resolve(self.mapContribution(tagRecord));
+        });
+    });
+}
+
+ImageService.prototype.readImageTagContributions = function (imageId) {
+    const self = this;
+    return new Promise((resolve, reject) => {
+        var query = new azure.TableQuery().where("PartitionKey == ?", imageId);
+        self.tableService.queryEntities(imageTagContributions, query, null, (error, results, response) => {
+            if (error) {
+                return reject(error);
+            }
+            resolve(results.entries.map(value => self.mapContribution(value)));
         });
     });
 }
@@ -199,6 +278,7 @@ ImageService.prototype.getTrainingImagesAnnotations = function (projectId) {
             const images = results.entries.map((value) => {
                 return {
                     projectId: value.PartitionKey._,
+                    imageId: value.RowKey._,
                     fileId: value.RowKey._,
                     fileURL: self.getImageURL(projectId, value.RowKey._),
                     annotations: [

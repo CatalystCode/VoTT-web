@@ -27,8 +27,8 @@ function polygonToRect(polygon) {
   return {
     x: left,
     y: minY,
-    w: (right - left),
-    h: (maxY - minY),
+    width: (right - left),
+    height: (maxY - minY),
   };
 }
 
@@ -48,24 +48,24 @@ function featureToRect(feature) {
 
 /**
  * Returns the rectangle representing the intersection between given rectangles a and b. Returns null if no intersection exists.
- * @param {object} a - An object representing a rectangle in the form { x:Number, y:Number, w:Number, h:Number }
- * @param {object} b - Another object representing a rectangle in the form { x:Number, y:Number, w:Number, h:Number }
+ * @param {object} a - An object representing a rectangle in the form { x:Number, y:Number, width:Number, height:Number }
+ * @param {object} b - Another object representing a rectangle in the form { x:Number, y:Number, width:Number, height:Number }
  */
 function rectIntersection(a, b) {
-  const polygonA = turf.bboxPolygon([a.x, a.y, a.x + a.w, a.y + a.h]);
-  const polygonB = turf.bboxPolygon([b.x, b.y, b.x + b.w, b.y + b.h]);
+  const polygonA = turf.bboxPolygon([a.x, a.y, a.x + a.width, a.y + a.height]);
+  const polygonB = turf.bboxPolygon([b.x, b.y, b.x + b.width, b.y + b.height]);
   const intersection = turf.intersect(polygonA, polygonB);
   return featureToRect(intersection);
 }
 
 /**
  * Returns the rectangle representing the union between given rectangles a and b. Returns null if no union exists.
- * @param {object} a - An object representing a rectangle in the form { x:Number, y:Number, w:Number, h:Number }
- * @param {object} b - Another object representing a rectangle in the form { x:Number, y:Number, w:Number, h:Number }
+ * @param {object} a - An object representing a rectangle in the form { x:Number, y:Number, width:Number, height:Number }
+ * @param {object} b - Another object representing a rectangle in the form { x:Number, y:Number, width:Number, height:Number }
  */
 function rectUnion(a, b) {
-  const polygonA = turf.bboxPolygon([a.x, a.y, a.x + a.w, a.y + a.h]);
-  const polygonB = turf.bboxPolygon([b.x, b.y, b.x + b.w, b.y + b.h]);
+  const polygonA = turf.bboxPolygon([a.x, a.y, a.x + a.width, a.y + a.height]);
+  const polygonB = turf.bboxPolygon([b.x, b.y, b.x + b.width, b.y + b.height]);
   var features = turf.featureCollection([
     polygonA, polygonB
   ]);
@@ -78,8 +78,8 @@ function rectToRbushRect(rectangle) {
   return {
     minX: rectangle.x,
     minY: rectangle.y,
-    maxX: rectangle.x + rectangle.w,
-    maxY: rectangle.y + rectangle.h,
+    maxX: rectangle.x + rectangle.width,
+    maxY: rectangle.y + rectangle.height,
     label: rectangle.label
   };
 }
