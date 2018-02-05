@@ -59,7 +59,7 @@ ProjectService.prototype.getNextTask = function (projectId) {
                 const imageURL = self.imageService.getImageURL(projectId, imageId);
 
                 resolve({
-                    taskId: [projectId, imageData.imageId, messageId, popReceipt].join('.'),
+                    taskId: [projectId, imageId, messageId, popReceipt].join('.'),
                     projectId: projectId,
                     messageId: messageId,
                     popReceipt: popReceipt,

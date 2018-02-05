@@ -161,15 +161,15 @@ ImageService.prototype.createImageTag = function (imageId, tags) {
     return new Promise((resolve, reject) => {
         const tagId = uuid();
         const tagRecord = {
-            PartitionKey: imageId,
-            RowKey: tagId,
-            tags: JSON.stringify(tags)
+            PartitionKey: { _: imageId },
+            RowKey: { _: tagId },
+            tags: { _: JSON.stringify(tags) }
         };
         self.tableService.insertEntity(imageTagsTableName, tagRecord, (error, tag) => {
             if (error) {
                 return reject(error);
             }
-            return resolve(self.mapImageTag(tag));
+            return resolve(self.mapImageTag(tagRecord));
         });
     });
 }
