@@ -1,7 +1,8 @@
 module.exports = {
   createMockServices: function () {
     const queues = [];
-    const queueMessages = [];
+    const queuedMessages = [];
+    const deletedMessages = [];
     const tables = [];
     const inserts = [];
     const queries = [];
@@ -17,13 +18,18 @@ module.exports = {
           queues.push(queueName);
           callback();
         },
-        queueMessages: queueMessages,
+        queueMessages: queuedMessages,
         createMessage: (queueName, message, callback) => {
-          queueMessages.push({ queueName: queueName, message: message });
+          queuedMessages.push({ queueName: queueName, message: message });
           callback();
         },
         getMessage: (queueName, callback) => {
           callback("No messages", null);
+        },
+        deletedMessages: deletedMessages,
+        deleteMessage: (queueName, messageId, popReceipt, callback) => {
+          deletedMessages.push({ messageId: messageId, popReceipt: popReceipt });
+          callback(null, "Deleted");
         }
       },
       tableService: {

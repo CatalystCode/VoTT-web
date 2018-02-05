@@ -13,7 +13,7 @@ describe('Project Service', () => {
       callback(null, {
         RowKey: { _: primaryKey },
         name: "Some Project",
-        taskType: "CLASSIFICATION" ,
+        taskType: "CLASSIFICATION",
         labels: "[]",
         instructionsText: "Do something.",
         instructionsImageId: "instructionsimageid"
@@ -34,6 +34,12 @@ describe('Project Service', () => {
       },
       getImageURL: function (containerName, imageId) {
         return `https://example.com/${containerName}/${imageId}`;
+      },
+      readTrainingImage: function (projectId, imageId) {
+        return Promise.resolve({});
+      },
+      updateTrainingImageWithTags: function (projectId, imageId) {
+        return Promise.resolve("OK");
       }
     };
     projectService = ps.createProjectService();
@@ -71,6 +77,49 @@ describe('Project Service', () => {
           });
         });
       });
+    });
+
+  });
+
+  describe('#submitImageTags()', () => {
+
+    it('should store image tag and remove queue message.', () => {
+      const taskId = "projectId.imageId.sampleMessageId.samplePopReceipt";
+      const tags = [
+        {
+        objectClass: 'guitar-neck',
+        objectBoundingBox: {
+          x: 50,
+          y: 10,
+          width: 20,
+          height: 30
+        }
+      },
+      {
+        objectClass: 'guitar-body',
+        objectBoundingBox: {
+          x: 20,
+          y: 90,
+          width: 70,
+          height: 100
+        }
+      }
+    ];
+
+      const createdImageTags = [];
+      services.imageService.createImageTag = function (projectId, imageTag) {
+        createdImageTags.push(imageTag);
+        return Promise.resolve(imageTag);
+      };
+
+      return projectService.setServices(services).then(config => {
+        return projectService.submitImageTags(taskId, tags).then(result => {
+          assert.deepEqual(createdImageTags, tags);
+          assert.deepEqual(services.queueService.deletedMessages, [{ messageId: "sampleMessageId", popReceipt: "samplePopReceipt" }]);
+          return result;
+        });
+      });
+
     });
 
   });

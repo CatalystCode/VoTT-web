@@ -88,11 +88,15 @@ ProjectService.prototype.deleteTaskMessage = function (projectId, messageId, pop
     });
 }
 
-ProjectService.prototype.submitImageTags = function (taksId, tags) {
+ProjectService.prototype.submitImageTags = function (taskId, tags) {
     const [projectId, imageId, messageId, popReceipt] = taskId.split('.');
     const self = this;
     return self.imageService.readTrainingImage(projectId, imageId).then(imageRecord => {
-        return self.imageService.createImageTag(imageId, tags).then(tagRecord => {
+        return Promise.all(
+            tags.map(currenTag => {
+                return self.imageService.createImageTag(imageId, currenTag);
+            })
+        ).then(tagRecords => {
             return self.imageService.updateTrainingImageWithTags(projectId, imageId).then(result => {
                 return self.deleteTaskMessage(projectId, messageId, popReceipt);
             });
