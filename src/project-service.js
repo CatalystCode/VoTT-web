@@ -46,7 +46,7 @@ ProjectService.prototype.getNextTask = function (projectId) {
     const self = this;
     return this.readProject(projectId).then(project => {
         return new Promise((resolve, reject) => {
-            const queueName = self.projectService.getTaskQueueName(projectId);
+            const queueName = self.getTaskQueueName(projectId);
             self.queueService.getMessage(queueName, (error, message) => {
                 if (error) {
                     return reject(error);
@@ -55,7 +55,8 @@ ProjectService.prototype.getNextTask = function (projectId) {
                 const messageId = message.messageId;
                 const popReceipt = message.popReceipt;
                 const imageData = message.messageText.startsWith('{&quot;') ? JSON.parse(decodeXml(message.messageText)) : JSON.parse(message.messageText);
-                const imageURL = self.imageService.getImageURL(projectId, imageData.imageId);
+                const imageId = imageData.imageId ? imageData.imageId : imageData.fileId;
+                const imageURL = self.imageService.getImageURL(projectId, imageId);
 
                 resolve({
                     taskId: [projectId, imageData.imageId, messageId, popReceipt].join('.'),

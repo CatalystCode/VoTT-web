@@ -1,30 +1,24 @@
 const assert = require('assert');
-const imageService = require('../src/image-service').createImageService();
+const mock = require('./mock-services');
+const is = require('../src/image-service');
 
-describe('Project graphql controller', () => {
+describe('Image Service', () => {
+
+  let imageService = null;
+  let services = null;
+
+  beforeEach(()=>{
+    imageService = is.createImageService();
+    services = mock.createMockServices();
+  });
 
   describe('#setServices()', () => {
 
     it('should initialize queues and tables', () => {
 
-      const createdQueues = [];
-      const createdTables = [];
-      return imageService.setServices({
-        queueService: {
-          createQueueIfNotExists: (queueName, callback) => {
-            createdQueues.push(queueName);
-            callback();
-          }
-        },
-        tableService: {
-          createTableIfNotExists: (tableName, callback) => {
-            createdTables.push(tableName);
-            callback();
-          }
-        }
-      }).then(data => {
-        assert.deepEqual(createdQueues, [ ]);
-        assert.deepEqual(createdTables, [ 'images' ]);
+      return imageService.setServices(services).then(data => {
+        assert.deepEqual(services.queueService.queues, [ ]);
+        assert.deepEqual(services.tableService.tables, [ 'images', "imagetags" ]);
       });
 
     });
@@ -46,15 +40,10 @@ describe('Project graphql controller', () => {
     it('should use the images container', () => {
       const projectId = 'someProjectId';
       const modelId = 'someImageId';
-      imageService.setServices({
-        blobService: {
-          getUrl: (containerName, blobName)=>{
-            return `https://somestorageaccount.blob.core.windows.net/${containerName}/${blobName}`;
-          }
-        }
+      return imageService.setServices(services).then(data=>{
+        const imageURL = imageService.getImageURL(projectId, modelId);
+        assert.equal(imageURL, 'https://somestorageaccount.blob.core.windows.net/someProjectId-images/someImageId');  
       });
-      const imageURL = imageService.getImageURL(projectId, modelId);
-      assert.equal(imageURL, 'https://somestorageaccount.blob.core.windows.net/someProjectId-images/someImageId');
     });
 
   });
