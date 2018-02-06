@@ -71,6 +71,40 @@ describe('Image Service', () => {
     });
   });
 
+  describe('#countTrainingImagesByStatus()', () => {
+
+    it('should group each record by status', () => {
+      const records = [
+        { status: { _: is.trainingImageStates.TAG_PENDING } },
+        { status: { _: is.trainingImageStates.TAG_PENDING } },
+        { status: { _: is.trainingImageStates.TAG_PENDING } },
+        { status: { _: is.trainingImageStates.TAG_PENDING } },
+        { status: { _: is.trainingImageStates.READY_FOR_TRAINING } },
+        { status: { _: is.trainingImageStates.READY_FOR_TRAINING } },
+        { status: { _: is.trainingImageStates.READY_FOR_TRAINING } },
+        { status: { _: is.trainingImageStates.IN_CONFLICT } },
+        { status: { _: is.trainingImageStates.IN_CONFLICT } },
+      ];
+
+      services.tableService.queryEntities = (tableName, query, paginationToken, callback) => {
+        return callback(null, { entries: records });
+      };
+
+      return imageService.setServices(services).then(result => {
+        return imageService.countTrainingImagesByStatus('someprojectid').then(counts => {
+          assert.deepEqual(counts, {
+            TAG_PENDING: 4,
+            READY_FOR_TRAINING: 3,
+            IN_CONFLICT: 2,
+            TOTAL: 9
+          });
+        });
+      });
+
+    });
+
+  });
+
   describe('#updateTrainingImageWithTagContributions()', () => {
 
     it('should update images record stats with two object detection contributions in agreement', () => {
@@ -81,12 +115,7 @@ describe('Image Service', () => {
           tags: {
             _: JSON.stringify([{
               label: 'guitar-body',
-              boundingBox: {
-                x: 20,
-                y: 90,
-                width: 70,
-                height: 100
-              }
+              boundingBox: { x: 20, y: 90, width: 70, height: 100 }
             }])
           }
         },
@@ -96,12 +125,7 @@ describe('Image Service', () => {
           tags: {
             _: JSON.stringify([{
               label: 'guitar-body',
-              boundingBox: {
-                x: 21,
-                y: 88,
-                width: 72,
-                height: 99
-              }
+              boundingBox: { x: 21, y: 88, width: 72, height: 99 }
             }])
           }
         }
@@ -109,9 +133,7 @@ describe('Image Service', () => {
 
       services.tableService.queryEntities = (tableName, query, paginationToken, callback) => {
         if (tableName == 'imagetagcontributions') {
-          return callback(null, {
-            entries: contributions
-          });
+          return callback(null, { entries: contributions });
         }
 
         return callback("Missing query support.", null);
@@ -143,12 +165,7 @@ describe('Image Service', () => {
           tags: {
             _: JSON.stringify([{
               label: 'guitar-body',
-              boundingBox: {
-                x: 20,
-                y: 90,
-                width: 70,
-                height: 100
-              }
+              boundingBox: { x: 20, y: 90, width: 70, height: 100 }
             }])
           }
         },
@@ -158,12 +175,7 @@ describe('Image Service', () => {
           tags: {
             _: JSON.stringify([{
               label: 'guitar-body',
-              boundingBox: {
-                x: 21,
-                y: 88,
-                width: 30,
-                height: 40
-              }
+              boundingBox: { x: 21, y: 88, width: 30, height: 40 }
             }])
           }
         }
@@ -171,9 +183,7 @@ describe('Image Service', () => {
 
       services.tableService.queryEntities = (tableName, query, paginationToken, callback) => {
         if (tableName == 'imagetagcontributions') {
-          return callback(null, {
-            entries: contributions
-          });
+          return callback(null, { entries: contributions });
         }
 
         return callback("Missing query support.", null);
@@ -207,12 +217,7 @@ describe('Image Service', () => {
           tags: {
             _: JSON.stringify([{
               label: 'guitar-body',
-              boundingBox: {
-                x: 20,
-                y: 90,
-                width: 70,
-                height: 100
-              }
+              boundingBox: { x: 20, y: 90, width: 70, height: 100 }
             }])
           }
         },
@@ -222,26 +227,16 @@ describe('Image Service', () => {
           tags: {
             _: JSON.stringify([{
               label: 'guitar-body',
-              boundingBox: {
-                x: 22,
-                y: 89,
-                width: 30,
-                height: 40
-              }
+              boundingBox: { x: 22, y: 89, width: 30, height: 40 }
             }])
           }
-        },        {
+        }, {
           PartitionKey: { _: 'someImageId' },
           RowKey: { _: 'contribution02' },
           tags: {
             _: JSON.stringify([{
               label: 'guitar-body',
-              boundingBox: {
-                x: 21,
-                y: 88,
-                width: 72,
-                height: 99
-              }
+              boundingBox: { x: 21, y: 88, width: 72, height: 99 }
             }])
           }
         }
@@ -249,9 +244,7 @@ describe('Image Service', () => {
 
       services.tableService.queryEntities = (tableName, query, paginationToken, callback) => {
         if (tableName == 'imagetagcontributions') {
-          return callback(null, {
-            entries: contributions
-          });
+          return callback(null, { entries: contributions });
         }
 
         return callback("Missing query support.", null);
@@ -285,12 +278,7 @@ describe('Image Service', () => {
           tags: {
             _: JSON.stringify([{
               label: 'guitar-body',
-              boundingBox: {
-                x: 20,
-                y: 90,
-                width: 70,
-                height: 100
-              }
+              boundingBox: { x: 20, y: 90, width: 70, height: 100 }
             }])
           }
         },
@@ -300,26 +288,16 @@ describe('Image Service', () => {
           tags: {
             _: JSON.stringify([{
               label: 'guitar-body',
-              boundingBox: {
-                x: 22,
-                y: 89,
-                width: 30,
-                height: 40
-              }
+              boundingBox: { x: 22, y: 89, width: 30, height: 40 }
             }])
           }
-        },        {
+        }, {
           PartitionKey: { _: 'someImageId' },
           RowKey: { _: 'contribution02' },
           tags: {
             _: JSON.stringify([{
               label: 'guitar-body',
-              boundingBox: {
-                x: 0,
-                y: 0,
-                width: 72,
-                height: 99
-              }
+              boundingBox: { x: 0, y: 0, width: 72, height: 99 }
             }])
           }
         }
@@ -327,9 +305,7 @@ describe('Image Service', () => {
 
       services.tableService.queryEntities = (tableName, query, paginationToken, callback) => {
         if (tableName == 'imagetagcontributions') {
-          return callback(null, {
-            entries: contributions
-          });
+          return callback(null, { entries: contributions });
         }
 
         return callback("Missing query support.", null);

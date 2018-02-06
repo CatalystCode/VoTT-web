@@ -147,6 +147,32 @@ ImageService.prototype.readTrainingImages = function (projectId, nextPageToken) 
     });
 }
 
+ImageService.prototype.countTrainingImagesByStatus = function (projectId) {
+    // If aggregation queries are supported, use those (cosmos db). Otherwise,
+    // count in-memory.
+    const self = this;
+    return new Promise((resolve, reject) => {
+        var query = new azure.TableQuery().where("PartitionKey == ?", projectId);
+        self.tableService.queryEntities(imagesTableName, query, null, (error, results, response) => {
+            if (error) {
+                return reject(error);
+            }
+
+            const aggregation = { TOTAL: 0 };
+            results.entries.forEach(image => {
+                aggregation['TOTAL'] += 1;
+                const status = image.status._;
+                if (status in aggregation) {
+                    aggregation[status] += 1;
+                } else {
+                    aggregation[status] = 1;
+                }
+            });
+            resolve(aggregation);
+        });
+    });    
+}
+
 ImageService.prototype.updateTrainingImageStatus = function (projectId, imageId, status, tags) {
     const self = this;
     return new Promise((resolve, reject) => {
@@ -173,6 +199,8 @@ ImageService.prototype.updateTrainingImageWithTagContributions = function (proje
                 // Waiting for more contributions before marking as ANNOTATED.
                 return self.updateTrainingImageStatus(projectId, imageId, trainingImageStates.TAG_PENDING, []);
             }
+
+            // TODO: Support image classification contributions.
 
             const referenceContribution = contributions.pop();
             const secondContribution = contributions.pop();
@@ -302,5 +330,6 @@ ImageService.prototype.getTrainingImagesAnnotations = function (projectId) {
 module.exports = {
     createImageService: function () {
         return new ImageService();
-    }
+    },
+    trainingImageStates:trainingImageStates
 };

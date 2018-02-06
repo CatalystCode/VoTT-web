@@ -25,6 +25,20 @@
 <div class="container">
   <hr/>
   <h4 ng-if="isLoading">Loading...</h4>
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Status</th>
+        <th scope="col">Count</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="counter in stats.statusCount">
+        <th scope="row">{{counter.status.replace('_',' ') | lowercase}}</th>
+        <td>{{counter.count}}</td>
+      </tr>
+    </tbody>
+  </table>
   <button type="button" class="btn btn-success" ng-click="upload()">Upload Images</button>
   <h5 ng-if="!isLoading &amp;&amp; (images == null || images.length == 0)">No images have been uploaded - please upload some when you are ready.</h5>
   <hr/>

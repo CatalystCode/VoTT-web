@@ -29,19 +29,23 @@ RequestHandler.prototype.projects = function (args, request) {
     const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
     return this.projectService.readProjects(nextPageToken);
 }
+
 RequestHandler.prototype.project = function (args, request) {
     // TODO: Ensure user has access to projectId.
     const projectId = args.projectId;
     return this.projectService.readProject(projectId);
 }
+
 RequestHandler.prototype.createProject = function (args, res) {
     // TODO: Ensure user has access to projectId.
     return this.projectService.createProject(args.name, args.taskType, args.labels, args.instructionsText);
 }
+
 RequestHandler.prototype.updateProject = function (args, res) {
     // TODO: Ensure user has access to projectId.
     return this.projectService.updateProject(args.projectId, args.name, args.taskType, args.labels, args.instructionsText);
 }
+
 RequestHandler.prototype.deleteProject = function (args, res) {
     // TODO: Ensure user has access to projectId.
     const projectId = args.projectId;
@@ -61,6 +65,7 @@ RequestHandler.prototype.createInstructionsImage = function (args, res) {
         };
     });
 }
+
 RequestHandler.prototype.commitInstructionsImage = function (args, res) {
     const projectId = args.image.projectId;
     const fileId = args.image.fileId;
@@ -80,15 +85,31 @@ RequestHandler.prototype.createTrainingImage = function (args, res) {
         };
     });
 }
+
 RequestHandler.prototype.commitTrainingImage = function (args, res) {
     const projectId = args.projectId;
     const fileId = args.fileId;
     return this.imageService.createTrainingImage(projectId, fileId);
 }
+
 RequestHandler.prototype.trainingImages = function (args, res) {
     const projectId = args.projectId;
     const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
     return this.imageService.readTrainingImages(projectId, nextPageToken);
+}
+
+RequestHandler.prototype.trainingImageStats = function (args, res) {
+    const projectId = args.projectId;
+    return this.imageService.countTrainingImagesByStatus(projectId).then(counts => {
+        const statusCount = [];
+        for (let status in counts) {
+            statusCount.push({
+                status: status,
+                count: counts[status]
+            });
+        }
+        return { statusCount: statusCount.sort((a, b) => a.status > b.status) };
+    });
 }
 
 RequestHandler.prototype.createCollaborator = function (args, response) {
@@ -170,27 +191,32 @@ RequestHandler.prototype.reinviteCollaborator = function (args, response) {
             });
     });
 }
+
 RequestHandler.prototype.collaborators = function (args, response) {
     const projectId = args.projectId;
     const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
     return this.collaboratorService.readCollaborators(projectId, nextPageToken);
 }
+
 RequestHandler.prototype.deleteCollaborator = function (args, request) {
     // TODO: Remove invites for the collaborator.
     const projectId = args.projectId;
     const collaboratorId = args.collaboratorId;
     return this.collaboratorService.deleteCollaborator(projectId, collaboratorId);
 }
+
 RequestHandler.prototype.models = function (args, request) {
     // TODO: Ensure user has project access to the project.
     const projectId = args.projectId;
     const nextPageToken = (args.nextPageToken) ? JSON.parse(args.nextPageToken) : null;
     return this.modelService.readModels(projectId, nextPageToken);
 }
+
 RequestHandler.prototype.createModel = function (args, response) {
     const projectId = args.projectId;
     return this.modelService.createModel(projectId);
 }
+
 RequestHandler.prototype.deleteModel = function (args, request) {
     const projectId = args.projectId;
     const modelId = args.modelId;

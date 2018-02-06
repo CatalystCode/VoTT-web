@@ -13,13 +13,18 @@ angular.module('vott.project-images', [
   $scope.isLoading = true;
   $scope.isLoadingProject = true;
   $scope.isLoadingImages = true;
-  $scope.$watchGroup(['isLoadingProject', 'isLoadingImages'], function (newValues, oldValues, scope) {
-    $scope.isLoading = $scope.isLoadingProject || $scope.isLoadingImages;
-  });
+  $scope.isLoadingStats = true;
+  $scope.$watchGroup(
+    ['isLoadingProject', 'isLoadingImages', 'isLoadingStats'],
+    function (newValues, oldValues, scope) {
+      $scope.isLoading = $scope.isLoadingProject || $scope.isLoadingImages || $scope.isLoadingStats;
+    }
+  );
 
   $scope.load = function () {
     $scope.loadProject();
     $scope.loadImages();
+    $scope.loadStats();
   };
 
   $scope.loadProject = function () {
@@ -59,7 +64,22 @@ angular.module('vott.project-images', [
       });
   };
 
-  $scope.details = function() {
+  $scope.loadStats = function () {
+    $scope.isLoadingStats = true;
+    ProjectService.trainingImageStats($routeParams.projectId)
+      .then(function (response) {
+        const stats = response.data.data.trainingImageStats;
+        console.log(stats);
+        $scope.stats = stats;
+        $scope.isLoadingStats = false;
+      })
+      .catch(function (error) {
+        console.log(error);
+        $scope.error = error;
+      });
+  }
+
+  $scope.details = function () {
     $location.path(`/projects/${$routeParams.projectId}`);
   }
 

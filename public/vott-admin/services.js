@@ -80,6 +80,13 @@ angular.module('vott.factories', [])
                     data: { query: "query { " + invocation + "{ nextPageToken entries { projectId fileId fileURL } } }" }
                 });
             },
+            trainingImageStats: function(projectId) {
+                return $http({
+                    method: 'POST',
+                    url: baseUrl,
+                    data: { query: `query { trainingImageStats (projectId:${JSON.stringify(projectId)}) {  statusCount { status count } } }` }
+                });                
+            },
             createTrainingImage: function (projectId) {
                 return $http({
                     method: 'POST',
