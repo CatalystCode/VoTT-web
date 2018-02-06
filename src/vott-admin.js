@@ -235,23 +235,29 @@ RequestHandler.prototype.annotationsCSV = function (request, response) {
     const projectId = request.params.projectId;
     const modelId = request.params.modelId;
 
-    return this.imageService.getTrainingImagesAnnotations(projectId).then(images => {
-        var csv = '';
+    return this.modelService.readModel(projectId, modelId).then(model => {
+        return this.imageService.getTrainingImagesWithTags(projectId).then(images => {
+            var csv = '';
 
-        for (var i = 0; i < images.length; i++) {
-            const image = images[i];
+            for (var i = 0; i < images.length; i++) {
+                const image = images[i];
 
-            for (var annotationIndex = 0; annotationIndex < image.annotations.length; annotationIndex++) {
-                const annotation = image.annotations[annotationIndex];
-                csv += `${image.fileURL},${annotation.boundingBox.x},${annotation.boundingBox.y},${annotation.boundingBox.width},${annotation.boundingBox.height},${annotation.label}\n`;
+                for (var tagIndex = 0; tagIndex < image.tags.length; tagIndex++) {
+                    const tag = image.tags[tagIndex];
+                    if (tag.boundingBox) {
+                        csv += `${image.fileURL},${tag.boundingBox.x},${tag.boundingBox.y},${tag.boundingBox.width},${tag.boundingBox.height},${tag.label}\n`;
+                    } else {
+                        csv += `${image.fileURL},${tag.label}\n`;
+                    }
+                }
             }
-        }
 
-        response.set('Content-Type', 'text/plain; charset=utf8');
-        response.set('Content-Disposition', 'attachment;filename=annotations.csv');
-        response.send(csv);
+            response.set('Content-Type', 'text/plain; charset=utf8');
+            response.set('Content-Disposition', 'attachment;filename=training.csv');
+            response.send(csv);
 
-        return csv;
+            return csv;
+        });
     }).catch(error => {
         console.log(error);
         response.send(error);

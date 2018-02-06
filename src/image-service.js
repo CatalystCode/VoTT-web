@@ -294,32 +294,26 @@ ImageService.prototype.readImageTagContributions = function (imageId) {
     });
 }
 
-ImageService.prototype.getTrainingImagesAnnotations = function (projectId) {
+ImageService.prototype.getTrainingImagesWithTags = function (projectId) {
     const self = this;
 
     return new Promise((resolve, reject) => {
-        var query = new azure.TableQuery().where("PartitionKey == ?", projectId);
+        var query = new azure.TableQuery().where(
+            "PartitionKey == ? and status == ?",
+            projectId,
+            trainingImageStates.READY_FOR_TRAINING
+        );
         self.tableService.queryEntities(imagesTableName, query, null, (error, results, response) => {
             if (error) {
                 return reject(error);
             }
             const images = results.entries.map((value) => {
+                const tags = (value.tags && value.tags._) ? JSON.parse(value.tags._) : [];
                 return {
                     projectId: value.PartitionKey._,
                     imageId: value.RowKey._,
-                    fileId: value.RowKey._,
                     fileURL: self.getImageURL(projectId, value.RowKey._),
-                    annotations: [
-                        {
-                            label: 'guitar-body',
-                            boundingBox: {
-                                x: 0,
-                                y: 0,
-                                width: 128,
-                                height: 128
-                            }
-                        }
-                    ],
+                    tags: tags,
                 };
             });
             resolve(images);

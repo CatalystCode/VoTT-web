@@ -119,6 +119,18 @@ ModelService.prototype.createModel = function (projectId) {
   });
 }
 
+ModelService.prototype.readModel = function (projectId, modelId) {
+  const self = this;
+  return new Promise((resolve, reject) => {
+    self.tableService.retrieveEntity(modelsTableName, projectId, modelId, (error, response) => {
+      if (error) {
+        return reject(error);
+      }
+      resolve(self.mapModel(response));
+    });
+  });
+}
+
 ModelService.prototype.readModels = function (projectId, nextPageToken) {
   const self = this;
   return new Promise((resolve, reject) => {
@@ -129,17 +141,19 @@ ModelService.prototype.readModels = function (projectId, nextPageToken) {
       }
       resolve({
         nextPageToken: (results.continuationToken) ? JSON.stringify(results.continuationToken) : null,
-        entries: results.entries.map((value) => {
-          return {
-            projectId: value.PartitionKey._,
-            modelId: value.RowKey._,
-            created: value.Timestamp._,
-            status: value.status._
-          };
-        })
+        entries: results.entries.map(value => self.mapModel(value))
       });
     });
   });
+}
+
+ModelService.prototype.mapModel = function (value) {
+  return {
+    projectId: value.PartitionKey._,
+    modelId: value.RowKey._,
+    created: value.Timestamp._,
+    status: value.status._
+  };
 }
 
 ModelService.prototype.deleteModel = function (projectId, modelId) {
@@ -159,7 +173,7 @@ ModelService.prototype.deleteModel = function (projectId, modelId) {
 }
 
 module.exports = {
-  createModelService: function() {
+  createModelService: function () {
     return new ModelService();
   }
 };

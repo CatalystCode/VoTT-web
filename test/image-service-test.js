@@ -105,6 +105,39 @@ describe('Image Service', () => {
 
   });
 
+  describe('#getTrainingImagesWithTags()', () => {
+    it('should query for images that are ready for training', () => {
+      const records = [
+        {
+          PartitionKey: { _: 'someprojectid' },
+          RowKey: { _: 'imageid01' },
+          fileURL: { _: 'https://example.com/someprojectid/imageid01.jpg' },
+          tags: { _: JSON.stringify([{ label: 'guitar-body', boundingBox: { x: 20, y: 90, width: 70, height: 100 } }]) }
+        },
+        {
+          PartitionKey: { _: 'someprojectid' },
+          RowKey: { _: 'imageid02' },
+          fileURL: { _: 'https://example.com/someprojectid/imageid02.jpg' },
+          tags: { _: JSON.stringify([{ label: 'bass', boundingBox: { x: 20, y: 90, width: 70, height: 100 } }]) }
+        }
+      ];
+
+      services.tableService.queryEntities = (tableName, query, paginationToken, callback) => {
+        return callback(null, { entries: records });
+      };
+
+      return imageService.setServices(services).then(result => {
+        return imageService.getTrainingImagesWithTags('someprojectid').then(images => {
+          assert.deepEqual(images, [
+            { projectId: "someprojectid", imageId: "imageid01", fileURL: "https://somestorageaccount.blob.core.windows.net/someprojectid-images/imageid01", tags: [{ label: 'guitar-body', boundingBox: { x: 20, y: 90, width: 70, height: 100 } }] },
+            { projectId: "someprojectid", imageId: "imageid02", fileURL: "https://somestorageaccount.blob.core.windows.net/someprojectid-images/imageid02", tags: [{ label: 'bass', boundingBox: { x: 20, y: 90, width: 70, height: 100 } }] }
+          ]);
+        });
+      });
+
+    });
+  });
+
   describe('#updateTrainingImageWithTagContributions()', () => {
 
     it('should update images record stats with two object detection contributions in agreement', () => {
