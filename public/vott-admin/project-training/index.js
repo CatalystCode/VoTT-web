@@ -46,6 +46,10 @@ angular.module('vott.project-training', [
       });
   };
 
+  $scope.export = function (model) {
+    window.location = `/v1/vott-training/projects/${$routeParams.projectId}/${model.modelId}/annotations.csv`;
+  };
+
   $scope.train = function () {
     ProjectService.createModel($routeParams.projectId)
       .then(function (response) {
@@ -68,7 +72,7 @@ angular.module('vott.project-training', [
     $('#modelDeleteConfirmation').modal('show');
   };
 
-  $scope.deleteCancelled = function() {
+  $scope.deleteCancelled = function () {
     $scope.selectedModel = null;
     $('#modelDeleteConfirmation').modal('hide');
   }
@@ -84,7 +88,7 @@ angular.module('vott.project-training', [
         $scope.error = error;
       });
   };
-  
+
   $scope.save = function () {
     console.log("Save");
   };
