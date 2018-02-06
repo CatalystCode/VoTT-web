@@ -15,7 +15,7 @@
           <a href ng-click="manageCollaborators()">Collaborators</a>
         </li>
         <li class="active">
-          <a href ng-click="manageModels()">Trained Models</a>
+          <a href ng-click="manageModels()">Training</a>
         </li>
       </ul>
     </div>
@@ -27,7 +27,7 @@
   <hr/>
 
   <h4 ng-if="isLoading">Loading...</h4>
-  <button type="button" class="btn btn-success" ng-click="train()">Train Model</button>
+  <button type="button" class="btn btn-success" ng-click="train()">Request Training</button>
 
   <hr />
 

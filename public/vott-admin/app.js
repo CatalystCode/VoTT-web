@@ -3,7 +3,7 @@ angular.module('vott', [
     'vott.project-details',
     'vott.project-images',
     'vott.project-collaborators',
-    'vott.project-models',
+    'vott.project-training',
     'ngRoute'
 ]).config(function ($routeProvider) {
     $routeProvider.when('/projects', {
@@ -23,8 +23,8 @@ angular.module('vott', [
         controller: 'ProjectCollaboratorsController'
     })
     .when('/projects/:projectId/models', {
-        templateUrl: './project-models/index.html',
-        controller: 'ProjectModelsController'
+        templateUrl: './project-training/index.html',
+        controller: 'ProjectTrainingController'
     })
     .otherwise({
         redirectTo: '/projects'

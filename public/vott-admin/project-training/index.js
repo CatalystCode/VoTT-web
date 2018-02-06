@@ -1,6 +1,6 @@
-angular.module('vott.project-models', [
+angular.module('vott.project-training', [
   'vott.factories'
-]).controller('ProjectModelsController', function ($scope, $location, $route, $routeParams, ProjectService) {
+]).controller('ProjectTrainingController', function ($scope, $location, $route, $routeParams, ProjectService) {
 
   $scope.isLoading = true;
   $scope.isLoadingProject = true;
