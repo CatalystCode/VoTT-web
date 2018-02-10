@@ -24,6 +24,8 @@
 // > Note: This is not required in order to lift, but it is a convenient default.
 process.chdir(__dirname);
 
+require('dotenv').config();
+
 // Attempt to import `sails`.
 var sails;
 try {

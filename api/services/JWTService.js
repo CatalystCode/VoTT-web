@@ -3,6 +3,12 @@
 const jsonwebtoken = require('jsonwebtoken');
 
 function getAuthorizationToken(request) {
+    if (!request) {
+        return null;
+    }
+    if (!request.headers) {
+        return null;
+    }
     const authorization = request.headers['authorization'];
     if (!authorization) {
         return null;
@@ -17,6 +23,15 @@ function getAuthorizationToken(request) {
 }
 
 function getTokenCookie(request) {
+    if (!request) {
+        return null;
+    }
+    if (!request.cookies) {
+        return null;
+    }
+    if (!request.cookies.hasOwnProperty) {
+        return null;
+    }
     if (!request.cookies.hasOwnProperty('token')) {
         return null;
     }

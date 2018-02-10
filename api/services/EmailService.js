@@ -1,8 +1,27 @@
 'use strict';
 
-const sendgrid = require('@sendgrid/mail');
+let sendgrid = null;
 
-sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
+function emailServiceEnabled() {
+  if (!sails.config.hasOwnProperty('emailServiceEnabled')) {
+    return true;
+  }
+
+  return sails.config.emailServiceEnabled;
+}
+
+function getSendgrid() {
+  if (sendgrid) {
+    return sendgrid;
+  }
+
+  if (!emailServiceEnabled()) {
+    return null;
+  }
+
+  sendgrid = require('@sendgrid/mail');
+  return sendgrid;
+}
 
 module.exports = {
 
@@ -14,6 +33,11 @@ module.exports = {
    * @param {*} text 
    */
   send: function (from, to, subject, html, text, callback) {
+    const sg = getSendgrid();
+    if (!sg) {
+      return callback();
+    }
+
     const msg = {
       to: to,
       from: from,
@@ -21,6 +45,6 @@ module.exports = {
       text: text,
       html: html,
     };
-    return sendgrid.send(msg, false, callback);
+    return sg.send(msg, false, callback);
   }
 }
