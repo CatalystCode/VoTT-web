@@ -10,7 +10,7 @@
     "**/.*",
     "node_modules",
     "bower_components",
-    "public/lib"
+    "assets/lib"
   ],
   "dependencies": {
     "angular": "~1.6.7",
