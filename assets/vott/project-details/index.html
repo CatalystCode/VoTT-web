@@ -23,10 +23,11 @@
 </div>
 
 <div class="container">
-    
+
     <hr/>
 
     <h4 ng-if="isLoading">Loading...</h4>
+    <h4 ng-if="!isLoading &amp;&amp; error">{{ error }}</h4>
 
     <form ng-if="!isLoading">
         <div class="form-group">
@@ -37,15 +38,14 @@
         <div class="form-group">
             <label for="projectTaskType">Type</label>
             <select class="form-control" ng-model="project.taskType" id="projectTaskType" aria-describedby="projectTaskTypeHelp">
-                <option value="OBJECT_DETECTION">Object Detection</option>
-                <option value="CLASSIFICATION">Image Classification</option>
+                <option value="object-detection">Object Detection</option>
+                <option value="image-classification">Image Classification</option>
             </select>
             <small id="projectTaskTypeHelp" class="form-text text-muted">Select wether image tags should be used for object detection or image classification.</small>
         </div>
         <div class="form-group">
             <label for="labels">Tags</label>
-            <input type="text" ng-model="project.labels" class="form-control" id="labels" aria-describedby="labelsHelp"
-                placeholder="Tags">
+            <input type="text" ng-model="project.labels" class="form-control" id="labels" aria-describedby="labelsHelp" placeholder="Tags">
             <small id="labelsHelp" class="form-text text-muted">Names of object or image class tags separated by commas, e.g. "kit-kat,reeses-pieces,twix".</small>
         </div>
         <div class="form-group">
@@ -56,7 +56,7 @@
         </div>
         <div class="form-group" ng-if="!isNewRecord()">
             <label for="instructionsImage">Instructions Image</label>
-            <img ng-if="project.instructionsImageURL" ng-src="{{project.instructionsImageURL}}" class="img-thumbnail" style="width: 128pt; height: 128pt; display: block;">
+            <img ng-if="instructionsImageURL()" ng-src="{{instructionsImageURL()}}" class="img-thumbnail" style="width: 128pt; height: 128pt; display: block;">
             <input type="file" onchange="angular.element(this).scope().instructionsImageFileDidChange(this.value)" class="form-control"
                 id="instructionsImage" aria-describedby="instructionsImageHelp">
             <small id="instructionsImageHelp" class="form-text text-muted">Instructions image for people performing the work of image tagging.</small>

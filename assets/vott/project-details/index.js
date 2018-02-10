@@ -10,15 +10,15 @@ angular.module('vott.project-details', [
     }
     $scope.loadRecord = function () {
         if ($scope.isNewRecord()) {
-            $scope.project = {};
+            $scope.project = {labels:[]};
             $scope.isLoading = false;
         }
         else {
             $scope.isLoading = true;
             ProjectService.getProject($routeParams.projectId)
                 .then(function (response) {
-                    $scope.project = response.data.data.project;
                     $scope.isLoading = false;
+                    $scope.project = response.data;
                 })
                 .catch(function (error) {
                     console.log(error);
@@ -71,6 +71,13 @@ angular.module('vott.project-details', [
         $location.path(`/projects/${$routeParams.projectId}/models`);
     };
 
+    $scope.instructionsImageURL = function() {
+        if (!$scope.project.instructionsImageId) {
+            return null;
+        }
+        return `/api/vott/v1/projects/${$routeParams.projectId}/images/${$scope.project.instructionsImageId}`;
+    }
+
     /**
      * Quasi-angular handler for changes in the instructions image <input type="file"> element.
      */
@@ -83,11 +90,12 @@ angular.module('vott.project-details', [
 
         $('#uploadProgressBar').attr('value', 0);
         $('#uploadProgressModal').modal('show');
-        const projectId = $scope.project.projectId;
+        const projectId = $scope.project.id;
         const files = imageFile[0].files;
         const file = files[0];
         ProjectService.createInstructionsImage(projectId).then(function (response) {
-            const imageRecord = response.data.data.createInstructionsImage;
+            console.log(response);
+            const imageRecord = response.data;
             $scope.uploadInstructionsImage(imageRecord, file);
         }).catch(function (error) {
             console.log(error);
@@ -96,6 +104,7 @@ angular.module('vott.project-details', [
     };
 
     $scope.uploadInstructionsImage = function (imageRecord, file) {
+        const projectId = $routeParams.projectId;
         const reader = new FileReader();
         reader.onload = function (event) {
             if (event.target.readyState != FileReader.DONE) {
@@ -106,7 +115,7 @@ angular.module('vott.project-details', [
             $scope.uploadImageToAzureStorageBlob(
                 file.type,
                 data,
-                imageRecord.fileURL,
+                imageRecord.url,
                 function (error, result, status) {
                     if (error) {
                         $scope.error = error;
@@ -115,7 +124,8 @@ angular.module('vott.project-details', [
 
                     $('#uploadProgressBar').attr('value', 100);
                     $('#uploadProgressBar').attr('max', 100);
-                    ProjectService.commitInstructionsImage(imageRecord).then(function (response) {
+                    imageRecord.name = file.name;
+                    ProjectService.commitInstructionsImage(projectId, imageRecord).then(function (response) {
                         $('#uploadProgressModal').modal('hide');
                         $scope.loadRecord();
                     }).catch(function (error) {

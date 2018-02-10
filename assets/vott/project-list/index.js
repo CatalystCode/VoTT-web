@@ -1,13 +1,11 @@
 angular.module('vott.project-list', [
     'vott.factories'
 ]).controller('ProjectListController', function ($scope, $location, $route, ProjectService) {
-    $scope.getProjects = function(paginationToken) {
+    $scope.getProjects = function() {
         $scope.isLoading = true;
-        ProjectService.getProjects(paginationToken).then(function(response){
+        ProjectService.getProjects().then(function(response){
             $scope.isLoading = false;
-            const projectsData = response.data.data.projects;
-            $scope.paginationToken = projectsData.nextPageToken;
-            $scope.projects = projectsData.entries;
+            $scope.projects = response.data;
         }).catch(function(error){
             console.log(error);
             $scope.error = error;
@@ -17,7 +15,7 @@ angular.module('vott.project-list', [
         $location.path('/projects/new');
     };
     $scope.editProject = function(project) {
-        $location.path(`/projects/${project.projectId}`);
+        $location.path(`/projects/${project.id}`);
     };
     $scope.deleteProject = function(project) {
         $scope.selectedProject = project;
@@ -25,7 +23,7 @@ angular.module('vott.project-list', [
     };
     $scope.confirmDeleteProject = function(project) {
         $('#projectDeleteConfirmation').modal('hide');
-        ProjectService.deleteProject(project.projectId).then(function(response){
+        ProjectService.deleteProject(project.id).then(function(response){
             $route.reload();
         }).catch(function(error){
             console.log(error);

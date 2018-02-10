@@ -22,34 +22,12 @@
 
 module.exports.routes = {
 
-  /***************************************************************************
-  *                                                                          *
-  * Make the view located at `views/homepage.ejs` (or `views/homepage.jade`, *
-  * etc. depending on your default view engine) your home page.              *
-  *                                                                          *
-  * (Alternatively, remove this and add an `index.html` file in your         *
-  * `assets` directory)                                                      *
-  *                                                                          *
-  ***************************************************************************/
-
-  '/': {
-    view: 'homepage'
-  },
-
-  /***************************************************************************
-  *                                                                          *
-  * Custom routes here...                                                    *
-  *                                                                          *
-  * If a request to a URL doesn't match any of the custom routes above, it   *
-  * is matched against Sails route blueprints. See `config/blueprints.js`    *
-  * for configuration options and examples.                                  *
-  *                                                                          *
-  ***************************************************************************/
   'get /vott/invites/:userId/:inviteId': 'InviteController.read',
   'get /vott/logout': 'InviteController.logout',
 
   'post /api/vott/v1/projects/:projectId/instructionsImage': 'ProjectController.allocateInstructionsImage',
   'put /api/vott/v1/projects/:projectId/instructionsImage': 'ProjectController.commitInstructionsImage',
+  'get /api/vott/v1/projects/:projectId/images/:imageId': 'ProjectController.image',
 
   'get /api/vott/v1/projects/:projectId/tasks/next': 'TaskController.pullTask',
   'post /api/vott/v1/projects/:projectId/tasks/results': 'TaskController.pushTask'

@@ -1,104 +1,94 @@
 angular.module('vott.factories', [])
     .factory('ProjectService', function ($http) {
-        const baseUrl = '/api/vott-admin';
+        const baseUrl = '/api/vott/v1';
         return {
-            getProjects: function (nextPageToken) {
-                const invocation = nextPageToken ? `projects(nextPageToken:${JSON.stringify(nextPageToken)})` : 'projects';
+            getProjects: function (skip, limit) {
                 return $http({
-                    method: 'POST',
-                    url: baseUrl,
-                    data: { query: "query { " + invocation + "{ nextPageToken entries { projectId name taskType } } }" }
+                    method: 'GET',
+                    url: `${baseUrl}/projects`
                 });
             },
             getProject: function (projectId) {
                 return $http({
-                    method: 'POST',
-                    url: baseUrl,
-                    data: { query: `query { project (projectId:${JSON.stringify(projectId)} ) { projectId name taskType labels instructionsText instructionsImageURL } }` }
+                    method: 'GET',
+                    url: `${baseUrl}/projects/${projectId}`
                 });
             },
             createProject: function (project) {
-                const parameters = [
-                    `name:${JSON.stringify(project.name)}`,
-                    `taskType:${project.taskType}`,
-                    `labels:${JSON.stringify(project.labels)}`,
-                    `instructionsText:${JSON.stringify(project.instructionsText)}`
-                ].join(', ');
+                if (typeof (project.labels) == 'string') {
+                    project.labels = project.labels.split(',').map(v => v.trim());
+                }
                 return $http({
                     method: 'POST',
-                    url: baseUrl,
-                    data: { query: `mutation { createProject (${parameters}) { projectId } }` }
+                    url: `${baseUrl}/projects`,
+                    data: project
                 });
             },
             updateProject: function (project) {
-                const parameters = [
-                    `projectId:${JSON.stringify(project.projectId)}`,
-                    `name:${JSON.stringify(project.name)}`,
-                    `taskType:${project.taskType}`,
-                    `labels:${JSON.stringify(project.labels)}`,
-                    `instructionsText:${JSON.stringify(project.instructionsText)}`
-                ].join(', ');
+                if (typeof (project.labels) == 'string') {
+                    project.labels = project.labels.split(',').map(v => v.trim());
+                }
                 return $http({
-                    method: 'POST',
-                    url: baseUrl,
-                    data: { query: `mutation { updateProject (${parameters}) { projectId } }` }
+                    method: 'PUT',
+                    url: `${baseUrl}/projects/${project.id}`,
+                    data: project
                 });
             },
             deleteProject: function (projectId) {
                 return $http({
-                    method: 'POST',
-                    url: baseUrl,
-                    data: { query: `mutation { deleteProject (projectId:${JSON.stringify(projectId)}) }` }
+                    method: 'DELETE',
+                    url: `${baseUrl}/projects/${projectId}`
                 });
             },
             //  createInstructionsImage(projectId: String!): Image
             createInstructionsImage: function (projectId) {
                 return $http({
                     method: 'POST',
-                    url: baseUrl,
-                    data: { query: `mutation { createInstructionsImage (projectId:${JSON.stringify(projectId)}) { projectId fileId fileURL } }` }
+                    url: `${baseUrl}/projects/${projectId}/instructionsImage`
                 });
             },
-            commitInstructionsImage: function (confirmedFile) {
-                const parameters = [
-                    `projectId:${JSON.stringify(confirmedFile.projectId)}`,
-                    `fileId:${JSON.stringify(confirmedFile.fileId)}`
-                ].join(', ');
+            commitInstructionsImage: function (projectId, image) {
                 return $http({
-                    method: 'POST',
-                    url: baseUrl,
-                    data: { query: `mutation { commitInstructionsImage (image:{ ${parameters} }) }` }
+                    method: 'PUT',
+                    url: `${baseUrl}/projects/${projectId}/instructionsImage`,
+                    data: image
                 });
             },
-            trainingImages: function (projectId, nextPageToken) {
-                const invocation = nextPageToken ?
-                    `trainingImages(projectId: ${JSON.stringify(projectId)}, nextPageToken:${JSON.stringify(nextPageToken)})` :
-                    `trainingImages(projectId: ${JSON.stringify(projectId)})`;
+            trainingImages: function (projectId, skip, limit) {
+                const query = [];
+                if (skip) {
+                    query.push(`skip=${skip}`);
+                }
+                if (limit) {
+                    query.push(`limit=${limit}`);
+                }
+                var url = `${baseUrl}/trainingImages?projectId=${projectId}`
+                if (query.length) {
+                    url += '&' + query.join('&');
+                }
                 return $http({
-                    method: 'POST',
-                    url: baseUrl,
-                    data: { query: "query { " + invocation + "{ nextPageToken entries { projectId fileId fileURL } } }" }
+                    method: 'GET',
+                    url: url
                 });
             },
-            trainingImageStats: function(projectId) {
+            trainingImageStats: function (projectId) {
                 return $http({
-                    method: 'POST',
-                    url: baseUrl,
-                    data: { query: `query { trainingImageStats (projectId:${JSON.stringify(projectId)}) {  statusCount { status count } } }` }
-                });                
+                    method: 'GET',
+                    url: `${baseUrl}/trainingImages/stats?projectId=${projectId}`
+                });
             },
             createTrainingImage: function (projectId) {
                 return $http({
                     method: 'POST',
-                    url: baseUrl,
-                    data: { query: `mutation { createTrainingImage (projectId:${JSON.stringify(projectId)}) { projectId fileId fileURL } }` }
+                    url: `${baseUrl}/trainingImages`,
+                    data: { projectId: projectId }
                 });
             },
-            commitTrainingImage: function (projectId, fileId) {
+            commitTrainingImage: function (projectId, image) {
                 return $http({
-                    method: 'POST',
-                    url: baseUrl,
-                    data: { query: `mutation { commitTrainingImage (projectId:${JSON.stringify(projectId)}, fileId:${JSON.stringify(fileId)}) { projectId fileId fileURL } }` }
+                    method: 'PUT',
+                    url: `${baseUrl}/trainingImages/${image.id}`,
+                    data: image
                 });
             },
             createCollaborator: function (projectId, name, email, profile) {
@@ -128,7 +118,7 @@ angular.module('vott.factories', [])
                     }
                 });
             },
-            reinviteCollaborator: function(projectId, collaboratorId) {
+            reinviteCollaborator: function (projectId, collaboratorId) {
                 return $http({
                     method: 'POST',
                     url: baseUrl,
@@ -145,7 +135,7 @@ angular.module('vott.factories', [])
                     data: { query: "query { " + invocation + "{ nextPageToken entries { collaboratorId name email profile } } }" }
                 });
             },
-            deleteCollaborator: function(projectId, collaboratorId) {
+            deleteCollaborator: function (projectId, collaboratorId) {
                 return $http({
                     method: 'POST',
                     url: baseUrl,

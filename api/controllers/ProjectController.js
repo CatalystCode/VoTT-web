@@ -17,7 +17,7 @@ module.exports = {
     },
 
     destroy: function (req, res) {
-        const projectId = req.params.id;
+        const projectId = req.project.id;
         ProjectService.destroyProject(projectId).then(result => {
             res.ok();
         }).catch(error => {
@@ -26,7 +26,7 @@ module.exports = {
     },
 
     allocateInstructionsImage: function (req, res) {
-        const projectId = req.params.id;
+        const projectId = req.project.id;
         ProjectService.allocateInstructionsImage(projectId).then(image => {
             res.json(image);
         }).catch(error => {
@@ -35,7 +35,7 @@ module.exports = {
     },
 
     commitInstructionsImage: function (req, res) {
-        const projectId = req.params.id;
+        const projectId = req.project.id;
         const image = req.body;
         ProjectService.commitInstructionsImage(projectId, image).then(project => {
             res.json(project);
@@ -43,6 +43,13 @@ module.exports = {
             res.serverError(error);
         });
     },
+
+    image: function (req, res) {
+        const projectId = req.params.projectId;
+        const imageId = req.params.imageId;
+        const url = ProjectService.getImageURL(projectId, imageId);
+        res.redirect(url);
+    }
 
 };
 

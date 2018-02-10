@@ -37,7 +37,12 @@ module.exports.policies = {
   },
 
   ProjectController: {
-    '*': 'isProjectManager'
+    '*': 'isProjectManager',
+    'image': 'isProjectManager',
+
+    'destroy': ['isProjectManager', 'projectIdPolicy'],
+    'allocateInstructionsImage': ['isProjectManager', 'projectIdPolicy'],
+    'commitInstructionsImage': ['isProjectManager', 'projectIdPolicy']
   },
 
   TrainingImageController: {

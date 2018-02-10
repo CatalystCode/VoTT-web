@@ -19,15 +19,21 @@ function getTrainQueueName(projectId) {
   return 'training';
 }
 
+function getImageURL(projectId, imageId) {
+  const containerName = getTrainingImageContainerName(projectId);
+  return BlobService.getUrl(containerName, imageId);
+}
+
 module.exports = {
 
+  getImageURL: getImageURL,
   getTrainingImageContainerName: getTrainingImageContainerName,
   getTaskQueueName: getTaskQueueName,
   getModelContainerName: getModelContainerName,
   getTrainQueueName: getTrainQueueName,
 
   createProject: function (project) {
-    const labels = JSON.parse(project.labels);
+    project.labels = (typeof (project.labels) == 'string') ? JSON.parse(project.labels) : project.labels;
     const projectId = uuid();
 
     const trainingImagesContainerName = getTrainingImageContainerName(projectId);
