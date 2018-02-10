@@ -24,17 +24,19 @@ module.exports = {
 
   },
 
-  createDefaultAdmin: function (callback) {
+  findOrCreateDefaultAdmin: function () {
     if (!process.env.VOTT_DEFAULT_ADMIN_EMAIL) {
-      return callback(new Error("Cannot create default admin user because VOTT_DEFAULT_ADMIN_EMAIL is not set."));
+      return Promise.reject(new Error("Cannot create default admin user because VOTT_DEFAULT_ADMIN_EMAIL is not set."));
     }
 
-    User.create({
-      id: uuid(),
-      name: process.env.VOTT_DEFAULT_ADMIN_NAME,
-      email: process.env.VOTT_DEFAULT_ADMIN_EMAIL
-    }).exec(callback);
-
+    return User.findOrCreate(
+      { email: process.env.VOTT_DEFAULT_ADMIN_EMAIL },
+      {
+        id: uuid(),
+        name: process.env.VOTT_DEFAULT_ADMIN_NAME,
+        email: process.env.VOTT_DEFAULT_ADMIN_EMAIL
+      }
+    );
   }
 
 };

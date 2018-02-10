@@ -3,8 +3,10 @@ module.exports = function inviteHook(sails) {
     initialize: function (cb) {
       sails.on('hook:orm:loaded', function () {
 
-        InviteService.createForDefaultAdmin(function (error, invite) {
-          return cb();
+        InviteService.findOrCreateForDefaultAdmin().then(invite => {
+          cb();
+        }).catch(error => {
+          cb(error);
         });
 
       });
