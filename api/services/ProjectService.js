@@ -20,8 +20,10 @@ function getTrainQueueName(projectId) {
 }
 
 function getImageURL(projectId, imageId) {
+  // TODO: Consider using an SAS token.
   const containerName = getTrainingImageContainerName(projectId);
-  return BlobService.getUrl(containerName, imageId);
+  const url = BlobService.getUrl(containerName, imageId);
+  return url;
 }
 
 module.exports = {

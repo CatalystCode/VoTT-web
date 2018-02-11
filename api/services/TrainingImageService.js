@@ -1,6 +1,7 @@
 function getImageURL(projectId, imageId) {
   const containerName = ProjectService.getTrainingImageContainerName(projectId);
-  return BlobService.getUrl(containerName, imageId);
+  const url = BlobService.getUrl(containerName, imageId);
+  return url;
 }
 
 module.exports = {
@@ -16,7 +17,7 @@ module.exports = {
           taskType: project.taskType,
           imageId: image.id,
           imageURL: getImageURL(project.id, image.id),
-          labels: JSON.parse(project.labels),
+          labels: project.labelsArray(),
           instructionsText: project.instructionsText,
           instructionsImageURL: getImageURL(project.id, project.instructionsImageId)
         };

@@ -31,7 +31,7 @@ angular.module('vott.project-images', [
     $scope.isLoadingProject = true;
     ProjectService.getProject($routeParams.projectId)
       .then(function (response) {
-        $scope.project = response.data.data.project;
+        $scope.project = response.data;
         $scope.isLoadingProject = false;
       })
       .catch(function (error) {
@@ -40,15 +40,16 @@ angular.module('vott.project-images', [
       });
   };
 
-  $scope.loadImages = function (paginationToken) {
+  $scope.loadImages = function (skip, limit) {
     $scope.isLoadingImages = true;
-    const requestedPaginationToken = paginationToken;
-    ProjectService.trainingImages($routeParams.projectId, paginationToken)
+    const requestedSkip = skip;
+    ProjectService.trainingImages($routeParams.projectId, skip, limit)
       .then(function (response) {
-        const serviceData = response.data.data.trainingImages;
+        const serviceData = response.data;
         $scope.isLoadingImages = false;
-        $scope.nextPageToken = serviceData.nextPageToken;
-        if (requestedPaginationToken) {
+        $scope.skip = serviceData.skip;
+        $scope.limit = serviceData.limit;
+        if (requestedSkip) {
           if (serviceData.entries) {
             for (var imageIndex = 0; imageIndex < serviceData.entries.length; imageIndex++) {
               $scope.images.push(serviceData.entries[imageIndex]);
@@ -68,8 +69,7 @@ angular.module('vott.project-images', [
     $scope.isLoadingStats = true;
     ProjectService.trainingImageStats($routeParams.projectId)
       .then(function (response) {
-        const stats = response.data.data.trainingImageStats;
-        console.log(stats);
+        const stats = response.data;
         $scope.stats = stats;
         $scope.isLoadingStats = false;
       })
@@ -136,12 +136,12 @@ angular.module('vott.project-images', [
     $scope.filesUploadProgress = Array.apply(null, Array(files.length)).map(Number.prototype.valueOf, 0.0);
     $scope.refreshUploadProgress();
 
-    const projectId = $scope.project.projectId;
+    const projectId = $scope.project.id;
     for (var i = 0; i < files.length; i++) {
       const currentFile = files[i];
       const currentIndex = i;
       ProjectService.createTrainingImage(projectId).then(function (response) {
-        const imageRecord = response.data.data.createTrainingImage;
+        const imageRecord = response.data;
         $scope.uploadImage(imageRecord, currentFile, currentIndex);
       }).catch(function (error) {
         console.log(error);
@@ -152,6 +152,8 @@ angular.module('vott.project-images', [
   };
 
   $scope.uploadImage = function (imageRecord, file, index) {
+    const projectId = $routeParams.projectId;
+    imageRecord.name = file.name;
     const reader = new FileReader();
     reader.onload = function (event) {
       if (event.target.readyState != FileReader.DONE) {
@@ -162,32 +164,32 @@ angular.module('vott.project-images', [
       ProjectService.uploadImageToAzureStorageBlob(
         file.type,
         data,
-        imageRecord.fileURL,
+        imageRecord.url,
         function (error, result, status) {
           if (error) {
             $scope.error = error;
-            alert(error);
+            console.log("Unable to upload to:");
+            console.log(imageRecord.url);
+            console.log(error);
             return;
           }
 
-          ProjectService.commitTrainingImage(imageRecord.projectId, imageRecord.fileId).then(function (response) {
-            const canonicalRecord = response.data.data.commitTrainingImage;
+          ProjectService.commitTrainingImage(imageRecord).then(function (response) {
+            const canonicalRecord = response.data;
             $scope.filesUploadProgress[index] = 100;
             $scope.refreshUploadProgress();
-            $scope.images.push(canonicalRecord);
+            $scope.setNeedsLoadImages();
           }).catch(function (error) {
+            $scope.error = error;
             console.log("Got commit error:");
             console.log(error);
-            $scope.error = error;
             console.log(error);
-            alert(error);
           });
         },
         function (error) {
+          $scope.error = error;
           console.log("Got upload error:");
           console.log(error);
-          $scope.error = error;
-          alert(error);
         },
         function (progressEvent) {
           if (!progressEvent.lengthComputable) {
@@ -202,6 +204,16 @@ angular.module('vott.project-images', [
     };
     reader.readAsArrayBuffer(file);
   };
+
+  $scope.setNeedsLoadImages = function () {
+    $scope.needsLoadImages = true;
+    setTimeout(function () {
+      if ($scope.needsLoadImages) {
+        $scope.needsLoadImages = false;
+        $scope.loadImages();
+      }
+    }, 500);
+  }
 
   $scope.load();
 

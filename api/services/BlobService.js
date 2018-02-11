@@ -3,22 +3,7 @@
 const azure = require('azure-storage');
 const uuid = require('uuid/v4');
 
-function PassthroughEncoder() {
-}
-
-PassthroughEncoder.prototype.encode = function (input) {
-  return input;
-};
-
-PassthroughEncoder.prototype.decode = function (textToDecode) {
-  return textToDecode;
-};
-
 const blobService = azure.createBlobService();
-
-// A custom pass-through encoder is assigned to the blob service because, by
-// default, it uses an XML encoder that mangles JSON messages.
-blobService.messageEncoder = new PassthroughEncoder();
 
 module.exports = {
 
@@ -29,7 +14,7 @@ module.exports = {
   createSAS: (containerName, blobName, durationInMinutes) => {
     const startDate = new Date();
     const expiryDate = new Date(startDate);
-    const expiryMinutes = startDate.getMinutes() + (durationInMinutes ? durationInMinutes : 5);
+    const expiryMinutes = startDate.getMinutes() + (durationInMinutes ? durationInMinutes : 10);
     expiryDate.setMinutes(expiryMinutes);
 
     const BlobUtilities = azure.BlobUtilities;

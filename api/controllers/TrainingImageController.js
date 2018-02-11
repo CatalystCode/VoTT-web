@@ -9,8 +9,7 @@ const uuid = require('uuid/v4');
 module.exports = {
 
   find: function (req, res) {
-    const projectId = req.query.projectId;
-    if (!projectId) return res.badRequest("Missing projectId.");
+    const projectId = req.project.id;
 
     const query = TrainingImage.find({ project: projectId });
     const limit = (req.query.limit) ? parseInt(req.query.limit) : 32;
@@ -21,39 +20,32 @@ module.exports = {
       query.skip(skip);
     }
 
-    query.exec(function (error, records) {
-      if (error) return res.serverError(error);
+    query.then(records => {
       return res.json({
         limit: limit,
         skip: (records.length < limit) ? 0 : (skip + limit),
-        records: records
+        entries: records.map(value => {
+          const url = ProjectService.getImageURL(projectId, value.id);
+          value.url = url;
+          return value;
+        })
       });
+    }).catch(error => {
+      res.serverError(error);
     });
   },
 
   create: function (req, res) {
-    // TODO: Separate into a policy
-    const image = req.body;
-    if (!image) return res.badRequest("Missing body.");
-
-    const projectId = image.projectId;
-    if (!projectId) return res.badRequest("Missing projectId.");
-
-    Project.findOne({ id: projectId }).exec(function (error, project) {
-      if (error) return res.serverError(error);
-      if (!project) return res.notFound();
-
-      const containerName = ProjectService.getTrainingImageContainerName(project.id);
-      const image = BlobService.createSAS(containerName);
-      return res.json(image);
-    });
+    const projectId = req.project.id;
+    const containerName = ProjectService.getTrainingImageContainerName(projectId);
+    const sas = BlobService.createSAS(containerName);
+    const image = Object.assign({ projectId: projectId }, sas);
+    return res.json(image);
   },
 
   update: function (req, res) {
     const project = req.project;
-    const image = Object.assign({}, req.body);
-    image.id = req.params.id;
-    image.project = project;
+    const image = Object.assign({ project: project }, req.body);
     delete image.projectId;
 
     TrainingImageService.create(project, image).then(imageRecord => {
@@ -61,7 +53,19 @@ module.exports = {
     }).catch(error => {
       res.serverError(error);
     });
+  },
 
+  stats: function (req, res) {
+    // TODO: Find a way to do these counts in one go, a la 'select status, count(*) from trainingimage group by status;'
+    Promise.all([
+      TrainingImage.count({ status: 'tag-pending' }).then(count => Promise.resolve({ status: 'tag-pending', count: count })),
+      TrainingImage.count({ status: 'ready-for-training' }).then(count => Promise.resolve({ status: 'ready-for-training', count: count })),
+      TrainingImage.count({ status: 'in-conflict' }).then(count => Promise.resolve({ status: 'in-conflict', count: count }))
+    ]).then(counts => {
+      res.json({ statusCount: counts });
+    }).catch(error => {
+      res.serverError(error);
+    });
   }
 
 };

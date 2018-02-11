@@ -33,6 +33,16 @@ module.exports = {
     instructionsImageId: {
       type: 'string',
       required: false
+    },
+
+    labelsArray: function() {
+      const labels = this.labels;
+      if (!labels) return [];
+      try {
+        return JSON.parse(labels);
+      } catch(error) {
+        return labels.split(',');
+      }
     }
 
   }

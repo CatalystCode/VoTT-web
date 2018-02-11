@@ -29,6 +29,8 @@ module.exports.routes = {
   'put /api/vott/v1/projects/:projectId/instructionsImage': 'ProjectController.commitInstructionsImage',
   'get /api/vott/v1/projects/:projectId/images/:imageId': 'ProjectController.image',
 
+  'get /api/vott/v1/trainingImages/stats': 'TrainingImageController.stats',
+
   'get /api/vott/v1/projects/:projectId/tasks/next': 'TaskController.pullTask',
   'post /api/vott/v1/projects/:projectId/tasks/results': 'TaskController.pushTask'
 

@@ -1,7 +1,23 @@
 'use strict';
 
 const azure = require('azure-storage');
+
+function PassthroughEncoder() {
+}
+
+PassthroughEncoder.prototype.encode = function (input) {
+  return input;
+};
+
+PassthroughEncoder.prototype.decode = function (textToDecode) {
+  return textToDecode;
+};
+
 const queueService = azure.createQueueService();
+
+// A custom pass-through encoder is assigned to the blob service because, by
+// default, it uses an XML encoder that mangles JSON messages.
+queueService.messageEncoder = new PassthroughEncoder();
 
 module.exports = {
   createQueueIfNotExists: (queueName, callback) => queueService.createQueueIfNotExists(queueName, callback),
