@@ -94,54 +94,30 @@ angular.module('vott.factories', [])
                 });
             },
             createCollaborator: function (projectId, name, email, profile) {
-                const parameters = [
-                    `projectId:${JSON.stringify(projectId)}`,
-                    `name:${JSON.stringify(name)}`,
-                    `email:${JSON.stringify(email)}`,
-                    `profile:${profile}`, /* profile is an enum constant, not a string */
-                ].join(', ');
                 return $http({
                     method: 'POST',
-                    url: baseUrl,
+                    url: `${baseUrl}/accessRights`,
                     data: {
-                        query: `mutation {
-                            createCollaborator (${parameters}) {
-                                inviteId
-                                inviteURL
-                                collaborator {
-                                projectId
-                                collaboratorId
-                                name
-                                email
-                                profile
-                                }
-                            }
-                        }`
+                        projectId: projectId,
+                        name: name,
+                        email: email,
+                        role: profile
                     }
                 });
             },
-            reinviteCollaborator: function (projectId, collaboratorId) {
+            collaborators: function (projectId) {
                 return $http({
-                    method: 'POST',
-                    url: baseUrl,
-                    data: { query: `mutation { reinviteCollaborator (projectId:${JSON.stringify(projectId)}, collaboratorId:${JSON.stringify(collaboratorId)}) { inviteId inviteURL } }` }
-                });
-            },
-            collaborators: function (projectId, paginationToken) {
-                const invocation = paginationToken ?
-                    `collaborators(projectId: ${JSON.stringify(projectId)}, paginationToken:${JSON.stringify(paginationToken)})` :
-                    `collaborators(projectId: ${JSON.stringify(projectId)})`;
-                return $http({
-                    method: 'POST',
-                    url: baseUrl,
-                    data: { query: "query { " + invocation + "{ nextPageToken entries { collaboratorId name email profile } } }" }
+                    method: 'GET',
+                    url: `${baseUrl}/accessRights?projectId=${projectId}`
                 });
             },
             deleteCollaborator: function (projectId, collaboratorId) {
+                console.log("deleteCollaborator:");
+                console.log(projectId);
+                console.log(collaboratorId);
                 return $http({
-                    method: 'POST',
-                    url: baseUrl,
-                    data: { query: `mutation { deleteCollaborator (projectId:${JSON.stringify(projectId)}, collaboratorId: ${JSON.stringify(collaboratorId)}) }` }
+                    method: 'DELETE',
+                    url: `${baseUrl}/accessRights/${collaboratorId}?projectId=${projectId}`
                 });
             },
             models: function (projectId, paginationToken) {

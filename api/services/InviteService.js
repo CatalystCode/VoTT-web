@@ -76,16 +76,13 @@ module.exports = {
       return Promise.reject("No email");
     }
 
-    return new Promise((resolve, reject) => {
-      Invite.create({ id: uuid(), user: user }).exec(function (error, invite) {
-        if (error) return reject(error);
-
+    return Invite.create({ id: uuid(), user: user }).then(invite => {
+      return new Promise((resolve, reject) => {
         sendInviteEmail(user, invite, function (error) {
           if (error) return reject(error);
           resolve(invite);
         });
       });
-
     });
 
   }

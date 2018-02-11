@@ -31,23 +31,23 @@
 
   <hr />
 
-  <table ng-if="!isLoading &amp;&amp; collaborators != null &amp;&amp; collaborators.length > 0" class="table">
+  <table ng-if="!isLoading &amp;&amp; accessRights != null &amp;&amp; accessRights.length > 0" class="table">
     <thead>
       <tr>
         <th scope="col">Name</th>
         <th scope="col">Email</th>
-        <th scope="col">Profile</th>
+        <th scope="col">Role</th>
         <th scope="col">Action</th>
       </tr>
     </thead>
     <tbody>
-      <tr ng-repeat="collaborator in collaborators">
-        <th scope="row">{{collaborator.name}}</th>
-        <td>{{ collaborator.email }}</td>
-        <td>{{ collaborator.profile.replace('_', ' ') | lowercase }}</td>
+      <tr ng-repeat="right in accessRights">
+        <th scope="row">{{right.user.name}}</th>
+        <td>{{ right.user.email }}</td>
+        <td>{{ right.role.replace('-', ' ') | lowercase }}</td>
         <td>
-          <button type="button" class="btn btn-default" ng-click="reinvite(collaborator)">Reinvite</button>
-          <button type="button" class="btn btn-danger" ng-click="delete(collaborator)">Delete</button>
+          <button type="button" class="btn btn-default" ng-click="reinvite(right)">Reinvite</button>
+          <button type="button" class="btn btn-danger" ng-click="delete(right)">Delete</button>
         </td>
       </tr>
     </tbody>
@@ -76,7 +76,7 @@
       <div class="modal-content">
         <form>
           <div class="modal-header">
-            <h5 class="modal-title" id="editDialogLabel">{{selectedCollaborator.collaboratorId ? 'Edit' : 'New Collaborator'}}</h5>
+            <h5 class="modal-title" id="editDialogLabel">New Collaborator</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -84,21 +84,21 @@
           <div class="modal-body">
               <div class="form-group">
                   <label for="name">Name</label>
-                  <input type="text" ng-model="selectedCollaborator.name" class="form-control" id="name" aria-describedby="nameHelp" placeholder="Collaborator name">
-                  <small id="nameHelp" class="form-text text-muted">The name of the project collaborator.</small>
+                  <input type="text" ng-model="user.name" class="form-control" id="name" aria-describedby="nameHelp" placeholder="Person name">
+                  <small id="nameHelp" class="form-text text-muted">The name of the person to be invited to the project.</small>
               </div>
               <div class="form-group">
                   <label for="name">Email</label>
-                  <input type="email" ng-model="selectedCollaborator.email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="someone@example.com">
+                  <input type="email" ng-model="user.email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="someone@example.com">
                   <small id="emailHelp" class="form-text text-muted">The email address of the project collaborator.</small>
               </div>
               <div class="form-group">
-                  <label for="profile">Profile</label>
-                  <select class="form-control" ng-model="selectedCollaborator.profile" id="profile" aria-describedby="profileHelp">
-                      <option value="PROJECT_MANAGER">Project Manager</option>
-                      <option value="IMAGE_TAGGER">Image Tagger</option>
+                  <label for="role">Role</label>
+                  <select class="form-control" ng-model="user.role" id="role" aria-describedby="roleHelp">
+                      <option value="project-manager">Project Manager</option>
+                      <option value="project-collabortor">Image Tagger</option>
                   </select>
-                  <small id="profileHelp" class="form-text text-muted">Select wether the collaborator will be able to manager projects or if he or she will only be able to help with the image tagging effort.</small>
+                  <small id="roleHelp" class="form-text text-muted">Select wether the collaborator will be able to manager projects or if he or she will only be able to help with the image tagging effort.</small>
               </div>
                 </div>
           <div class="modal-footer">
@@ -122,11 +122,11 @@
                 </button>
             </div>
             <div class="modal-body">
-                Please confirm you would like to remove {{selectedCollaborator.name}} ({{selectedCollaborator.email}}) from this project's collaborators.
+                Please confirm you would like to remove {{selectedAccessRight.user.name}} ({{selectedAccessRight.user.email}}) from this project's collaborators.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-danger" ng-click="deleteConfirmed(selectedCollaborator)">Delete</button>
+                <button type="button" class="btn btn-danger" ng-click="deleteConfirmed(selectedAccessRight)">Delete</button>
             </div>
         </div>
     </div>

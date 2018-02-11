@@ -6,23 +6,22 @@ angular.module('vott.project-collaborators', [
   $scope.isLoadingProject = true;
   $scope.isLoadingImages = true;
 
-  $scope.collaborators = [];
-  $scope.nextPageToken = null;
+  $scope.accessRights = [];
 
-  $scope.$watchGroup(['isLoadingProject', 'isLoadingCollaborators'], function (newValues, oldValues, scope) {
-    $scope.isLoading = $scope.isLoadingProject || $scope.isLoadingCollaborators;
+  $scope.$watchGroup(['isLoadingProject', 'isLoadingAccessRights'], function (newValues, oldValues, scope) {
+    $scope.isLoading = $scope.isLoadingProject || $scope.isLoadingAccessRights;
   });
 
   $scope.load = function () {
     $scope.loadProject();
-    $scope.loadCollaborators();
+    $scope.loadAccessRights();
   };
 
   $scope.loadProject = function () {
     $scope.isLoadingProject = true;
     ProjectService.getProject($routeParams.projectId)
       .then(function (response) {
-        $scope.project = response.data.data.project;
+        $scope.project = response.data;
         $scope.isLoadingProject = false;
       })
       .catch(function (error) {
@@ -31,14 +30,13 @@ angular.module('vott.project-collaborators', [
       });
   };
 
-  $scope.loadCollaborators = function (paginationToken) {
-    $scope.isLoadingCollaborators = true;
-    ProjectService.collaborators($routeParams.projectId, paginationToken)
+  $scope.loadAccessRights = function () {
+    $scope.isLoadingAccessRights = true;
+    ProjectService.collaborators($routeParams.projectId)
       .then(function (response) {
-        const collaboratorsData = response.data.data.collaborators;
-        $scope.collaborators = collaboratorsData.entries;
-        $scope.nextPageToken = collaboratorsData.nextPageToken;
-        $scope.isLoadingCollaborators = false;
+        console.log(response.data);
+        $scope.accessRights = response.data;
+        $scope.isLoadingAccessRights = false;
       })
       .catch(function (error) {
         console.log(error);
@@ -46,34 +44,43 @@ angular.module('vott.project-collaborators', [
       });
   };
 
-  $scope.invite = function (collaborator) {
-    $scope.selectedCollaborator = {};
+  $scope.invite = function (accessRight) {
+    $scope.user = {};
     $('#editDialog').modal('show');
   };
 
-  $scope.reinvite = function (collaborator) {
-    ProjectService.reinviteCollaborator($routeParams.projectId, collaborator.collaboratorId)
-      .then(function (response) {
-        alert(`Reinvited ${collaborator.name}.`);
-      })
-      .catch(function (error) {
-        console.log(error);
-        $scope.error = error;
-      });
+  $scope.reinvite = function (accessRight) {
+    console.log("About to reinvite:");
+    console.log(accessRight.user);
+    ProjectService.createCollaborator(
+      $routeParams.projectId,
+      accessRight.user.name,
+      accessRight.user.email,
+      accessRight.user.role
+    ).then(function (response) {
+      console.log("Created user:");
+      console.log(response.data);
+      $scope.user = {};
+      $scope.loadAccessRights();
+    }).catch(function (error) {
+      console.log(error);
+      $scope.error = error;
+      $scope.loadAccessRights();
+    });
   }
 
-  $scope.delete = function (collaborator) {
-    $scope.selectedCollaborator = collaborator;
+  $scope.delete = function (accessRight) {
+    $scope.selectedAccessRight = accessRight;
     $('#deleteConfirmation').modal('show');
   };
 
-  $scope.deleteConfirmed = function (collaborator) {
+  $scope.deleteConfirmed = function (accessRight) {
     ProjectService.deleteCollaborator(
       $routeParams.projectId,
-      collaborator.collaboratorId
+      accessRight.id
     ).then(function (response) {
-      $scope.selectedCollaborator = {};
-      $scope.loadCollaborators();
+      $scope.selectedAccessRight = {};
+      $scope.loadAccessRights();
       $('#deleteConfirmation').modal('hide');
     }).catch(function (error) {
       console.log(error);
@@ -84,12 +91,14 @@ angular.module('vott.project-collaborators', [
   $scope.save = function () {
     ProjectService.createCollaborator(
       $routeParams.projectId,
-      $scope.selectedCollaborator.name,
-      $scope.selectedCollaborator.email,
-      $scope.selectedCollaborator.profile
+      $scope.user.name,
+      $scope.user.email,
+      $scope.user.role
     ).then(function (response) {
-      $scope.selectedCollaborator = {};
-      $scope.loadCollaborators();
+      console.log("Created user:");
+      console.log(response.data);
+      $scope.user = {};
+      $scope.loadAccessRights();
     }).catch(function (error) {
       console.log(error);
       $scope.error = error;

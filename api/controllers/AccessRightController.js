@@ -11,9 +11,9 @@ module.exports = {
   find: function (req, res) {
     const project = req.project;
     AccessRightService.find(project).then(rights => {
-      res.json(rights.map(value => value.user));
+      res.json(rights);
     }).catch(error => {
-      res.internalServerError(error);
+      res.serverError(error);
     });
   },
 
@@ -32,7 +32,7 @@ module.exports = {
     }).then(right => {
       res.json(right);
     }).catch(error => {
-      res.internalServerError(error);
+      res.serverError(error);
     });
   },
 

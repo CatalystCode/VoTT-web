@@ -1,6 +1,6 @@
 'use strict';
 
-let sendgrid = null;
+let sendgrid;
 
 function emailServiceEnabled() {
   if (!sails.config.hasOwnProperty('emailServiceEnabled')) {
