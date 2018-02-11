@@ -6,7 +6,7 @@
 <div class="container">
     <hr />
     <h4 ng-if="isLoading">Loading...</h4>
-    <button type="button" class="btn btn-success" ng-click="createProject()">Create New Project</button>
+    <button type="button" class="btn btn-success" ng-if="isAuthorized" ng-click="createProject()">Create New Project</button>
     <h5 ng-if="!isLoading &amp;&amp; projects == null || projects.length == 0">No projects have been created - please create one when you are ready.</h5>
     <table ng-if="!isLoading &amp;&amp; projects != null &amp;&amp; projects.length > 0" class="table">
         <thead>
