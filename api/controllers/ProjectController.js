@@ -17,7 +17,7 @@ module.exports = {
     },
 
     destroy: function (req, res) {
-        const projectId = req.project.id;
+        const projectId = req.params.id;
         ProjectService.destroyProject(projectId).then(result => {
             res.ok();
         }).catch(error => {
