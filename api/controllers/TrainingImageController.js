@@ -56,11 +56,12 @@ module.exports = {
   },
 
   stats: function (req, res) {
+    const projectId = req.project.id;
     // TODO: Find a way to do these counts in one go, a la 'select status, count(*) from trainingimage group by status;'
     Promise.all([
-      TrainingImage.count({ status: 'tag-pending' }).then(count => Promise.resolve({ status: 'tag-pending', count: count })),
-      TrainingImage.count({ status: 'ready-for-training' }).then(count => Promise.resolve({ status: 'ready-for-training', count: count })),
-      TrainingImage.count({ status: 'in-conflict' }).then(count => Promise.resolve({ status: 'in-conflict', count: count }))
+      TrainingImage.count({ project: projectId, status: 'tag-pending' }).then(count => Promise.resolve({ status: 'tag-pending', count: count })),
+      TrainingImage.count({ project: projectId, status: 'ready-for-training' }).then(count => Promise.resolve({ status: 'ready-for-training', count: count })),
+      TrainingImage.count({ project: projectId, status: 'in-conflict' }).then(count => Promise.resolve({ status: 'in-conflict', count: count }))
     ]).then(counts => {
       res.json({ statusCount: counts });
     }).catch(error => {
