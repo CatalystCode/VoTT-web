@@ -120,28 +120,22 @@ angular.module('vott.factories', [])
                     url: `${baseUrl}/accessRights/${collaboratorId}?projectId=${projectId}`
                 });
             },
-            models: function (projectId, paginationToken) {
-                const invocation = paginationToken ?
-                    `models(projectId: ${JSON.stringify(projectId)}, paginationToken:${JSON.stringify(paginationToken)})` :
-                    `models(projectId: ${JSON.stringify(projectId)})`;
+            trainingRequests: function (projectId) {
                 return $http({
-                    method: 'POST',
-                    url: baseUrl,
-                    data: { query: "query { " + invocation + "{ nextPageToken entries { modelId created status modelURL } } }" }
+                    method: 'GET',
+                    url: `${baseUrl}/trainingRequests?projectId=${projectId}`,
                 });
             },
-            createModel: function (projectId) {
+            createTrainingRequest: function (projectId, trainingRequest) {
                 return $http({
                     method: 'POST',
-                    url: baseUrl,
-                    data: { query: `mutation { createModel (projectId:${JSON.stringify(projectId)}) { projectId modelId status } }` }
+                    url: `${baseUrl}/trainingRequests?projectId=${projectId}`
                 });
             },
-            deleteModel: function (projectId, modelId) {
+            deleteTrainingRequest: function (projectId, trainingRequestId) {
                 return $http({
-                    method: 'POST',
-                    url: baseUrl,
-                    data: { query: `mutation { deleteModel (projectId:${JSON.stringify(projectId)}, modelId: ${JSON.stringify(modelId)}) }` }
+                    method: 'DELETE',
+                    url: `${baseUrl}/trainingRequests/${trainingRequestId}?projectId=${projectId}`
                 });
             },
             uploadImageToAzureStorageBlob: function (contentType, data, url, successCallback, errorCallback, progressCallback) {

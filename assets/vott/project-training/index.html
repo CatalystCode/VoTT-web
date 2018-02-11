@@ -31,7 +31,7 @@
 
   <hr />
 
-  <table ng-if="!isLoading &amp;&amp; models != null &amp;&amp; models.length > 0" class="table">
+  <table ng-if="!isLoading &amp;&amp; trainingRequests != null &amp;&amp; trainingRequests.length > 0" class="table">
     <thead>
       <tr>
         <th scope="col">Training ID</th>
@@ -42,18 +42,18 @@
       </tr>
     </thead>
     <tbody>
-      <tr ng-repeat="model in models">
-        <th scope="row">{{model.modelId}}</th>
-        <td>{{ model.created }}</td>
-        <td>{{ model.status }}</td>
+      <tr ng-repeat="request in trainingRequests">
+        <th scope="row">{{request.id}}</th>
+        <td>{{ request.createdAt }}</td>
+        <td>{{ request.status }}</td>
         <td>
-          <a ng-if="model.status == 'READY' || model.status == 'PROMOTED'" ng-href="{{model.modelURL}}">{{model.modelURL.split('/').reverse()[0]}}</a>
-          <div ng-if="model.status != 'READY' &amp;&amp; model.status != 'PROMOTED'">Not yet available</div>
+          <a ng-if="request.status == 'READY' || request.status == 'PROMOTED'" ng-href="{{request.url}}">{{request.url.split('/').reverse()[0]}}</a>
+          <div ng-if="request.status != 'READY' &amp;&amp; request.status != 'PROMOTED'">Not yet available</div>
         </td>
         <td>
-          <button type="button" class="btn btn-success" ng-click="export(model)">Export</button>
-          <button type="button" class="btn btn-default" ng-click="promote(model)">Promote</button>
-          <button type="button" class="btn btn-danger" ng-click="delete(model)">Delete</button>
+          <button type="button" class="btn btn-success" ng-click="export(request)">Export</button>
+          <button type="button" class="btn btn-default" ng-click="promote(request)">Promote</button>
+          <button type="button" class="btn btn-danger" ng-click="delete(request)">Delete</button>
         </td>
       </tr>
     </tbody>
@@ -77,18 +77,18 @@
 
 </div>
 
-<div id="modelDeleteConfirmation" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modelDeleteConfirmationLabel"
+<div id="deleteConfirmation" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmationLabel"
     aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modelDeleteConfirmationLabel">Confirm Delete</h5>
+                <h5 class="modal-title" id="deleteConfirmationLabel">Confirm Delete</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                Please confirm you would like to delete the model created on {{selectedModel.created}} ({{selectedModel.projectId}}).
+                Please confirm you would like to delete the training request created on {{selectedRequest.createdAt}} ({{selectedRequest.id}}).
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

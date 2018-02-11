@@ -4,25 +4,25 @@ angular.module('vott.project-training', [
 
   $scope.isLoading = true;
   $scope.isLoadingProject = true;
-  $scope.isLoadingModels = true;
+  $scope.isLoadingTrainingRequests = true;
 
   $scope.collaborators = [];
   $scope.nextPageToken = null;
 
-  $scope.$watchGroup(['isLoadingProject', 'isLoadingModels'], function (newValues, oldValues, scope) {
-    $scope.isLoading = $scope.isLoadingProject || $scope.isLoadingModels;
+  $scope.$watchGroup(['isLoadingProject', 'isLoadingTrainingRequests'], function (newValues, oldValues, scope) {
+    $scope.isLoading = $scope.isLoadingProject || $scope.isLoadingTrainingRequests;
   });
 
   $scope.load = function () {
     $scope.loadProject();
-    $scope.loadModels();
+    $scope.loadTrainingRequests();
   };
 
   $scope.loadProject = function () {
     $scope.isLoadingProject = true;
     ProjectService.getProject($routeParams.projectId)
       .then(function (response) {
-        $scope.project = response.data.data.project;
+        $scope.project = response.data;
         $scope.isLoadingProject = false;
       })
       .catch(function (error) {
@@ -31,14 +31,12 @@ angular.module('vott.project-training', [
       });
   };
 
-  $scope.loadModels = function (paginationToken) {
-    $scope.isLoadingModels = true;
-    ProjectService.models($routeParams.projectId, paginationToken)
+  $scope.loadTrainingRequests = function (paginationToken) {
+    $scope.isLoadingTrainingRequests = true;
+    ProjectService.trainingRequests($routeParams.projectId)
       .then(function (response) {
-        const modelsData = response.data.data.models;
-        $scope.models = modelsData.entries;
-        $scope.nextPageToken = modelsData.nextPageToken;
-        $scope.isLoadingModels = false;
+        $scope.trainingRequests = response.data;
+        $scope.isLoadingTrainingRequests = false;
       })
       .catch(function (error) {
         console.log(error);
@@ -46,14 +44,13 @@ angular.module('vott.project-training', [
       });
   };
 
-  $scope.export = function (model) {
-    window.location = `/v1/vott-training/projects/${$routeParams.projectId}/${model.modelId}/annotations.csv`;
+  $scope.export = function (request) {
+    window.location = `/v1/vott-training/projects/${$routeParams.projectId}/${request.id}/annotations.csv`;
   };
 
   $scope.train = function () {
-    ProjectService.createModel($routeParams.projectId)
+    ProjectService.createTrainingRequest($routeParams.projectId)
       .then(function (response) {
-        const model = response.data.data.createModel;
         $scope.load();
       })
       .catch(function (error) {
@@ -62,25 +59,25 @@ angular.module('vott.project-training', [
       });
   };
 
-  $scope.promote = function (model) {
+  $scope.promote = function (request) {
     console.log("Promote");
   };
 
-  $scope.delete = function (model) {
+  $scope.delete = function (trainingRequest) {
     console.log("Delete");
-    $scope.selectedModel = model;
-    $('#modelDeleteConfirmation').modal('show');
+    $scope.selectedRequest = trainingRequest;
+    $('#deleteConfirmation').modal('show');
   };
 
   $scope.deleteCancelled = function () {
-    $scope.selectedModel = null;
-    $('#modelDeleteConfirmation').modal('hide');
+    $scope.selectedRequest = null;
+    $('#deleteConfirmation').modal('hide');
   }
 
   $scope.deleteConfirmed = function () {
-    ProjectService.deleteModel($routeParams.projectId, $scope.selectedModel.modelId)
+    ProjectService.deleteTrainingRequest($routeParams.projectId, $scope.selectedRequest.id)
       .then(function (response) {
-        $('#modelDeleteConfirmation').modal('hide');
+        $('#deleteConfirmation').modal('hide');
         $scope.load();
       })
       .catch(function (error) {
