@@ -8,7 +8,10 @@ function getInviteURL(user, invite) {
 
 function sendInviteEmail(user, invite, callback) {
   const inviteURL = getInviteURL(user, invite);
-  const from = { name: "VoTT", email: (process.env.INVITE_EMAIL_FROM || user.email) };
+  const from = {
+    name: (process.env.VOTT_INVITE_FROM_NAME || process.env.VOTT_DEFAULT_ADMIN_NAME || user.name),
+    email: (process.env.VOTT_INVITE_FROM_EMAIL || process.env.VOTT_DEFAULT_ADMIN_EMAIL || user.email)
+  };
   const to = { email: user.email, name: user.name };
   const text = `You have been invited to collaborate on a VoTT project.\nClick on this link ${inviteURL} to get started.\nNOTE: This link is your password - DO NOT SHARE IT.`;
   const warning = '<p>NOTE: This link is your password - DO NOT SHARE IT.</p>';
