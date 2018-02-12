@@ -34,7 +34,6 @@ angular.module('vott.project-collaborators', [
     $scope.isLoadingAccessRights = true;
     ProjectService.collaborators($routeParams.projectId)
       .then(function (response) {
-        console.log(response.data);
         $scope.accessRights = response.data;
         $scope.isLoadingAccessRights = false;
       })
