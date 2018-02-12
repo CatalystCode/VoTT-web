@@ -1,0 +1,88 @@
+<div class="container-fluid">
+    <div class="container">
+        <h2>{{ isNewRecord() ? 'New Project' : project.name }}</h2>
+    </div>
+    <nav>
+        <div class="container">
+            <ul class="nav navbar-nav">
+                <li class="active">
+                    <a href ng-click="details()">Details</a>
+                </li>
+                <li>
+                    <a href ng-click="manageImages()">Images</a>
+                </li>
+                <li>
+                    <a href ng-click="manageCollaborators()">Collaborators</a>
+                </li>
+                <li>
+                    <a href ng-click="manageModels()">Training</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</div>
+
+<div class="container">
+
+    <hr/>
+
+    <h4 ng-if="isLoading">Loading...</h4>
+    <h4 ng-if="!isLoading &amp;&amp; error">{{ error }}</h4>
+
+    <form ng-if="!isLoading">
+        <div class="form-group">
+            <label for="projectName">Name</label>
+            <input type="text" ng-model="project.name" class="form-control" id="projectName" aria-describedby="projectNameHelp" placeholder="Project name">
+            <small id="projectNameHelp" class="form-text text-muted">The name of your project, e.g. "Candy Types" or "Guitar Bodies".</small>
+        </div>
+        <div class="form-group">
+            <label for="projectTaskType">Type</label>
+            <select class="form-control" ng-model="project.taskType" id="projectTaskType" aria-describedby="projectTaskTypeHelp">
+                <option value="object-detection">Object Detection</option>
+                <option value="image-classification">Image Classification</option>
+            </select>
+            <small id="projectTaskTypeHelp" class="form-text text-muted">Select wether image tags should be used for object detection or image classification.</small>
+        </div>
+        <div class="form-group">
+            <label for="labels">Tags</label>
+            <input type="text" ng-model="project.labels" class="form-control" id="labels" aria-describedby="labelsHelp" placeholder="Tags">
+            <small id="labelsHelp" class="form-text text-muted">Names of object or image class tags separated by commas, e.g. "kit-kat,reeses-pieces,twix".</small>
+        </div>
+        <div class="form-group">
+            <label for="instructionsText">Instructions</label>
+            <input type="text" ng-model="project.instructionsText" class="form-control" id="instructionsText" aria-describedby="instructionsTextHelp"
+                placeholder="Instructions for collaborators">
+            <small id="instructionsTextHelp" class="form-text text-muted">Instructions for people performing the work of image tagging.</small>
+        </div>
+        <div class="form-group" ng-if="!isNewRecord()">
+            <label for="instructionsImage">Instructions Image</label>
+            <img ng-if="instructionsImageURL()" ng-src="{{instructionsImageURL()}}" class="img-thumbnail" style="width: 128pt; height: 128pt; display: block;">
+            <input type="file" onchange="angular.element(this).scope().instructionsImageFileDidChange(this.value)" class="form-control"
+                id="instructionsImage" aria-describedby="instructionsImageHelp">
+            <small id="instructionsImageHelp" class="form-text text-muted">Instructions image for people performing the work of image tagging.</small>
+        </div>
+        <button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
+        <button type="button" class="btn btn-success" ng-click="save()">Save</button>
+    </form>
+
+    <hr/>
+
+</div>
+
+<div id="uploadProgressModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="uploadProgressModalLabel" aria-hidden="true"
+    data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadProgressModalLabel">Uploading</h5>
+            </div>
+            <div class="modal-body">
+                <progress id="uploadProgressBar" value="0" max="100" style="width: 100%"></progress>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Delete confirmation -->

@@ -1,48 +1,51 @@
 {
-  "name": "vott-web",
-  "version": "1.0.0",
-  "engines": {
-    "node": ">=8.0"
-  },
-  "engineStrict": true,
-  "description": "Visual Object Tagging Tool: A lightweight and collaborative tool for image tagging. Edit",
-  "main": "server.js",
-  "scripts": {
-    "test": "mocha",
-    "postinstall": "node_modules/.bin/bower install"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/jcjimenez/VoTT-web.git"
-  },
-  "author": "jc.jimenez@microsoft.com",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/jcjimenez/VoTT-web/issues"
-  },
-  "homepage": "https://github.com/jcjimenez/VoTT-web#readme",
+  "name": "vott",
+  "private": true,
+  "version": "0.0.0",
+  "description": "a Sails application",
+  "keywords": [],
   "dependencies": {
     "@sendgrid/mail": "^6.2.1",
-    "@turf/turf": "^5.1.6",
     "async": "^2.6.0",
-    "azure-storage": "^2.7.0",
-    "bcryptjs": "^2.4.3",
-    "body-parser": "^1.18.2",
+    "azure-storage": "^2.8.0",
     "bower": "^1.8.2",
-    "cookie-parser": "^1.4.3",
-    "cors": "^2.8.4",
-    "dotenv": "^4.0.0",
-    "express": "^4.16.2",
-    "express-graphql": "^0.6.11",
-    "express-session": "^1.15.6",
-    "graphql": "^0.11.7",
-    "helmet": "^3.9.0",
+    "dotenv": "^5.0.0",
+    "ejs": "^2.3.4",
+    "grunt": "^1.0.1",
+    "grunt-contrib-clean": "^1.0.0",
+    "grunt-contrib-coffee": "^1.0.0",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-cssmin": "^1.0.1",
+    "grunt-contrib-jst": "^1.0.0",
+    "grunt-contrib-less": "^1.3.0",
+    "grunt-contrib-uglify": "^1.0.1",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-sails-linker": "^0.10.1",
+    "grunt-sync": "^0.5.2",
+    "include-all": "^1.0.8",
     "jsonwebtoken": "^8.1.1",
-    "method-override": "^2.3.10",
-    "mocha": "^4.1.0",
-    "passport-azure-ad": "^3.0.9",
+    "mocha": "^5.0.0",
     "qrcode": "^1.2.0",
-    "qs": "^6.5.1",
-    "rbush": "^2.0.2"
-  }
+    "rbush": "^2.0.2",
+    "rc": "^1.0.1",
+    "sails": "^0.12.14",
+    "sails-disk": "^0.10.10",
+    "sails-sqlserver": "^0.10.8",
+    "supertest": "^3.0.0",
+    "uuid": "^3.2.1"
+  },
+  "scripts": {
+    "debug": "node debug app.js",
+    "start": "node app.js",
+    "postinstall": "node_modules/.bin/bower install",
+    "test": "node ./node_modules/mocha/bin/mocha test/bootstrap.test.js test/integration/**/*.test.js"
+  },
+  "main": "app.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jcjimenez/vott.git"
+  },
+  "author": "jcjimenez",
+  "license": ""
 }
