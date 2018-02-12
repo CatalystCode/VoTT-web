@@ -8,7 +8,7 @@ First make sure you have a `.env` file created and that it includes the followin
 PORT=8080
 GRAPHIQL_ENABLED=true
 AZURE_STORAGE_CONNECTION_STRING=somevaluefromazureportal
-JWT_SECRET=somesecretkey
+VOTT_JWT_SECRET=somesecretkey
 SENDGRID_API_KEY=apikeyfromsendgrid
 ```
 

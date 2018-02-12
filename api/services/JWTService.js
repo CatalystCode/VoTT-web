@@ -55,7 +55,7 @@ module.exports = {
 
     getDefaultConfiguration: function () {
         return {
-            secretOrPrivateKey: process.env.JWT_SECRET,
+            secretOrPrivateKey: process.env.VOTT_JWT_SECRET,
             expiresIn: 86400
         };
     },
