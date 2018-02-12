@@ -23,13 +23,7 @@ module.exports = {
     const email = req.body.email;
     const role = req.body.role;
 
-    UserService.findOrCreate(req.body.name, req.body.email).then(user => {
-      return AccessRightService.findOrCreate(user, project, role);
-    }).then(right => {
-      return InviteService.inviteWithAccessRight(right).then(invite => {
-        return Promise.resolve(right);
-      });
-    }).then(right => {
+    AccessRightService.findOrCreate(project, name, email, role).then(right => {
       res.json(right);
     }).catch(error => {
       res.serverError(error);

@@ -80,7 +80,6 @@ module.exports = {
     }
 
     return Invite.create({ id: uuid(), user: user }).then(invite => {
-      console.log(`Created root invite: /vott/invites/${invite.id}/${user.id}`);
       return new Promise((resolve, reject) => {
         sendInviteEmail(user, invite, function (error) {
           if (error) return reject(error);

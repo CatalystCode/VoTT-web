@@ -93,7 +93,8 @@ angular.module('vott.factories', [])
                     data: image
                 });
             },
-            createCollaborator: function (projectId, name, email, profile) {
+            createCollaborator: function (projectId, name, email, role) {
+                console.log(`createCollaborator: ${projectId}, ${name}, ${email}, ${role}`)
                 return $http({
                     method: 'POST',
                     url: `${baseUrl}/accessRights`,
@@ -101,7 +102,7 @@ angular.module('vott.factories', [])
                         projectId: projectId,
                         name: name,
                         email: email,
-                        role: profile
+                        role: role
                     }
                 });
             },
