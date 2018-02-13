@@ -14,7 +14,7 @@ module.exports = {
         if (error) return reject(error);
 
         const taskMessage = {
-          taskType: project.taskType,
+          type: project.type,
           imageId: image.id,
           imageURL: getImageURL(project.id, image.id),
           labels: project.labels,

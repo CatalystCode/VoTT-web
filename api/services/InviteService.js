@@ -78,8 +78,12 @@ module.exports = {
     if (!user.email) {
       return Promise.reject("No email");
     }
+    const project = right.project;
+    if (!project) {
+      return Promise.reject("No project");
+    }
 
-    return Invite.create({ id: uuid(), user: user }).then(invite => {
+    return Invite.create({ id: uuid(), user: user, project: project }).then(invite => {
       return new Promise((resolve, reject) => {
         sendInviteEmail(user, invite, function (error) {
           if (error) return reject(error);

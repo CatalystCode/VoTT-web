@@ -16,6 +16,10 @@ module.exports = {
     user: {
       model: 'User',
       required: true
+    },
+    project: {
+      model: 'Project',
+      required: false
     }
 
   }
