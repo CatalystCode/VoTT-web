@@ -9,6 +9,10 @@ module.exports = {
 
   attributes: {
     
+    id: {
+      type: 'string',
+      primaryKey: true
+    },
     role: {
       type: 'string',
       required: true,
