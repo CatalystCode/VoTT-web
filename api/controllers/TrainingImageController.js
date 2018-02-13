@@ -21,14 +21,17 @@ module.exports = {
     }
 
     query.then(records => {
-      return res.json({
-        limit: limit,
-        skip: (records.length < limit) ? 0 : (skip + limit),
-        entries: records.map(value => {
-          const url = ProjectService.getImageURL(projectId, value.id);
-          value.url = url;
-          return value;
-        })
+      TrainingImage.count().then(total=>{
+        return res.json({
+          total: total,
+          limit: limit,
+          skip: (records.length < limit) ? 0 : (skip + limit),
+          entries: records.map(value => {
+            const url = ProjectService.getImageURL(projectId, value.id);
+            value.url = url;
+            return value;
+          })
+        });
       });
     }).catch(error => {
       res.serverError(error);

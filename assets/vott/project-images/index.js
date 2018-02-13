@@ -47,6 +47,7 @@ angular.module('vott.project-images', [
       .then(function (response) {
         const serviceData = response.data;
         $scope.isLoadingImages = false;
+        $scope.total = serviceData.total;
         $scope.skip = serviceData.skip;
         $scope.limit = serviceData.limit;
         if (requestedSkip) {
@@ -217,6 +218,16 @@ angular.module('vott.project-images', [
         $scope.loadStats();
       }
     }, 500);
+  };
+
+  $scope.hasMore = function () {
+    const pageCount = Math.ceil($scope.total / $scope.limit);
+    const currentPage = Math.ceil($scope.skip / $scope.limit);
+    return currentPage < pageCount;
+  }
+
+  $scope.loadMore = function () {
+    $scope.loadImages($scope.skip + $scope.limit, $scope.limit);
   }
 
   $scope.load();
