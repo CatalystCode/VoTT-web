@@ -19,7 +19,7 @@
         <tbody>
             <tr ng-repeat="project in projects">
                 <th scope="row">{{project.name}}</th>
-                <td>{{project.taskType.replace('_', ' ') | lowercase}}</td>
+                <td>{{project.type.replace('-', ' ') | lowercase}}</td>
                 <td>
                     <button type="button" class="btn btn-warning" ng-click="editProject(project)">Edit</button>
                     <button type="button" class="btn btn-danger" ng-click="deleteProject(project)">Delete</button>

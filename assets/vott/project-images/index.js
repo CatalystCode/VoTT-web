@@ -96,7 +96,10 @@ angular.module('vott.project-images', [
   };
 
   $scope.upload = function () {
-    $('#uploadDialog').modal('show');
+    $('#uploadDialog').modal({
+      backdrop: 'static',
+      keyboard: false
+    });
   };
 
   /**
@@ -211,6 +214,7 @@ angular.module('vott.project-images', [
       if ($scope.needsLoadImages) {
         $scope.needsLoadImages = false;
         $scope.loadImages();
+        $scope.loadStats();
       }
     }, 500);
   }

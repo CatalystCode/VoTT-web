@@ -17,7 +17,7 @@ module.exports = {
           taskType: project.taskType,
           imageId: image.id,
           imageURL: getImageURL(project.id, image.id),
-          labels: project.labelsArray(),
+          labels: project.labels,
           instructionsText: project.instructionsText,
           instructionsImageURL: getImageURL(project.id, project.instructionsImageId)
         };

@@ -13,7 +13,7 @@ module.exports = {
       primaryKey: true
     },
     tags: {
-      type: 'string',
+      type: 'json',
       required: true
     },
     image: {
