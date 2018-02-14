@@ -22,6 +22,10 @@ module.exports = {
       enum: ['tag-pending', 'ready-for-training', 'in-conflict'],
       defaultsTo: 'tag-pending'
     },
+    tags: {
+      type: 'json',
+      required: false
+    },
     project: {
       model: 'Project',
       required: true

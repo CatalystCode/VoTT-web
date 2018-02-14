@@ -112,50 +112,6 @@ module.exports = {
         resolve(record);
       });
     });
-  },
-
-  pullTask: function (project) {
-    const taskQueueName = getTaskQueueName(project.id);
-    return new Promise((resolve, reject) => {
-      QueueService.getMessage(taskQueueName, function (error, message) {
-        if (error) return reject(error);
-        if (!message) return resolve(null, null);
-
-        const task = JSON.parse(message.messageText);
-        task.id = message.messageId;
-        task.popReceipt = message.popReceipt;
-        resolve(task);
-      });
-    });
-  },
-
-  pushTask: function (project, task, user) {
-    const taskQueueName = getTaskQueueName(project.id);
-    const imageId = task.imageId;
-    const tags = task.tags;
-    const messageId = task.id;
-    const popReceipt = task.popReceipt;
-
-    return TrainingImage
-      .findOne({ id: imageId })
-      .then(image => {
-        if (!image) return Promise.resolve(null);
-
-        return TrainingImageTagContribution
-          .create({
-            id: uuid(),
-            image: image,
-            user: user,
-            tags: JSON.stringify(tags)
-          })
-          .then(contribution => {
-            // image.takeStatusFromContributions();
-            QueueService.deleteMessage(taskQueueName, messageId, popReceipt, function (error) {
-              if (error) return Promise.reject(error);
-              Promise.resolve(contribution);
-            });
-          });
-      });
   }
 
 }
