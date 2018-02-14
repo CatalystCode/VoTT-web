@@ -136,30 +136,26 @@ module.exports = {
     const messageId = task.id;
     const popReceipt = task.popReceipt;
 
-    return new Promise((resolve, reject) => {
-      TrainingImage
-        .findOne({ id: imageId })
-        .exec(function (error, trainingImage) {
-          if (error) return reject(error);
-          if (!trainingImage) return resolve(null);
+    return TrainingImage
+      .findOne({ id: imageId })
+      .then(image => {
+        if (!image) return Promise.resolve(null);
 
-          TrainingImageTagContribution
-            .create({
-              id: uuid(),
-              image: trainingImage,
-              user: user,
-              tags: JSON.stringify(tags)
-            })
-            .exec(function (error, contribution) {
-              if (error) return reject(error);
-              // trainingImage.takeStatusFromContributions();
-              QueueService.deleteMessage(taskQueueName, messageId, popReceipt, function (error) {
-                if (error) return reject(error);
-                resolve(contribution);
-              });
+        return TrainingImageTagContribution
+          .create({
+            id: uuid(),
+            image: image,
+            user: user,
+            tags: JSON.stringify(tags)
+          })
+          .then(contribution => {
+            // image.takeStatusFromContributions();
+            QueueService.deleteMessage(taskQueueName, messageId, popReceipt, function (error) {
+              if (error) return Promise.reject(error);
+              Promise.resolve(contribution);
             });
-        });
-    });
+          });
+      });
   }
 
 }

@@ -22,8 +22,9 @@ module.exports = {
         const project = req.project;
         const user = req.user;
         const task = req.body;
-        ProjectService.pushTask(project, task, user).then(task => {
-            res.json(task);
+        ProjectService.pushTask(project, task, user).then(taskRecord => {
+            if (!taskRecord) return res.notFound();
+            res.json(taskRecord);
         }).catch(error => {
             res.serverError(error);
         });
