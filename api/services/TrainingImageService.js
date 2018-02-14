@@ -66,7 +66,7 @@ function tagAnalysis(tagsA, tagsB, similarityThreshold) {
       return score > similarityThreshold;
     });
 
-    if (aboveThreshold) {
+    if (aboveThreshold && aboveThreshold.label == element.label) {
       matches.push(element);
     } else {
       mismatches.push(element);
