@@ -120,6 +120,10 @@ angular.module('vott.project-collaborators', [
     $location.path(`/projects/${$routeParams.projectId}/models`);
   };
 
+  $scope.manageTasks = function () {
+    $location.path(`/projects/${$routeParams.projectId}/tasks`);
+  };
+
   $scope.load();
 
 });

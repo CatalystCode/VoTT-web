@@ -96,6 +96,10 @@ angular.module('vott.project-images', [
     $location.path(`/projects/${$routeParams.projectId}/models`);
   };
 
+  $scope.manageTasks = function () {
+    $location.path(`/projects/${$routeParams.projectId}/tasks`);
+  };
+
   $scope.upload = function () {
     $('#uploadDialog').modal({
       backdrop: 'static',

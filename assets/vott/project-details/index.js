@@ -71,6 +71,10 @@ angular.module('vott.project-details', [
         $location.path(`/projects/${$routeParams.projectId}/models`);
     };
 
+    $scope.manageTasks = function() {
+        $location.path(`/projects/${$routeParams.projectId}/tasks`);
+    };
+
     $scope.instructionsImageURL = function() {
         if (!$scope.project.instructionsImageId) {
             return null;

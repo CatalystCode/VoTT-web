@@ -106,6 +106,10 @@ angular.module('vott.project-training', [
     $location.load();
   };
 
+  $scope.manageTasks = function () {
+    $location.path(`/projects/${$routeParams.projectId}/tasks`);
+  };
+
   $scope.load();
 
 });

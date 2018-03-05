@@ -17,6 +17,9 @@
         <li>
           <a href ng-click="manageModels()">Training</a>
         </li>
+        <li>
+          <a href ng-click="manageTasks()">Tasks</a>
+        </li>
       </ul>
     </div>
   </nav>
@@ -46,7 +49,7 @@
   <div class="row list-group">
     <div class="item col-xs-12 col-lg-3" ng-repeat="image in images">
       <div class="thumbnail">
-        <img class="group list-group-image"  style="height: 128px; width: auto;" ng-src="{{image.url}}" />
+        <img class="group list-group-image" style="height: 128px; width: auto;" ng-src="{{image.url}}" />
       </div>
     </div>
   </div>

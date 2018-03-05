@@ -118,6 +118,14 @@ function updateStatusFromContributionsForObjectDetection(project, image, contrib
 }
 
 function updateStatusFromContributionsForImageClassification(project, image, contributions) {
+  const countByLabel = {};
+  contributions.forEach(contribution => {
+    if (countByLabel.hasOwnProperty(contribution.label)) {
+      countByLabel[contribution.label] += 1;
+    } else {
+      countByLabel[contribution.label] = 1;
+    }
+  });
   return Promise.resolve(image.status);
 }
 
@@ -207,9 +215,11 @@ module.exports = {
           })
           .then(contribution => {
             return updateStatusFromContributions(project, image).then(status => {
-              QueueService.deleteMessage(taskQueueName, messageId, popReceipt, function (error) {
-                if (error) return Promise.reject(error);
-                Promise.resolve(contribution);
+              return new Promise((resolve, reject) => {
+                QueueService.deleteMessage(taskQueueName, messageId, popReceipt, function (error) {
+                  if (error) return reject(error);
+                  return resolve(contribution);
+                });
               });
             });
           });

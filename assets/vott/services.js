@@ -139,6 +139,20 @@ angular.module('vott.factories', [])
                     url: `${baseUrl}/trainingRequests/${trainingRequestId}?projectId=${projectId}`
                 });
             },
+            pullTask: function (projectId) {
+                return $http({
+                    method: 'GET',
+                    url: `${baseUrl}/projects/${projectId}/tasks/next`
+                });
+            },
+            //http://localhost:1337/api/vott/v1/projects/a5c931ca-88af-455d-a9e9-b87ba46ede31/tasks/next
+            pushTask: function (projectId, task) {
+                return $http({
+                    method: 'POST',
+                    url: `${baseUrl}/projects/${projectId}/tasks/results`,
+                    data: task
+                });
+            },
             uploadImageToAzureStorageBlob: function (contentType, data, url, successCallback, errorCallback, progressCallback) {
                 $.ajax({
                     url: url,
