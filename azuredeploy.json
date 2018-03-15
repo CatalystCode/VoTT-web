@@ -5,7 +5,7 @@
     "siteName": {
       "type": "string",
       "metadata": {
-        "description": "The name of the web app that you wish to create. Name can only contain lowercase letters or numbers."
+        "description": "The name of the web app that you wish to create. Name must contain only lowercase letters or numbers."
       }
     },
     "hostingPlanName": {
@@ -38,13 +38,13 @@
     "workerSize": {
       "type": "string",
       "allowedValues": [
-        "0",
-        "1",
-        "2"
+        "Small",
+        "Medium",
+        "Large"
       ],
-      "defaultValue": "0",
+      "defaultValue": "Small",
       "metadata": {
-        "description": "The instance size of the hosting plan (small, medium, or large)."
+        "description": "The instance size of the hosting plan."
       }
     },
     "repoURL": {
@@ -66,6 +66,12 @@
     },
     "administratorLoginPassword": {
       "type": "securestring"
+    },
+    "sendgridapikey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Your Sendgrid API key."
+      }
     }
   },
   "resources": [
@@ -104,13 +110,37 @@
           "properties": {
             "RepoUrl": "[parameters('repoURL')]",
             "branch": "[parameters('branch')]",
-            "IsManualIntegration": true
+            "IsManualIntegration": true,
+            "defaultConnection":{  
+              "value":"[concat('Database=postgres', ';Server=', toLower(parameters('siteName'), '.postgres.database.azure.com;User Id=', parameters('administratorLogin'),'@', toLower(parameters('siteName'),';Password=', parameters('administratorLoginPassword'))]",
+              "type":"PostgreSQL"
+           }
           }
         }
-      ]
+      ],
+      "siteConfig": {
+        "appSettings": [
+            {
+                "name": "SENDGRID_API_KEY",
+                "value": "[parameters('sendgridapikey')]"
+            },
+            {
+              "name": "VOTT_JWT_SECRET",
+              "value": "[uniqueString(resourceGroup().id)]"
+            },
+            {
+              "name": "GRAPHIQL_ENABLED",
+              "value": true
+            },
+            {
+              "name": "AZURE_STORAGE_CONNECTION_STRING",
+              "value": "[listKeys(variables('storageid'),'2015-06-15').key1]"
+            }
+        ]
+    }
     },
     {
-      "name": "[parameters('siteName')]",
+      "name": "[toLower(parameters('siteName'))]",
       "type": "Microsoft.DBforPostgreSQL/servers",
       "apiVersion": "2017-04-30-preview",
       "sku": {
