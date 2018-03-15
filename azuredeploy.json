@@ -112,7 +112,7 @@
             "branch": "[parameters('branch')]",
             "IsManualIntegration": true,
             "defaultConnection": {
-              "value": "[concat('Database=postgres', ';Server=', toLower(parameters('siteName'), '.postgres.database.azure.com;User Id=', parameters('administratorLogin'),'@', toLower(parameters('siteName'),';Password=', parameters('administratorLoginPassword'))]",
+              "value": "[concat('Database=postgres;Server=', toLower(parameters('siteName')), '.postgres.database.azure.com;User Id=', parameters('administratorLogin'),'@', toLower(parameters('siteName')),';Password=', parameters('administratorLoginPassword'))]",
               "type": "PostgreSQL"
             },
             "siteConfig": {
