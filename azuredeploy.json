@@ -38,11 +38,11 @@
     "workerSize": {
       "type": "string",
       "allowedValues": [
-        "Small",
-        "Medium",
-        "Large"
+        "0",
+        "1",
+        "2"
       ],
-      "defaultValue": "Small",
+      "defaultValue": "0",
       "metadata": {
         "description": "The instance size of the hosting plan."
       }
