@@ -1,7 +1,7 @@
 # VoTT-web
 Visual Object Tagging Tool: A lightweight and collaborative tool for image tagging.
 
-# Development Setup
+## Development Setup
 First make sure you have a `.env` file created and that it includes the following key pairs:
 
 ```
@@ -22,3 +22,7 @@ docker-compose up
 npm start
 ```
 
+## Deploy to Azure
+Click this button to deploy web app and resources to Azure. 
+
+[![Deploy to Azure](https://azuredeploy.net/deploybutton.svg)](https://azuredeploy.net/)
