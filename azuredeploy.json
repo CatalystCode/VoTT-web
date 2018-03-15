@@ -128,10 +128,6 @@
                 {
                   "name": "GRAPHIQL_ENABLED",
                   "value": true
-                },
-                {
-                  "name": "AZURE_STORAGE_CONNECTION_STRING",
-                  "value": "[listKeys(variables('storageid'),'2015-06-15').key1]"
                 }
               ]
             }
