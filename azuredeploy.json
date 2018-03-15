@@ -111,33 +111,33 @@
             "RepoUrl": "[parameters('repoURL')]",
             "branch": "[parameters('branch')]",
             "IsManualIntegration": true,
-            "defaultConnection":{  
-              "value":"[concat('Database=postgres', ';Server=', toLower(parameters('siteName'), '.postgres.database.azure.com;User Id=', parameters('administratorLogin'),'@', toLower(parameters('siteName'),';Password=', parameters('administratorLoginPassword'))]",
-              "type":"PostgreSQL"
-           }
+            "defaultConnection": {
+              "value": "[concat('Database=postgres', ';Server=', toLower(parameters('siteName'), '.postgres.database.azure.com;User Id=', parameters('administratorLogin'),'@', toLower(parameters('siteName'),';Password=', parameters('administratorLoginPassword'))]",
+              "type": "PostgreSQL"
+            },
+            "siteConfig": {
+              "appSettings": [
+                {
+                  "name": "SENDGRID_API_KEY",
+                  "value": "[parameters('sendgridapikey')]"
+                },
+                {
+                  "name": "VOTT_JWT_SECRET",
+                  "value": "[uniqueString(resourceGroup().id)]"
+                },
+                {
+                  "name": "GRAPHIQL_ENABLED",
+                  "value": true
+                },
+                {
+                  "name": "AZURE_STORAGE_CONNECTION_STRING",
+                  "value": "[listKeys(variables('storageid'),'2015-06-15').key1]"
+                }
+              ]
+            }
           }
         }
-      ],
-      "siteConfig": {
-        "appSettings": [
-            {
-                "name": "SENDGRID_API_KEY",
-                "value": "[parameters('sendgridapikey')]"
-            },
-            {
-              "name": "VOTT_JWT_SECRET",
-              "value": "[uniqueString(resourceGroup().id)]"
-            },
-            {
-              "name": "GRAPHIQL_ENABLED",
-              "value": true
-            },
-            {
-              "name": "AZURE_STORAGE_CONNECTION_STRING",
-              "value": "[listKeys(variables('storageid'),'2015-06-15').key1]"
-            }
-        ]
-    }
+      ]
     },
     {
       "name": "[toLower(parameters('siteName'))]",
@@ -149,8 +149,8 @@
         "capacity": "100"
       },
       "properties": {
-          "administratorLogin": "[parameters('administratorLogin')]",
-          "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
+        "administratorLogin": "[parameters('administratorLogin')]",
+        "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
       },
       "location": "[resourceGroup().location]",
       "tags": {},
