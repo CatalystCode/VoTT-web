@@ -1,6 +1,10 @@
 {
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
+  "variables": {
+    "storageName": "[concat(toLower(parameters('siteName')), 'storage']",
+    "storageAccountId": "[concat(resourceGroup().id,'/providers/Microsoft.Storage/storageAccounts/', variables('storageName'))]"
+  },
   "parameters": {
     "siteName": {
       "type": "string",
@@ -76,6 +80,14 @@
   },
   "resources": [
     {
+      "name": "[variables('storageName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2017-10-01",
+      "sku": {
+        "name": "Standard_LRS"
+      }
+    },
+    {
       "apiVersion": "2015-08-01",
       "name": "[parameters('hostingPlanName')]",
       "type": "Microsoft.Web/serverfarms",
@@ -128,6 +140,10 @@
                 {
                   "name": "GRAPHIQL_ENABLED",
                   "value": true
+                },
+                {
+                  "name": "AZURE_STORAGE_CONNECTION_STRING",
+                  "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageName'),';AccountKey=',concat(listKeys(variables('storageAccountId'),'2015-05-01-preview').key1))]"
                 }
               ]
             }
