@@ -154,14 +154,14 @@
       "resources": []
     },
     {
-      "name": "[concat(tolower(parameters('siteName')), 'storage')]",
+      "name": "[tolower(parameters('siteName'))]",
       "type": "Microsoft.Storage/storageAccounts",
       "kind": "StorageV2",
-      "apiVersion": "2017-10-01",
+      "apiVersion": "2016-01-01",
       "sku": {
         "name": "Standard_LRS"
       },
-      "location": "East US",
+      "location": "[resourceGroup().location]",
       "tags": {},
       "properties": {}
     }
