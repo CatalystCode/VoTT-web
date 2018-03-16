@@ -6,6 +6,28 @@
     "storageAccountId": "[concat(resourceGroup().id,'/providers/Microsoft.Storage/storageAccounts/', variables('storageName'))]"
   },
   "parameters": {
+    "location": {
+      "type": "string",
+      "allowedValues": [
+        "Brazil South",
+        "Canada Central",
+        "Canada East",
+        "Central India",
+        "East Asia",
+        "East US",
+        "East US 2",
+        "Japan East",
+        "Japan West",
+        "North Central US",
+        "North Europe",
+        "South Central US",
+        "Southeast Asia",
+        "West Europe",
+        "West India",
+        "West US"
+      ],
+      "defaultValue": "East US"
+    },
     "siteName": {
       "type": "string",
       "metadata": {
@@ -72,10 +94,7 @@
       "type": "securestring"
     },
     "sendgridApiKey": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Your Sendgrid API key."
-      }
+      "type": "securestring"
     }
   },
   "resources": [
@@ -85,13 +104,14 @@
       "apiVersion": "2017-10-01",
       "sku": {
         "name": "Standard_LRS"
-      }
+      },
+      "location": "parameters('location')"
     },
     {
       "apiVersion": "2015-08-01",
       "name": "[parameters('hostingPlanName')]",
       "type": "Microsoft.Web/serverfarms",
-      "location": "[resourceGroup().location]",
+      "location": "parameters('location')",
       "sku": {
         "name": "[parameters('sku')]",
         "capacity": "[parameters('workerSize')]"
@@ -104,7 +124,7 @@
       "apiVersion": "2015-08-01",
       "name": "[parameters('siteName')]",
       "type": "Microsoft.Web/sites",
-      "location": "[resourceGroup().location]",
+      "location": "parameters('location')",
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]"
       ],
@@ -164,7 +184,7 @@
         "administratorLogin": "[parameters('administratorLogin')]",
         "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
       },
-      "location": "[resourceGroup().location]",
+      "location": "parameters('location')",
       "tags": {},
       "resources": []
     }
