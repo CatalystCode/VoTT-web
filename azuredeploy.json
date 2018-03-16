@@ -161,7 +161,6 @@
       "sku": {
         "name": "Standard_LRS"
       },
-      "location": "[resourceGroup().location]",
       "tags": {},
       "properties": {}
     }
