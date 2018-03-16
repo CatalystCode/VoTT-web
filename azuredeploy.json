@@ -154,7 +154,7 @@
       "resources": []
     },
     {
-      "name": "[concat(tolower(parameters('siteName')), storage)]",
+      "name": "[concat(tolower(parameters('siteName')), 'storage')]",
       "type": "Microsoft.Storage/storageAccounts",
       "kind": "StorageV2",
       "apiVersion": "2017-10-01",
