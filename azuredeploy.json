@@ -161,7 +161,7 @@
       "sku": {
         "name": "Standard_LRS"
       },
-      "location": "eastus",
+      "location": "East US",
       "tags": {},
       "properties": {}
     }
