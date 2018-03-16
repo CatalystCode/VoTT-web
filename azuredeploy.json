@@ -161,6 +161,7 @@
       "sku": {
         "name": "Standard_LRS"
       },
+      "location": "eastus",
       "tags": {},
       "properties": {}
     }
