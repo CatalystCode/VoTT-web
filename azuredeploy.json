@@ -156,7 +156,7 @@
     {
       "name": "[tolower(parameters('siteName'))]",
       "type": "Microsoft.Storage/storageAccounts",
-      "kind": "StorageV2",
+      "kind": "Storage",
       "apiVersion": "2016-01-01",
       "sku": {
         "name": "Standard_LRS"
