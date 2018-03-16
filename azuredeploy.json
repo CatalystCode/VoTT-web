@@ -2,7 +2,7 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "variables": {
-    "storageName": "[concat(toLower(parameters('siteName')), 'storage']",
+    "storageName": "[concat(toLower(parameters('siteName')), 'storage')]",
     "storageAccountId": "[concat(resourceGroup().id,'/providers/Microsoft.Storage/storageAccounts/', variables('storageName'))]"
   },
   "parameters": {
@@ -71,7 +71,7 @@
     "administratorLoginPassword": {
       "type": "securestring"
     },
-    "sendgridapikey": {
+    "sendgridApiKey": {
       "type": "securestring",
       "metadata": {
         "description": "Your Sendgrid API key."
@@ -131,7 +131,7 @@
               "appSettings": [
                 {
                   "name": "SENDGRID_API_KEY",
-                  "value": "[parameters('sendgridapikey')]"
+                  "value": "[parameters('sendgridApiKey')]"
                 },
                 {
                   "name": "VOTT_JWT_SECRET",
