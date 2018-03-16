@@ -6,7 +6,7 @@
     "storageAccountId": "[concat(resourceGroup().id,'/providers/Microsoft.Storage/storageAccounts/', variables('storageName'))]"
   },
   "parameters": {
-    "deploymentLocation": {
+    "location": {
       "type": "string",
       "allowedValues": [
         "Brazil South",
@@ -105,13 +105,13 @@
       "sku": {
         "name": "Standard_LRS"
       },
-      "location": "[parameters('deploymentLocation')]"
+      "location": "[resourceGroup().location]"
     },
     {
       "apiVersion": "2015-08-01",
       "name": "[parameters('hostingPlanName')]",
       "type": "Microsoft.Web/serverfarms",
-      "location": "[parameters('deploymentLocation')]",
+      "location": "[resourceGroup().location]",
       "sku": {
         "name": "[parameters('sku')]",
         "capacity": "[parameters('workerSize')]"
@@ -124,7 +124,7 @@
       "apiVersion": "2015-08-01",
       "name": "[parameters('siteName')]",
       "type": "Microsoft.Web/sites",
-      "location": "[parameters('deploymentLocation')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]"
       ],
@@ -184,7 +184,7 @@
         "administratorLogin": "[parameters('administratorLogin')]",
         "administratorLoginPassword": "[parameters('administratorLoginPassword')]"
       },
-      "location": "[parameters('deploymentLocation')]",
+      "location": "[resourceGroup().location]",
       "tags": {},
       "resources": []
     }
