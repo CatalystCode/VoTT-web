@@ -1,10 +1,6 @@
 {
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "variables": {
-    "storageName": "[concat(toLower(parameters('siteName')), 'storage')]",
-    "storageAccountId": "[concat(resourceGroup().id,'/providers/Microsoft.Storage/storageAccounts/', variables('storageName'))]"
-  },
   "parameters": {
     "siteName": {
       "type": "string",
@@ -74,6 +70,10 @@
     "sendgridApiKey": {
       "type": "securestring"
     }
+  },
+  "variables": {
+    "storageName": "[concat(toLower(parameters('siteName')), 'storage')]",
+    "storageAccountId": "[concat(resourceGroup().id,'/providers/Microsoft.Storage/storageAccounts/', variables('storageName'))]"
   },
   "resources": [
     {
@@ -156,6 +156,18 @@
       "location": "[resourceGroup().location]",
       "tags": {},
       "resources": []
+    },
+    {
+      "name": "[variables('storageName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "kind": "Storage",
+      "apiVersion": "2017-10-01",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "location": "East US",
+      "tags": {},
+      "properties": {}
     }
   ]
 }
