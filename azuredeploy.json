@@ -128,7 +128,7 @@
                 },
                 {
                   "name": "AZURE_STORAGE_CONNECTION_STRING",
-                  "value": "test"
+                  "value": "[Concat('DefaultEndpointsProtocol=https;AccountName=',tolower(parameters('siteName')),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', tolower(parameters('siteName'))), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value)]"
                 }
               ]
             }
