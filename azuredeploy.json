@@ -96,6 +96,12 @@
       "properties": {
         "serverFarmId": "[parameters('hostingPlanName')]",
         "siteConfig": {
+          "connectionStrings": [
+            {
+              "name": "defaultConnection",
+              "value": "[concat('Database=postgres;Server=', toLower(parameters('siteName')), '.postgres.database.azure.com;User Id=', parameters('administratorLogin'),'@', toLower(parameters('siteName')),';Password=', parameters('administratorLoginPassword'))]"
+            }
+          ],
           "appSettings": [
             {
               "name": "SENDGRID_API_KEY",
@@ -108,6 +114,10 @@
             {
               "name": "GRAPHIQL_ENABLED",
               "value": "true"
+            },
+            {
+              "name": "WEBSITE_NODE_DEFAULT_VERSION",
+              "value": "7.0.0"
             },
             {
               "name": "AZURE_STORAGE_CONNECTION_STRING",
@@ -127,11 +137,7 @@
           "properties": {
             "RepoUrl": "[parameters('repoURL')]",
             "branch": "[parameters('branch')]",
-            "IsManualIntegration": true,
-            "defaultConnection": {
-              "value": "[concat('Database=postgres;Server=', toLower(parameters('siteName')), '.postgres.database.azure.com;User Id=', parameters('administratorLogin'),'@', toLower(parameters('siteName')),';Password=', parameters('administratorLoginPassword'))]",
-              "type": "PostgreSQL"
-            }
+            "IsManualIntegration": true
           }
         }
       ]
