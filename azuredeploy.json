@@ -95,6 +95,25 @@
       ],
       "properties": {
         "serverFarmId": "[parameters('hostingPlanName')]",
+        "resources": [
+          {
+            "apiVersion": "2015-08-01",
+            "name": "web",
+            "type": "sourcecontrols",
+            "dependsOn": [
+              "[resourceId('Microsoft.Web/Sites', parameters('siteName'))]"
+            ],
+            "properties": {
+              "RepoUrl": "[parameters('repoURL')]",
+              "branch": "[parameters('branch')]",
+              "IsManualIntegration": true,
+              "defaultConnection": {
+                "value": "[concat('Database=postgres;Server=', toLower(parameters('siteName')), '.postgres.database.azure.com;User Id=', parameters('administratorLogin'),'@', toLower(parameters('siteName')),';Password=', parameters('administratorLoginPassword'))]",
+                "type": "PostgreSQL"
+              }
+            }
+          }
+        ],
         "siteConfig": {
           "appSettings": [
             {
@@ -115,26 +134,7 @@
             }
           ]
         }
-      },
-      "resources": [
-        {
-          "apiVersion": "2015-08-01",
-          "name": "web",
-          "type": "sourcecontrols",
-          "dependsOn": [
-            "[resourceId('Microsoft.Web/Sites', parameters('siteName'))]"
-          ],
-          "properties": {
-            "RepoUrl": "[parameters('repoURL')]",
-            "branch": "[parameters('branch')]",
-            "IsManualIntegration": true,
-            "defaultConnection": {
-              "value": "[concat('Database=postgres;Server=', toLower(parameters('siteName')), '.postgres.database.azure.com;User Id=', parameters('administratorLogin'),'@', toLower(parameters('siteName')),';Password=', parameters('administratorLoginPassword'))]",
-              "type": "PostgreSQL"
-            }
-          }
-        }
-      ]
+      }
     },
     {
       "name": "[toLower(parameters('siteName'))]",
