@@ -91,7 +91,8 @@
       "type": "Microsoft.Web/sites",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]"
+        "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
+        "[resourceId('Microsoft.DBforPostgreSQL/servers/', [toLower(parameters('siteName'))]"
       ],
       "properties": {
         "serverFarmId": "[parameters('hostingPlanName')]",
@@ -99,7 +100,8 @@
           "connectionStrings": [
             {
               "name": "defaultConnection",
-              "value": "[concat('Database=postgres;Server=', toLower(parameters('siteName')), '.postgres.database.azure.com;User Id=', parameters('administratorLogin'),'@', toLower(parameters('siteName')),';Password=', parameters('administratorLoginPassword'))]"
+              "value": "[concat('Database=postgres;Server=', toLower(parameters('siteName')), '.postgres.database.azure.com;User Id=', parameters('administratorLogin'),'@', toLower(parameters('siteName')),';Password=', parameters('administratorLoginPassword'))]",
+              "type": "PostgreSQL"
             }
           ],
           "appSettings": [
