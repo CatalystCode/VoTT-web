@@ -86,7 +86,7 @@
       }
     },
     {
-      "apiVersion": "2015-08-01",
+      "apiVersion": "2016-08-01",
       "name": "[parameters('siteName')]",
       "type": "Microsoft.Web/sites",
       "location": "[resourceGroup().location]",
@@ -94,40 +94,27 @@
         "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]"
       ],
       "properties": {
-        "serverFarmId": "[parameters('hostingPlanName')]"
-      },
-      "resources": [
-        {
-          "apiVersion": "2015-08-01",
-          "name": "web",
-          "type": "sourcecontrols",
-          "dependsOn": [
-            "[resourceId('Microsoft.Web/Sites', parameters('siteName'))]"
-          ],
-          "properties": {
-            "RepoUrl": "[parameters('repoURL')]",
-            "branch": "[parameters('branch')]",
-            "IsManualIntegration": true,
-            "defaultConnection": {
-              "value": "[concat('Database=postgres;Server=', toLower(parameters('siteName')), '.postgres.database.azure.com;User Id=', parameters('administratorLogin'),'@', toLower(parameters('siteName')),';Password=', parameters('administratorLoginPassword'))]",
-              "type": "PostgreSQL"
+        "serverFarmId": "[parameters('hostingPlanName')]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "SENDGRID_API_KEY",
+              "value": "[parameters('sendgridApiKey')]"
+            },
+            {
+              "name": "VOTT_JWT_SECRET",
+              "value": "[uniqueString(resourceGroup().id)]"
+            },
+            {
+              "name": "GRAPHIQL_ENABLED",
+              "value": "true"
+            },
+            {
+              "name": "AZURE_STORAGE_CONNECTION_STRING",
+              "value": "[Concat('DefaultEndpointsProtocol=https;AccountName=',tolower(parameters('siteName')),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', tolower(parameters('siteName'))), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value)]"
             }
-          }
+          ]
         }
-      ]
-    },
-    {
-      "apiVersion": "2015-08-01",
-      "name": "appsettings",
-      "type": "config",
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/Sites', parameters('siteName'))]"
-      ],
-      "properties": {
-        "SENDGRID_API_KEY": "[parameters('sendgridApiKey')]",
-        "VOTT_JWT_SECRET": "[uniqueString(resourceGroup().id)]",
-        "GRAPHIQL_ENABLED": true,
-        "AZURE_STORAGE_CONNECTION_STRING": "[Concat('DefaultEndpointsProtocol=https;AccountName=',tolower(parameters('siteName')),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', tolower(parameters('siteName'))), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value)]"
       }
     },
     {
