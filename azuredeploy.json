@@ -159,7 +159,7 @@
             },
             {
               "name": "WEBSITE_HOSTNAME",
-              "value": "[Concat('https://',tolower(parameters('siteName')),'azurewebsites.net)]"
+              "value": "[Concat('https://',tolower(parameters('siteName')),'azurewebsites.net')]"
             }
           ]
         }
