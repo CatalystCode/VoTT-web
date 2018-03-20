@@ -190,8 +190,8 @@
         "capacity": "100"
       },
       "properties": {
-        "postgresAdminUsername": "[parameters('postgresAdminUsername')]",
-        "postgresAdminPassword": "[parameters('postgresAdminPassword')]"
+        "administratorLogin": "[parameters('postgresAdminUsername')]",
+        "administratorLoginPassword": "[parameters('postgresAdminPassword')]"
       },
       "location": "[resourceGroup().location]",
       "tags": {},
