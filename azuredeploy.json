@@ -213,7 +213,7 @@
       "properties": {
         "administratorLogin": "[parameters('postgresAdminUsername')]",
         "administratorLoginPassword": "[parameters('postgresAdminPassword')]",
-        "sslEnforcement": false
+        "sslEnforcement": "Disabled"
       },
       "location": "[parameters('resourceLocation')]",
       "tags": {},
