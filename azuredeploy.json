@@ -152,7 +152,7 @@
             },
             {
               "name": "PG_HOST",
-              "value": "[Concat(variables('siteNameClean'), '.postgres.database.azure.com)]"
+              "value": "[Concat(variables('siteNameClean'), '.postgres.database.azure.com')]"
             },
             {
               "name": "PG_USER",
