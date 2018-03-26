@@ -122,7 +122,7 @@
           "connectionStrings": [
             {
               "name": "defaultConnection",
-              "value": "[Concat('Database=postgres;Server=', variables('siteNameClean'), '.postgres.database.azure.com;User Id=', parameters('postgresAdminUsername'),'@', variables('siteNameClean'),';Password=', parameters('postgresAdminPassword'))]",
+              "value": "[Concat('Database=postgres;Server=',variables('siteNameClean'),'.postgres.database.azure.com;User Id=',parameters('postgresAdminUsername'),'@',variables('siteNameClean'),';Password=',parameters('postgresAdminPassword'))]",
               "type": "PostgreSQL"
             }
           ],
@@ -161,7 +161,7 @@
             },
             {
               "name": "PG_PASSWORD",
-              "value": "parameters('postgresAdminPassword')"
+              "value": "[parameters('postgresAdminPassword')]"
             },
             {
               "name": "GRAPHIQL_ENABLED",
@@ -184,7 +184,7 @@
           "name": "web",
           "type": "sourcecontrols",
           "dependsOn": [
-            "[resourceId('Microsoft.Web/Sites', variables('siteNameClean'))]"
+            "[Concat('Microsoft.Web/Sites', variables('siteNameClean'))]"
           ],
           "properties": {
             "RepoUrl": "[parameters('repoURL')]",
