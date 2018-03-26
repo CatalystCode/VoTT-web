@@ -205,7 +205,6 @@
       "name": "[variables('siteNameClean')]",
       "type": "Microsoft.DBforPostgreSQL/servers",
       "apiVersion": "2017-04-30-preview",
-      "sslEnforcement": "disabled",
       "sku": {
         "name": "PGSQLS100",
         "tier": "Standard",
@@ -213,7 +212,8 @@
       },
       "properties": {
         "administratorLogin": "[parameters('postgresAdminUsername')]",
-        "administratorLoginPassword": "[parameters('postgresAdminPassword')]"
+        "administratorLoginPassword": "[parameters('postgresAdminPassword')]",
+        "sslEnforcement": false
       },
       "location": "[parameters('resourceLocation')]",
       "tags": {},
