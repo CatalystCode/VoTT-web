@@ -1,6 +1,10 @@
 {
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
+  "variables": {
+    "siteNameClean": "[toLower(replace(variables('siteNameClean'),'-', ''))]",
+    "hostingPlanName": "[Concat(variables('siteNameClean'), '-rg']"
+},
   "parameters": {
     "siteName": {
       "type": "string",
@@ -8,11 +12,12 @@
         "description": "The name of the web app that you wish to create. Name must contain only lowercase letters or numbers."
       }
     },
-    "hostingPlanName": {
+    "resourceLocation": {
       "type": "string",
-      "metadata": {
-        "description": "The name of the App Service plan to use for hosting the web app."
-      }
+      "allowedValues": [
+        "East US",
+        "West US"
+      ]
     },
     "sku": {
       "type": "string",
@@ -90,7 +95,7 @@
   "resources": [
     {
       "apiVersion": "2015-08-01",
-      "name": "[parameters('hostingPlanName')]",
+      "name": "[variables('hostingPlanName')]",
       "type": "Microsoft.Web/serverfarms",
       "location": "[resourceGroup().location]",
       "sku": {
@@ -98,25 +103,25 @@
         "capacity": "[parameters('workerSize')]"
       },
       "properties": {
-        "name": "[parameters('hostingPlanName')]"
+        "name": "[variables('hostingPlanName')]"
       }
     },
     {
       "apiVersion": "2015-08-01",
-      "name": "[parameters('siteName')]",
+      "name": "[variables('siteNameClean')]",
       "type": "Microsoft.Web/sites",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
-        "[resourceId('Microsoft.DBforPostgreSQL/servers/', toLower(parameters('siteName')))]"
+        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "[resourceId('Microsoft.DBforPostgreSQL/servers/', variables('siteNameClean'))]"
       ],
       "properties": {
-        "serverFarmId": "[parameters('hostingPlanName')]",
+        "serverFarmId": "[variables('hostingPlanName')]",
         "siteConfig": {
           "connectionStrings": [
             {
               "name": "defaultConnection",
-              "value": "[concat('Database=postgres;Server=', toLower(parameters('siteName')), '.postgres.database.azure.com;User Id=', parameters('postgresAdminUsername'),'@', toLower(parameters('siteName')),';Password=', parameters('postgresAdminPassword'))]",
+              "value": "[Concat('Database=postgres;Server=', variables('siteNameClean'), '.postgres.database.azure.com;User Id=', parameters('postgresAdminUsername'),'@', variables('siteNameClean'),';Password=', parameters('postgresAdminPassword'))]",
               "type": "PostgreSQL"
             }
           ],
@@ -146,6 +151,18 @@
               "value": "[uniqueString(resourceGroup().id)]"
             },
             {
+              "name": "PG_HOST",
+              "value": "[Concat(variables('siteNameClean'), '.postgres.database.azure.com)]"
+            },
+            {
+              "name": "PG_USER",
+              "value": "[Concat(parameters('postgresAdminUsername'),'@', variables('siteNameClean'))]"
+            },
+            {
+              "name": "PG_PASSWORD",
+              "value": "parameters('postgresAdminPassword')"
+            },
+            {
               "name": "GRAPHIQL_ENABLED",
               "value": "true"
             },
@@ -155,7 +172,7 @@
             },
             {
               "name": "AZURE_STORAGE_CONNECTION_STRING",
-              "value": "[Concat('DefaultEndpointsProtocol=https;AccountName=',tolower(parameters('siteName')),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', tolower(parameters('siteName'))), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value)]"
+              "value": "[Concat('DefaultEndpointsProtocol=https;AccountName=',variables('siteNameClean'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('siteNameClean')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value)]"
             }
           ]
         }
@@ -166,7 +183,7 @@
           "name": "web",
           "type": "sourcecontrols",
           "dependsOn": [
-            "[resourceId('Microsoft.Web/Sites', parameters('siteName'))]"
+            "[resourceId('Microsoft.Web/Sites', variables('siteNameClean'))]"
           ],
           "properties": {
             "RepoUrl": "[parameters('repoURL')]",
@@ -177,7 +194,7 @@
       ]
     },
     {
-      "name": "[toLower(parameters('siteName'))]",
+      "name": "[variables('siteNameClean')]",
       "type": "Microsoft.DBforPostgreSQL/servers",
       "apiVersion": "2017-04-30-preview",
       "sku": {
@@ -191,10 +208,24 @@
       },
       "location": "[resourceGroup().location]",
       "tags": {},
-      "resources": []
+      "resources": [
+        {
+          "type": "firewallrules",
+          "apiVersion": "2016-02-01-privatepreview",
+          "dependsOn": [
+              "[concat('Microsoft.DBforPostgreSQL/servers/', variables('siteName'))]"
+          ],
+          "location": "[resourceGroup().location]",
+          "name": "[concat(variables('siteName'),'firewall')]",
+          "properties": {
+              "startIpAddress": "0.0.0.0",
+              "endIpAddress": "255.255.255.255"
+          }
+        }
+      ]
     },
     {
-      "name": "[tolower(parameters('siteName'))]",
+      "name": "[variables('siteNameClean')]",
       "type": "Microsoft.Storage/storageAccounts",
       "kind": "Storage",
       "apiVersion": "2016-01-01",
