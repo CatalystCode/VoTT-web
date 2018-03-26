@@ -190,7 +190,7 @@
           "name":"connectionstrings",
           "type":"config",
           "dependsOn":[  
-             "[concat('Microsoft.Web/sites/', parameters('siteName'))]"
+             "[concat('Microsoft.Web/sites/', variables('siteNameClean'))]"
           ],
           "properties":{  
              "defaultConnection":{  
