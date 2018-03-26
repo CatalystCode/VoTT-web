@@ -213,10 +213,10 @@
           "type": "firewallrules",
           "apiVersion": "2016-02-01-privatepreview",
           "dependsOn": [
-              "[concat('Microsoft.DBforPostgreSQL/servers/', variables('siteName'))]"
+              "[concat('Microsoft.DBforPostgreSQL/servers/', variables('siteNameClean'))]"
           ],
           "location": "[parameters('resourceLocation')]",
-          "name": "[concat(variables('siteName'),'firewall')]",
+          "name": "[concat(variables('siteNameClean'),'firewall')]",
           "properties": {
               "startIpAddress": "0.0.0.0",
               "endIpAddress": "255.255.255.255"
