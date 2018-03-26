@@ -184,7 +184,7 @@
           "name": "web",
           "type": "sourcecontrols",
           "dependsOn": [
-            "[Concat('Microsoft.Web/Sites', variables('siteNameClean'))]"
+            "[Concat('Microsoft.Web/Sites/', variables('siteNameClean'))]"
           ],
           "properties": {
             "RepoUrl": "[parameters('repoURL')]",
