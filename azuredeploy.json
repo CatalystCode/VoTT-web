@@ -97,7 +97,7 @@
       "apiVersion": "2015-08-01",
       "name": "[variables('hostingPlanName')]",
       "type": "Microsoft.Web/serverfarms",
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('resourceLocation')]",
       "sku": {
         "name": "[parameters('sku')]",
         "capacity": "[parameters('workerSize')]"
@@ -110,7 +110,7 @@
       "apiVersion": "2015-08-01",
       "name": "[variables('siteNameClean')]",
       "type": "Microsoft.Web/sites",
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('resourceLocation')]",
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
         "[resourceId('Microsoft.DBforPostgreSQL/servers/', variables('siteNameClean'))]"
@@ -206,7 +206,7 @@
         "administratorLogin": "[parameters('postgresAdminUsername')]",
         "administratorLoginPassword": "[parameters('postgresAdminPassword')]"
       },
-      "location": "[resourceGroup().location]",
+      "location": "[parameters('resourceLocation')]",
       "tags": {},
       "resources": [
         {
@@ -215,7 +215,7 @@
           "dependsOn": [
               "[concat('Microsoft.DBforPostgreSQL/servers/', variables('siteName'))]"
           ],
-          "location": "[resourceGroup().location]",
+          "location": "[parameters('resourceLocation')]",
           "name": "[concat(variables('siteName'),'firewall')]",
           "properties": {
               "startIpAddress": "0.0.0.0",
