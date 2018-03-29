@@ -27,6 +27,7 @@
     "jsonwebtoken": "^8.1.1",
     "mocha": "^5.0.0",
     "pg": "^7.4.1",
+    "pg-format": "^1.0.4",
     "pg-pool": "^2.0.3",
     "qrcode": "^1.2.0",
     "rbush": "^2.0.2",
@@ -41,7 +42,7 @@
   "scripts": {
     "debug": "node debug app.js",
     "start": "node app.js",
-    "postinstall": "node_modules/.bin/bower install",
+    "postinstall": "node_modules/.bin/bower install && node migrations/setup.js",
     "test": "node ./node_modules/mocha/bin/mocha test/bootstrap.test.js test/integration/**/*.test.js"
   },
   "main": "app.js",
