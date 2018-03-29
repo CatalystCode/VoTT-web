@@ -42,7 +42,7 @@
   "scripts": {
     "debug": "node debug app.js",
     "start": "node app.js",
-    "postinstall": "node_modules/.bin/bower install",
+    "postinstall": "node_modules/.bin/bower install && node migrations/setup.js",
     "test": "node ./node_modules/mocha/bin/mocha test/bootstrap.test.js test/integration/**/*.test.js"
   },
   "main": "app.js",
