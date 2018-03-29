@@ -18,7 +18,7 @@ module.exports = {
    ***************************************************************************/
 
   models: {
-    migrate: 'alter',
+    connection: 'azurePostgresqlServer'
   }
 
 };
