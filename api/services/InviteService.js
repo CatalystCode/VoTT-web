@@ -45,7 +45,7 @@ function createInviteForDefaultAdmin() {
   return User.findOrCreateDefaultAdmin().then(user => {
     return AccessRight.findOrCreate(
       { user: user.id, role: 'project-manager', project: null },
-      { user: user.id, role: 'project-manager', project: null }
+      { id: uuid(), user: user.id, role: 'project-manager', project: null }
     ).then(right => {
       return Invite.create({ id: uuid(), user: user }).then(invite => {
         return new Promise((resolve, reject) => {
