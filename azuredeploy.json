@@ -3,21 +3,13 @@
   "contentVersion": "1.0.0.0",
   "variables": {
     "siteNameClean": "[toLower(replace(parameters('siteName'),'-', ''))]",
-    "hostingPlanName": "[variables('siteNameClean')]"
+    "hostingPlanName": "[Concat(variables('siteNameClean'), '-rg')]"
 },
   "parameters": {
     "siteName": {
       "type": "string",
-      "defaultValue": "[variables('siteNameClean')]",
       "metadata": {
         "description": "The name of the web app that you wish to create. Name must contain only lowercase letters or numbers."
-      }
-    },
-    "resourceGroupName": {
-      "type": "string",
-      "defaultValue": "[Concat(variables('siteNameClean'), '-rg']",
-      "metadata": {
-        "description": "The name of the resource group that you wish to create."
       }
     },
     "resourceLocation": {
@@ -240,7 +232,7 @@
       "sku": {
         "name": "Standard_LRS"
       },
-      "location": "[parameters('resourceLocation')]",
+      "location": "East US",
       "tags": {},
       "properties": {}
     }
