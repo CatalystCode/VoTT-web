@@ -144,7 +144,7 @@
             },
             {
               "name": "PG_HOST",
-              "value": "[Concat(toLower(parameters('siteName')), '.postgres.database.azure.com)]"
+              "value": "[Concat(toLower(parameters('siteName')), '.postgres.database.azure.com)']"
             },
             {
               "name": "PG_USER",
