@@ -119,6 +119,13 @@
       "properties": {
         "serverFarmId": "[variables('hostingPlanName')]",
         "siteConfig": {
+          "connectionStrings": [
+            {
+              "name": "defaultConnection",
+              "value": "[Concat('Database=postgres;Server=',variables('siteNameClean'),'.postgres.database.azure.com;User Id=',parameters('postgresAdminUsername'),'@',variables('siteNameClean'),';Password=',parameters('postgresAdminPassword'))]",
+              "type": "PostgreSQL"
+            }
+          ],
           "appSettings": [
             {
               "name": "SENDGRID_API_KEY",
@@ -184,21 +191,7 @@
             "branch": "[parameters('branch')]",
             "IsManualIntegration": true
           }
-        },
-        {  
-          "apiVersion":"2015-04-01",
-          "name":"connectionstrings",
-          "type":"config",
-          "dependsOn":[  
-             "[concat('Microsoft.Web/sites/', parameters('siteName'))]"
-          ],
-          "properties":{  
-             "defaultConnection":{  
-                "value":"[concat('Database=postgres;Server=', variables('siteNameClean'), '.postgres.database.azure.com;User Id=', parameters('postgresAdminUsername'),'@',variables('siteNameClean'),';Password=',parameters('postgresAdminPassword'))]",
-                "type":"PostgreSQL"
-             }
-          }
-       }
+        }
       ]
     },
     {
