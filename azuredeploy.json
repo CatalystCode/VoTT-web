@@ -113,7 +113,7 @@
           "connectionStrings": [
             {
               "name": "defaultConnection",
-              "value": "[Concat('Database=postgres;Server=', toLower(parameters('siteName')), '.postgres.database.azure.com;User Id=', parameters('postgresAdminUsername'),'@', variables('siteNameClean'),';Password=', parameters('postgresAdminPassword'))]",
+              "value": "[Concat('Database=postgres;Server=', toLower(parameters('siteName')), '.postgres.database.azure.com;User Id=', parameters('postgresAdminUsername'),'@', toLower(parameters('siteName')),';Password=', parameters('postgresAdminPassword'))]",
               "type": "PostgreSQL"
             }
           ],
@@ -144,11 +144,11 @@
             },
             {
               "name": "PG_HOST",
-              "value": "[Concat(variables('siteNameClean'), '.postgres.database.azure.com)]"
+              "value": "[Concat(toLower(parameters('siteName')), '.postgres.database.azure.com)]"
             },
             {
               "name": "PG_USER",
-              "value": "[Concat(parameters('postgresAdminUsername'),'@', variables('siteNameClean'))]"
+              "value": "[Concat(parameters('postgresAdminUsername'),'@', toLower(parameters('siteName')))]"
             },
             {
               "name": "PG_PASSWORD",
@@ -217,7 +217,7 @@
       ]
     },
     {
-      "name": "[toLower(parameters('siteNameClean'))]",
+      "name": "[toLower(parameters('siteName'))]",
       "type": "Microsoft.Storage/storageAccounts",
       "kind": "Storage",
       "apiVersion": "2016-01-01",
