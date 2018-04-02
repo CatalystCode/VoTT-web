@@ -205,10 +205,10 @@
           "type": "firewallrules",
           "apiVersion": "2016-02-01-privatepreview",
           "dependsOn": [
-              "[concat('Microsoft.DBforPostgreSQL/servers/', variables('siteName'))]"
+              "[concat('Microsoft.DBforPostgreSQL/servers/', parameters('siteName'))]"
           ],
           "location": "[resourceGroup().location]",
-          "name": "[concat(variables('siteName'),'firewall')]",
+          "name": "[concat(parameters('siteName'),'firewall')]",
           "properties": {
               "startIpAddress": "0.0.0.0",
               "endIpAddress": "255.255.255.255"
