@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "variables": {
     "siteNameClean": "[toLower(replace(parameters('siteName'),'-', ''))]",
-    "hostingPlanName": "[Concat(variables('siteNameClean'), '-rg')]"
+    "hostingPlanName": "[Concat(variables('siteNameClean'), '-rg']"
 },
   "parameters": {
     "siteName": {
