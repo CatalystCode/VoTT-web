@@ -1,10 +1,6 @@
 {
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "variables": {
-    "siteNameClean": "[toLower(replace(variables('siteName'),'-', ''))]",
-    "hostingPlanName": "[Concat(variables('siteNameClean'), '-rg']"
-},
   "parameters": {
     "siteName": {
       "type": "string",
@@ -12,12 +8,8 @@
         "description": "The name of the web app that you wish to create. Name must contain only lowercase letters or numbers."
       }
     },
-    "resourceLocation": {
-      "type": "string",
-      "allowedValues": [
-        "East US",
-        "West US"
-      ]
+    "hostingPlanName": {
+      "type": "string"
     },
     "sku": {
       "type": "string",
@@ -95,7 +87,7 @@
   "resources": [
     {
       "apiVersion": "2015-08-01",
-      "name": "[variables('hostingPlanName')]",
+      "name": "[parameters('hostingPlanName')]",
       "type": "Microsoft.Web/serverfarms",
       "location": "[resourceGroup().location]",
       "sku": {
@@ -103,25 +95,25 @@
         "capacity": "[parameters('workerSize')]"
       },
       "properties": {
-        "name": "[variables('hostingPlanName')]"
+        "name": "[parameters('hostingPlanName')]"
       }
     },
     {
       "apiVersion": "2015-08-01",
-      "name": "[variables('siteNameClean')]",
+      "name": "[parameters('siteName')]",
       "type": "Microsoft.Web/sites",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
-        "[resourceId('Microsoft.DBforPostgreSQL/servers/', variables('siteNameClean'))]"
+        "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
+        "[resourceId('Microsoft.DBforPostgreSQL/servers/', toLower(parameters('siteName'))]"
       ],
       "properties": {
-        "serverFarmId": "[variables('hostingPlanName')]",
+        "serverFarmId": "[parameters('hostingPlanName')]",
         "siteConfig": {
           "connectionStrings": [
             {
               "name": "defaultConnection",
-              "value": "[Concat('Database=postgres;Server=', variables('siteNameClean'), '.postgres.database.azure.com;User Id=', parameters('postgresAdminUsername'),'@', variables('siteNameClean'),';Password=', parameters('postgresAdminPassword'))]",
+              "value": "[Concat('Database=postgres;Server=', toLower(parameters('siteName')), '.postgres.database.azure.com;User Id=', parameters('postgresAdminUsername'),'@', variables('siteNameClean'),';Password=', parameters('postgresAdminPassword'))]",
               "type": "PostgreSQL"
             }
           ],
@@ -172,7 +164,7 @@
             },
             {
               "name": "AZURE_STORAGE_CONNECTION_STRING",
-              "value": "[Concat('DefaultEndpointsProtocol=https;AccountName=',variables('siteNameClean'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('siteNameClean')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value)]"
+              "value": "[Concat('DefaultEndpointsProtocol=https;AccountName=',toLower(parameters('siteName')),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', toLower(parameters('siteName'))), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value)]"
             }
           ]
         }
@@ -183,7 +175,7 @@
           "name": "web",
           "type": "sourcecontrols",
           "dependsOn": [
-            "[resourceId('Microsoft.Web/Sites', variables('siteNameClean'))]"
+            "[resourceId('Microsoft.Web/Sites', parameters('siteName'))]"
           ],
           "properties": {
             "RepoUrl": "[parameters('repoURL')]",
@@ -194,7 +186,7 @@
       ]
     },
     {
-      "name": "[variables('siteNameClean')]",
+      "name": "[toLower(parameters('siteName'))]",
       "type": "Microsoft.DBforPostgreSQL/servers",
       "apiVersion": "2017-04-30-preview",
       "sku": {
@@ -225,14 +217,14 @@
       ]
     },
     {
-      "name": "[variables('siteNameClean')]",
+      "name": "[toLower(parameters('siteNameClean'))]",
       "type": "Microsoft.Storage/storageAccounts",
       "kind": "Storage",
       "apiVersion": "2016-01-01",
       "sku": {
         "name": "Standard_LRS"
       },
-      "location": "East US",
+      "location": "[resourceGroup().location]",
       "tags": {},
       "properties": {}
     }
