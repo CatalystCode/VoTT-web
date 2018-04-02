@@ -105,7 +105,7 @@
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
-        "[resourceId('Microsoft.DBforPostgreSQL/servers/', toLower(parameters('siteName'))]"
+        "[resourceId('Microsoft.DBforPostgreSQL/servers/', toLower(parameters('siteName')))]"
       ],
       "properties": {
         "serverFarmId": "[parameters('hostingPlanName')]",
