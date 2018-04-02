@@ -136,7 +136,7 @@
               "value": "[parameters('adminEmail')]"
             },
             {
-              "name": "VOTT_DEFAULT_ADMIN_NAME",
+              "name": "VOTT_DEFAULT_ADMIN_Name",
               "value": "[parameters('adminDisplayName')]"
             },
             {
