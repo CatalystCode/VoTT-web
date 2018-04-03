@@ -1,17 +1,9 @@
+FROM node:carbon
 LABEL maintainer="raweil@microsoft.com"
-USER root
 
-RUN apt-get update -y --fix-missing
-RUN apt-get install -y --fix-missing \
-    curl \
-    git \
-    
-RUN curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
-RUN apt-get install nodejs
-
-ADD ./ /VoTT-web
-
-WORKDIR /VoTT-web
-
-CMD npm install
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 1337
 CMD node app.js
