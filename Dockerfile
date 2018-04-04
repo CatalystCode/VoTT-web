@@ -1,4 +1,4 @@
-FROM node:alpine
+FROM node:8
 LABEL maintainer="raweil@microsoft.com"
 
 WORKDIR /usr/src/app
