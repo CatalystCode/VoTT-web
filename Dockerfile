@@ -1,9 +1,9 @@
-FROM node:carbon
+FROM node:8.9.3-alpine
 LABEL maintainer="raweil@microsoft.com"
 
 WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install
 COPY . .
-EXPOSE 1337
-CMD node app.js
+EXPOSE 8080
+CMD [ "node", "app.js" ]
