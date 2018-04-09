@@ -48,7 +48,7 @@
         "1",
         "2"
       ],
-      "defaultValue": "0",
+      "defaultValue": "1",
       "metadata": {
         "description": "The instance size of the hosting plan."
       }
@@ -94,113 +94,124 @@
     }
   },
   "resources": [
-    {
-      "apiVersion": "2015-08-01",
-      "name": "[variables('hostingPlanName')]",
-      "type": "Microsoft.Web/serverfarms",
-      "location": "[parameters('resourceLocation')]",
-      "sku": {
-        "name": "[parameters('sku')]",
-        "capacity": "[parameters('workerSize')]"
-      },
-      "properties": {
-        "name": "[variables('hostingPlanName')]"
-      }
-    },
-    {
-      "apiVersion": "2015-08-01",
-      "name": "[variables('siteNameClean')]",
-      "type": "Microsoft.Web/sites",
-      "location": "[parameters('resourceLocation')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
-        "[resourceId('Microsoft.DBforPostgreSQL/servers/', variables('siteNameClean'))]"
-      ],
-      "properties": {
-        "serverFarmId": "[variables('hostingPlanName')]",
-        "siteConfig": {
-          "appSettings": [
-            {
-              "name": "SENDGRID_API_KEY",
-              "value": "[parameters('sendgridApiKey')]"
-            },
-            {
-              "name": "VOTT_DEFAULT_ADMIN_EMAIL",
-              "value": "[parameters('adminEmail')]"
-            },
-            {
-              "name": "VOTT_DEFAULT_ADMIN_NAME",
-              "value": "[parameters('adminDisplayName')]"
-            },
-            {
-              "name": "VOTT_DEFAULT_FROM_EMAIL",
-              "value": "[parameters('invitationSenderEmail')]"
-            },
-            {
-              "name": "VOTT_DEFAULT_FROM_NAME",
-              "value": "[parameters('invitationSenderName')]"
-            },
-            {
-              "name": "VOTT_JWT_SECRET",
-              "value": "[uniqueString(resourceGroup().id)]"
-            },
-            {
-              "name": "PG_HOST",
-              "value": "[Concat(variables('siteNameClean'), '.postgres.database.azure.com')]"
-            },
-            {
-              "name": "PG_USER",
-              "value": "[Concat(parameters('postgresAdminUsername'),'@', variables('siteNameClean'))]"
-            },
-            {
-              "name": "PG_PASSWORD",
-              "value": "[parameters('postgresAdminPassword')]"
-            },
-            {
-              "name": "GRAPHIQL_ENABLED",
-              "value": "true"
-            },
-            {
-              "name": "WEBSITE_NODE_DEFAULT_VERSION",
-              "value": "7.0.0"
-            },
-            {
-              "name": "AZURE_STORAGE_CONNECTION_STRING",
-              "value": "[Concat('DefaultEndpointsProtocol=https;AccountName=',variables('siteNameClean'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('siteNameClean')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value)]"
-            }
-          ]
-        }
-      },
-      "resources": [
-        {
-          "apiVersion": "2015-08-01",
-          "name": "web",
-          "type": "sourcecontrols",
-          "dependsOn": [
-            "[Concat('Microsoft.Web/Sites/', variables('siteNameClean'))]"
-          ],
-          "properties": {
-            "RepoUrl": "[parameters('repoURL')]",
-            "branch": "[parameters('branch')]",
-            "IsManualIntegration": true
-          }
-        },
-        {  
-          "apiVersion":"2015-04-01",
-          "name":"connectionstrings",
-          "type":"config",
-          "dependsOn":[  
-             "[concat('Microsoft.Web/sites/', variables('siteNameClean'))]"
-          ],
-          "properties":{  
-             "defaultConnection":{  
-                "value":"[concat('Database=postgres;Server=', variables('siteNameClean'), '.postgres.database.azure.com;User Id=', parameters('postgresAdminUsername'),'@',variables('siteNameClean'),';Password=',parameters('postgresAdminPassword'))]",
-                "type":"PostgreSQL"
-             }
-          }
-       }
-      ]
-    },
+
+
+
+
+          {
+              "type": "Microsoft.Web/sites",
+              "name": "[variables('siteNameClean')]",
+              "apiVersion": "2016-03-01",
+              "location": "[parameters('resourceLocation')]",
+              "tags": {
+                  "[concat('hidden-related:', '/subscriptions/', parameters('subscriptionId'),'/resourcegroups/', parameters('serverFarmResourceGroup'), '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]": "empty"
+              },
+              "properties": {
+                  "name": "[variables('siteNameClean')]",
+                  "siteConfig": {
+                      "appSettings": [
+                        {
+                          "name": "SENDGRID_API_KEY",
+                          "value": "[parameters('sendgridApiKey')]"
+                        },
+                        {
+                          "name": "VOTT_DEFAULT_ADMIN_EMAIL",
+                          "value": "[parameters('adminEmail')]"
+                        },
+                        {
+                          "name": "VOTT_DEFAULT_ADMIN_NAME",
+                          "value": "[parameters('adminDisplayName')]"
+                        },
+                        {
+                          "name": "VOTT_DEFAULT_FROM_EMAIL",
+                          "value": "[parameters('invitationSenderEmail')]"
+                        },
+                        {
+                          "name": "VOTT_DEFAULT_FROM_NAME",
+                          "value": "[parameters('invitationSenderName')]"
+                        },
+                        {
+                          "name": "VOTT_JWT_SECRET",
+                          "value": "[uniqueString(resourceGroup().id)]"
+                        },
+                        {
+                          "name": "PG_HOST",
+                          "value": "[Concat(variables('siteNameClean'), '.postgres.database.azure.com')]"
+                        },
+                        {
+                          "name": "PG_USER",
+                          "value": "[Concat(parameters('postgresAdminUsername'),'@', variables('siteNameClean'))]"
+                        },
+                        {
+                          "name": "PG_PASSWORD",
+                          "value": "[parameters('postgresAdminPassword')]"
+                        },
+                        {
+                          "name": "GRAPHIQL_ENABLED",
+                          "value": "true"
+                        },
+                        {
+                          "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                          "value": "7.0.0"
+                        },
+                        {
+                          "name": "AZURE_STORAGE_CONNECTION_STRING",
+                          "value": "[Concat('DefaultEndpointsProtocol=https;AccountName=',variables('siteNameClean'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('siteNameClean')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value)]"
+                        },
+                          {
+                              "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
+                              "value": "false"
+                          },
+                          {
+                            "name": "NODE_ENV",
+                            "value": "production"
+                          }
+                      ],
+                      "appCommandLine": "",
+                      "linuxFxVersion": "DOCKER|hxlnt/vott-web"
+                  },
+                  "serverFarmId": "[concat('/subscriptions/', parameters('subscriptionId'),'/resourcegroups/', parameters('serverFarmResourceGroup'), '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
+                  "hostingEnvironment": "[parameters('hostingEnvironment')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+                "[resourceId('Microsoft.DBforPostgreSQL/servers/', variables('siteNameClean'))]"
+              ],
+              "resources": [
+                {  
+                  "apiVersion":"2015-04-01",
+                  "name":"connectionstrings",
+                  "type":"config",
+                  "dependsOn":[  
+                     "[concat('Microsoft.Web/sites/', variables('siteNameClean'))]"
+                  ],
+                  "properties":{  
+                     "defaultConnection":{  
+                        "value":"[concat('Database=postgres;Server=', variables('siteNameClean'), '.postgres.database.azure.com;User Id=', parameters('postgresAdminUsername'),'@',variables('siteNameClean'),';Password=',parameters('postgresAdminPassword'))]",
+                        "type":"PostgreSQL"
+                     }
+                  }
+               }
+              ]
+          },
+          {
+              "type": "Microsoft.Web/serverfarms",
+              "sku": {
+                  "Tier": "[parameters('sku')]",
+                  "Name": "[parameters('skuCode')]"
+              },
+              "kind": "linux",
+              "name": "[parameters('hostingPlanName')]",
+              "apiVersion": "2016-09-01",
+              "location": "[parameters('resourceLocation')]",
+              "properties": {
+                  "name": "[parameters('hostingPlanName')]",
+                  "workerSizeId": "[parameters('workerSize')]",
+                  "reserved": true,
+                  "numberOfWorkers": "1",
+                  "hostingEnvironment": "[parameters('hostingEnvironment')]"
+              }
+          },
     {
       "name": "[variables('siteNameClean')]",
       "type": "Microsoft.DBforPostgreSQL/servers",
