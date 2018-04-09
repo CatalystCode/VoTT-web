@@ -163,8 +163,7 @@
                       ],
                       "appCommandLine": "node app.js",
                       "linuxFxVersion": "DOCKER|hxlnt/vott-web"
-                  },
-                  "hostingEnvironment": "[parameters('hostingEnvironment')]"
+                  }
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
@@ -199,9 +198,7 @@
               "properties": {
                   "name": "[variables('hostingPlanName')]",
                   "workerSizeId": "[parameters('workerSize')]",
-                  "reserved": true,
-                  "numberOfWorkers": "1",
-                  "hostingEnvironment": "[parameters('hostingEnvironment')]"
+                  "reserved": true
               }
           },
     {
