@@ -100,9 +100,6 @@
               "name": "[variables('siteNameClean')]",
               "apiVersion": "2016-03-01",
               "location": "[parameters('resourceLocation')]",
-              "tags": {
-                  "[concat('hidden-related:', '/subscriptions/', parameters('subscriptionId'),'/resourcegroups/', parameters('serverFarmResourceGroup'), '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]": "empty"
-              },
               "properties": {
                   "name": "[variables('siteNameClean')]",
                   "siteConfig": {
@@ -167,7 +164,6 @@
                       "appCommandLine": "node app.js",
                       "linuxFxVersion": "DOCKER|hxlnt/vott-web"
                   },
-                  "serverFarmId": "[concat('/subscriptions/', parameters('subscriptionId'),'/resourcegroups/', parameters('serverFarmResourceGroup'), '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
                   "hostingEnvironment": "[parameters('hostingEnvironment')]"
               },
               "dependsOn": [
