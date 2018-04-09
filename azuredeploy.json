@@ -194,11 +194,11 @@
                   "Name": "[parameters('skuCode')]"
               },
               "kind": "linux",
-              "name": "[parameters('hostingPlanName')]",
+              "name": "[variables('hostingPlanName')]",
               "apiVersion": "2016-09-01",
               "location": "[parameters('resourceLocation')]",
               "properties": {
-                  "name": "[parameters('hostingPlanName')]",
+                  "name": "[variables('hostingPlanName')]",
                   "workerSizeId": "[parameters('workerSize')]",
                   "reserved": true,
                   "numberOfWorkers": "1",
