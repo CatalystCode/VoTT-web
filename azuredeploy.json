@@ -190,8 +190,7 @@
           {
               "type": "Microsoft.Web/serverfarms",
               "sku": {
-                  "Tier": "[parameters('sku')]",
-                  "Name": "[parameters('skuCode')]"
+                  "Tier": "[parameters('sku')]"
               },
               "kind": "linux",
               "name": "[variables('hostingPlanName')]",
