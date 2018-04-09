@@ -62,7 +62,7 @@
     },
     "branch": {
       "type": "string",
-      "defaultValue": "master",
+      "defaultValue": "docker",
       "metadata": {
         "description": "The branch of the GitHub repository to use."
       }
@@ -94,9 +94,6 @@
     }
   },
   "resources": [
-
-
-
 
           {
               "type": "Microsoft.Web/sites",
@@ -167,7 +164,7 @@
                             "value": "production"
                           }
                       ],
-                      "appCommandLine": "",
+                      "appCommandLine": "node app.js",
                       "linuxFxVersion": "DOCKER|hxlnt/vott-web"
                   },
                   "serverFarmId": "[concat('/subscriptions/', parameters('subscriptionId'),'/resourcegroups/', parameters('serverFarmResourceGroup'), '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
