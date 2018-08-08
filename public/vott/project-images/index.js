@@ -47,7 +47,6 @@ angular.module('vott.project-images', [
     ProjectService.trainingImages($routeParams.projectId, currentToken, limit)
       .then(function (response) {
         const serviceData = response.data;
-        console.log(serviceData);
         $scope.isLoadingImages = false;
         $scope.currentToken = serviceData.currentToken ? JSON.stringify(serviceData.currentToken) : null;
         $scope.total = serviceData.total;
