@@ -54,10 +54,10 @@ angular.module('vott.factories', [])
                     data: image
                 });
             },
-            trainingImages: function (projectId, skip, limit) {
+            trainingImages: function (projectId, currentToken, limit) {
                 const query = [];
-                if (skip) {
-                    query.push(`skip=${skip}`);
+                if (currentToken) {
+                    query.push(`currentToken=${currentToken}`);
                 }
                 if (limit) {
                     query.push(`limit=${limit}`);

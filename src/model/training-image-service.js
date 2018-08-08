@@ -26,16 +26,22 @@ TrainingImageService.prototype.ensureTablesExist = function () {
     });
 }
 
-TrainingImageService.prototype.list = function (projectId, paginationToken) {
+TrainingImageService.prototype.list = function (projectId, currentToken) {
     return new Promise((resolve, reject) => {
+        const limit = 500;
         const tableQuery = new azureStorage.TableQuery().where('PartitionKey == ?', projectId);
-        this.tableService.queryEntities(this.trainingImagesTableName, tableQuery, paginationToken, (error, result) => {
+        this.tableService.queryEntities(this.trainingImagesTableName, tableQuery, currentToken, (error, result) => {
             if (error) {
                 return reject(error);
             }
-            return resolve(result.entries.map(entity => {
+            const records = result.entries.map(entity => {
                 return this.mapEntityToImage(entity);
-            }));
+            });
+            return resolve({
+                currentToken: result.continuationToken,
+                limit: limit,
+                entries: records
+            });
         });
     });
 }

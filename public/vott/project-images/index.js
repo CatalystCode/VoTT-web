@@ -2,6 +2,7 @@ angular.module('vott.project-images', [
   'vott.factories'
 ]).controller('ProjectImagesController', function ($scope, $location, $route, $routeParams, $timeout, ProjectService) {
 
+  $scope.currentToken = null;
   $scope.totalImageCount = 0;
   $scope.taggedImageCount = 0;
   $scope.conflictImageCount = 0;
@@ -40,13 +41,15 @@ angular.module('vott.project-images', [
       });
   };
 
-  $scope.loadImages = function (skip, limit) {
+  $scope.loadImages = function (currentToken, limit) {
     $scope.isLoadingImages = true;
-    const requestedSkip = skip;
-    ProjectService.trainingImages($routeParams.projectId, skip, limit)
+    const requestedSkip = currentToken != null;
+    ProjectService.trainingImages($routeParams.projectId, currentToken, limit)
       .then(function (response) {
         const serviceData = response.data;
+        console.log(serviceData);
         $scope.isLoadingImages = false;
+        $scope.currentToken = serviceData.currentToken ? JSON.stringify(serviceData.currentToken) : null;
         $scope.total = serviceData.total;
         $scope.skip = serviceData.skip;
         $scope.limit = serviceData.limit;
@@ -225,13 +228,11 @@ angular.module('vott.project-images', [
   };
 
   $scope.hasMore = function () {
-    const pageCount = Math.ceil($scope.total / $scope.limit);
-    const currentPage = Math.ceil($scope.skip / $scope.limit);
-    return currentPage < pageCount;
+    return $scope.currentToken;
   }
 
   $scope.loadMore = function () {
-    $scope.loadImages($scope.skip + $scope.limit, $scope.limit);
+    $scope.loadImages($scope.currentToken, $scope.limit);
   }
 
   $scope.load();
