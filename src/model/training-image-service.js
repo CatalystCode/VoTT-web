@@ -26,10 +26,10 @@ TrainingImageService.prototype.ensureTablesExist = function () {
     });
 }
 
-TrainingImageService.prototype.list = function (projectId, currentToken) {
+TrainingImageService.prototype.list = function (projectId, currentToken, requestedLimit) {
     return new Promise((resolve, reject) => {
-        const limit = 500;
-        const tableQuery = new azureStorage.TableQuery().where('PartitionKey == ?', projectId);
+        const limit = requestedLimit ? parseInt(requestedLimit) : 128;
+        const tableQuery = new azureStorage.TableQuery().top(limit).where('PartitionKey == ?', projectId);
         this.tableService.queryEntities(this.trainingImagesTableName, tableQuery, currentToken, (error, result) => {
             if (error) {
                 return reject(error);

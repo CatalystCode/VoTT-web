@@ -7,7 +7,7 @@ function TrainingImageController(trainingImageService) {
 
 TrainingImageController.prototype.list = function (req, res, next) {
     const currentToken = req.query.currentToken ? JSON.parse(req.query.currentToken) : null;
-    this.trainingImageService.list(req.query.projectId, currentToken).then(result => {
+    this.trainingImageService.list(req.query.projectId, currentToken, req.query.limit).then(result => {
         res.json(result);
     }).catch(error => {
         expressFoundation.replyWithError(res, error);
