@@ -70,15 +70,12 @@ app.get(
   }
 );
 
-const projectService = new (require('./src/model/project-service').ProjectService)(
-  blobService,
-  tableService,
-  queueService
-);
-const projectController = new (require('./src/api/project-controller')).ProjectController(projectService);
-
 // TODO: Enforce policies.
 const router = new express.Router();
+
+const projectService = new (require('./src/model/project-service').ProjectService)(blobService, tableService, queueService);
+const projectController = new (require('./src/api/project-controller')).ProjectController(projectService);
+
 router.get('/projects', (req, res) => { projectController.list(req, res); });
 router.post('/projects', (req, res) => { projectController.create(req, res); });
 router.get('/projects/:id', (req, res) => { projectController.read(req, res); });
@@ -89,6 +86,14 @@ router.get('/projects/:projectId/images/:imageId', (req, res) => { projectContro
 
 router.post('/projects/:id/instructionsImage', (req, res) => { projectController.allocateInstructionsImage(req, res); });
 router.put('/projects/:id/instructionsImage', (req, res) => { projectController.commitInstructionsImage(req, res); });
+
+const trainingImageService = new (require('./src/model/training-image-service').TrainingImageService)(blobService, tableService, queueService, projectService);
+const trainingImageController = new (require('./src/api/training-image-controller')).TrainingImageController(trainingImageService);
+
+router.get('/trainingImages', (req, res, next) => { trainingImageController.list(req, res, next); });
+router.post('/trainingImages', (req, res, next) => { trainingImageController.allocate(req, res, next); });
+router.put('/trainingImages/:id', (req, res, next) => { trainingImageController.create(req, res, next); });
+router.get('/trainingImages/stats', (req, res, next) => { trainingImageController.stats(req, res, next); });
 
 app.use('/api/vott/v1', router);
 
