@@ -10,39 +10,34 @@ function TrainingImageService(blobService, tableService, queueService, projectSe
     this.queueService = queueService;
     this.projectService = projectService;
 
-    // TODO: Ensure blob containers and tables are present.
     this.trainingImagesTableName = 'TrainingImages';
-    this.ensureTablesExist();
+    this.trainingImageTagsTableName = 'TrainingImageTags';
+    this.ensureTablesExistAsync();
+}
+
+TrainingImageService.prototype.ensureTablesExistAsync = async function () {
+    await this.ensureTablesExist();
 }
 
 TrainingImageService.prototype.ensureTablesExist = function () {
-    return new Promise((resolve, reject) => {
-        this.tableService.createTableIfNotExists(this.trainingImagesTableName, (error, result) => {
-            if (error) {
-                return reject(error);
-            }
-            return resolve(result);
-        });
-    });
+    return Promise.all([
+        storageFoundation.createTableIfNotExists(this.tableService, this.trainingImagesTableName),
+        storageFoundation.createTableIfNotExists(this.tableService, this.trainingImageTagsTableName)
+    ]);
 }
 
 TrainingImageService.prototype.list = function (projectId, currentToken, requestedLimit) {
-    return new Promise((resolve, reject) => {
-        const limit = requestedLimit ? parseInt(requestedLimit) : 128;
-        const tableQuery = new azureStorage.TableQuery().top(limit).where('PartitionKey == ?', projectId);
-        this.tableService.queryEntities(this.trainingImagesTableName, tableQuery, currentToken, (error, result) => {
-            if (error) {
-                return reject(error);
-            }
-            const records = result.entries.map(entity => {
-                return this.mapEntityToImage(entity);
-            });
-            return resolve({
-                currentToken: result.continuationToken,
-                limit: limit,
-                entries: records
-            });
+    const limit = requestedLimit ? parseInt(requestedLimit) : 128;
+    const tableQuery = new azureStorage.TableQuery().top(limit).where('PartitionKey == ?', projectId);
+    return storageFoundation.queryEntities(this.tableService, this.trainingImagesTableName, tableQuery, currentToken).then(result => {
+        const records = result.entries.map(entity => {
+            return this.mapEntityToImage(entity);
         });
+        return {
+            currentToken: result.continuationToken,
+            limit: limit,
+            entries: records
+        };
     });
 }
 
@@ -128,7 +123,7 @@ TrainingImageService.prototype.createTask = function (project, taskMessage) {
             if (error) {
                 return reject(error);
             }
-            resolve();
+            resolve({});
         });
     });
 }
@@ -164,18 +159,67 @@ TrainingImageService.prototype.pullTask = function (projectId) {
 }
 
 TrainingImageService.prototype.pushTask = function (projectId, task, user) {
-    const taskQueueName = this.projectService.getTaskQueueName(projectId);
     const imageId = task.imageId;
     const tags = task.tags;
     const messageId = task.id;
     const popReceipt = task.popReceipt;
+
+    return this.createImageTag(projectId, imageId, tags, user).then(tag => {
+        return Promise.all([
+            this.removeTask(projectId, messageId, popReceipt),
+            this.refreshImageStatus(projectId, imageId)
+        ]);
+    });
+}
+
+TrainingImageService.prototype.createImageTag = function (projectId, imageId, tags, user) {
+    const entity = {
+        PartitionKey: { '_': imageId },
+        RowKey: { '_': uuid() },
+        tags: { '_': JSON.stringify(tags) },
+        user: { '_': user.username }
+    };
+    return storageFoundation.insertEntity(this.tableService, this.trainingImageTagsTableName, entity);
+}
+
+TrainingImageService.prototype.removeTask = function (projectId, messageId, popReceipt) {
+    const taskQueueName = this.projectService.getTaskQueueName(projectId);
     return new Promise((resolve, reject) => {
-        // TODO: Create TrainingImageTagContribution record and update the TrainingImage's status.
         this.queueService.deleteMessage(taskQueueName, messageId, popReceipt, function (error) {
             if (error) return reject(error);
-            return resolve(contribution);
+            return resolve();
         });
     });
+}
+
+TrainingImageService.prototype.refreshImageStatus = function (projectId, imageId) {
+    return this.calculateImageStatus(projectId, imageId).then(status => {
+        return this.setImageStatus(projectId, imageId, status).then(result => {
+            return status
+        });
+    });
+}
+
+TrainingImageService.prototype.calculateImageStatus = function (projectId, imageId) {
+    const tableQuery = new azureStorage.TableQuery().where('PartitionKey == ?', imageId);
+    return storageFoundation.queryEntities(this.tableService, this.trainingImageTagsTableName, tableQuery).then(result => {
+        const tags = result.entries;
+        if (tags.length < 2) {
+            return 'tag-pending';
+        }
+
+        // If 2 of the 3 tags agree, update to 'ready-for-training', 'conflict' otherwise. 
+        return 'ready-for-training';
+    });
+}
+
+TrainingImageService.prototype.setImageStatus = function (projectId, imageId, status) {
+    const entity = {
+        PartitionKey: { '_': projectId },
+        RowKey: { '_': imageId },
+        status: { '_': status }
+    };
+    return storageFoundation.mergeEntity(this.tableService, this.trainingImagesTableName, entity);
 }
 
 TrainingImageService.prototype.getImageURL = function (projectId, imageId) {

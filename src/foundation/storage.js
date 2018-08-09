@@ -31,5 +31,45 @@ module.exports = {
             url: url,
             id: blobName,
         }
-    }
+    },
+    createTableIfNotExists: function (tableService, tableName) {
+        return new Promise((resolve, reject) => {
+            tableService.createTableIfNotExists(tableName, (error, result) => {
+                if (error) {
+                    return reject(error);
+                }
+                return resolve(result);
+            });
+        });
+    },
+    insertEntity: function (tableService, tableName, entity) {
+        return new Promise((resolve, reject) => {
+            tableService.insertEntity(tableName, entity, (error, result, response) => {
+                if (error) {
+                    return reject(error);
+                }
+                return resolve(result, response);
+            });
+        });
+    },
+    mergeEntity: function (tableService, tableName, entity) {
+        return new Promise((resolve, reject) => {
+            tableService.mergeEntity(tableName, entity, (error, result) => {
+                if (error) {
+                    return reject(error);
+                }
+                return resolve(result);
+            });
+        });
+    },
+    queryEntities: function (tableService, tableName, query, currentToken) {
+        return new Promise((resolve, reject) => {
+            tableService.queryEntities(tableName, query, currentToken, (error, result, response) => {
+                if (error) {
+                    return reject(error);
+                }
+                resolve(result, response);
+            });
+        });
+    },
 };

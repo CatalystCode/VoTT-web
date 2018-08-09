@@ -92,7 +92,7 @@ router.post('/trainingImages', managerAccess, (req, res, next) => { trainingImag
 router.put('/trainingImages/:id', managerAccess, (req, res, next) => { trainingImageController.create(req, res, next); });
 router.get('/trainingImages/stats', managerAccess, (req, res, next) => { trainingImageController.stats(req, res, next); });
 router.get('/projects/:projectId/tasks/next', collaboratorAccess, (req, res) => { trainingImageController.pullTask(req, res); });
-router.post('/projects/:projectId/tasks/results', collaboratorAccess, (req, res) => { trainingImageController.pullTask(req, res); });
+router.post('/projects/:projectId/tasks/results', collaboratorAccess, (req, res) => { trainingImageController.pushTask(req, res); });
 
 const accessRightsController = new api.AccessRightsController(accessRightsService);
 router.get('/accessRights', managerAccess, (req, res, next) => { accessRightsController.list(req, res, next); });
