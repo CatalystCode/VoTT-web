@@ -53,7 +53,21 @@ AccessRightsService.prototype.create = function (record) {
     });
 }
 
-AccessRightsService.prototype.upsertUser = function(user) {
+AccessRightsService.prototype.read = function (projectId, userId) {
+    return new Promise((resolve, reject) => {
+        if (!projectId) {
+            projectId = 'root';
+        }
+        this.tableService.retrieveEntity(this.accessRightsByProjectTableName, projectId, userId, (error, entity) => {
+            if (error) {
+                return reject(error);
+            }
+            return resolve(this.mapEntityToAccessRight(entity));
+        });
+    });
+}
+
+AccessRightsService.prototype.upsertUser = function (user) {
     return new Promise((resolve, reject) => {
         const entity = mapUserToEntity(user);
         this.tableService.insertEntity(this.userTableName, entity, (error, result, response) => {
@@ -123,6 +137,14 @@ function mapUserToEntity(user) {
         PartitionKey: generator.String(user.provider),
         RowKey: generator.String(user.username),
         name: generator.String(user.displayName)
+    };
+}
+
+function mapEntityToUser(user) {
+    return {
+        provider: rightEntity.RowKey._,
+        username: rightEntity.PartitionKey._,
+        displayName: rightEntity.displayName._
     };
 }
 
