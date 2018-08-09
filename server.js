@@ -13,6 +13,7 @@ const expressSession = require('express-session');
 const passport = require('passport');
 const passportGithub = require('passport-github');
 const path = require('path');
+const model = require('./src/model');
 
 const blobServiceConnectionString = process.env.BLOB_SERVICE_CONNECTION_STRING;
 const blobService = azureStorage.createBlobService(blobServiceConnectionString);
@@ -22,6 +23,8 @@ const tableService = azureStorage.createTableService(tableServiceConnectionStrin
 
 const queueServiceConnectionString = process.env.QUEUE_SERVICE_CONNECTION_STRING;
 const queueService = azureStorage.createQueueService(queueServiceConnectionString);
+
+const accessRightsService = new model.AccessRightsService(tableService);
 
 passport.use(new passportGithub.Strategy(
   {
@@ -34,17 +37,11 @@ passport.use(new passportGithub.Strategy(
   }
 ));
 passport.serializeUser((user, done) => {
-  /**
-   * Github replies with something like:
-   * {
-   *   "id":"1117904",
-   *   "displayName":"Juan Carlos Jimenez",
-   *   "username":"jcjimenez",
-   *   "provider":"github",
-   *   ...
-   * }
-   */
-  done(null, JSON.stringify(user));
+  accessRightsService.upsertUser(user).then(result => {
+    done(null, JSON.stringify(user));
+  }).catch(error => {
+    done(null, JSON.stringify(user));
+  });
 });
 passport.deserializeUser((user, done) => {
   done(null, JSON.parse(user));
@@ -73,7 +70,6 @@ app.get(
 // TODO: Enforce policies.
 const router = new express.Router();
 const api = require('./src/api');
-const model = require('./src/model');
 
 const projectService = new model.ProjectService(blobService, tableService, queueService);
 const projectController = new api.ProjectController(projectService);
@@ -93,7 +89,6 @@ router.post('/trainingImages', (req, res, next) => { trainingImageController.all
 router.put('/trainingImages/:id', (req, res, next) => { trainingImageController.create(req, res, next); });
 router.get('/trainingImages/stats', (req, res, next) => { trainingImageController.stats(req, res, next); });
 
-const accessRightsService = new model.AccessRightsService(tableService);
 const accessRightsController = new api.AccessRightsController(accessRightsService);
 router.get('/accessRights', (req, res, next) => { accessRightsController.list(req, res, next); });
 router.post('/accessRights', (req, res, next) => { accessRightsController.create(req, res, next); });

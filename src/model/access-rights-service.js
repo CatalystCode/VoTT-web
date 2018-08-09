@@ -53,6 +53,18 @@ AccessRightsService.prototype.create = function (record) {
     });
 }
 
+AccessRightsService.prototype.upsertUser = function(user) {
+    return new Promise((resolve, reject) => {
+        const entity = mapUserToEntity(user);
+        this.tableService.insertEntity(this.userTableName, entity, (error, result, response) => {
+            if (error) {
+                return reject(error);
+            }
+            return resolve(user);
+        });
+    });
+}
+
 AccessRightsService.prototype.delete = function (projectId, userId) {
     return new Promise((resolve, reject) => {
         const generator = azureStorage.TableUtilities.entityGenerator;
@@ -91,6 +103,26 @@ function mapAccessRightToEntity(right) {
         RowKey: generator.String(right.userId),
         email: generator.String(right.email),
         role: generator.String(right.role)
+    };
+}
+
+/**
+ * Github replies with something like:
+ * {
+ *   "id":"1117904",
+ *   "displayName":"Juan Carlos Jimenez",
+ *   "username":"jcjimenez",
+ *   "provider":"github",
+ *   ...
+ * }
+ * @param {*} user representing Github user interpreted by passport.
+ */
+function mapUserToEntity(user) {
+    const generator = azureStorage.TableUtilities.entityGenerator;
+    return {
+        PartitionKey: generator.String(user.provider),
+        RowKey: generator.String(user.username),
+        name: generator.String(user.displayName)
     };
 }
 
