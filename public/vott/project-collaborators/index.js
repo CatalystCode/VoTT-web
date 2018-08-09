@@ -53,7 +53,7 @@ angular.module('vott.project-collaborators', [
     console.log(accessRight.user);
     ProjectService.createCollaborator(
       $routeParams.projectId,
-      accessRight.user.name,
+      accessRight.user.userId,
       accessRight.user.email,
       accessRight.user.role
     ).then(function (response) {
@@ -88,9 +88,9 @@ angular.module('vott.project-collaborators', [
   };
 
   $scope.save = function () {
-    ProjectService.createCollaborator(
+  ProjectService.createCollaborator(
       $routeParams.projectId,
-      $scope.user.name,
+      $scope.user.userId,
       $scope.user.email,
       $scope.user.role
     ).then(function (response) {

@@ -30,7 +30,7 @@
   <hr/>
 
   <h4 ng-if="isLoading">Loading...</h4>
-  <button type="button" class="btn btn-success" ng-click="invite()">Invite Collaborator</button>
+  <button type="button" class="btn btn-success" ng-click="invite()">Add Collaborator</button>
 
   <hr />
 
@@ -45,11 +45,11 @@
     </thead>
     <tbody>
       <tr ng-repeat="right in accessRights">
-        <th scope="row">{{right.user.name}}</th>
+        <th scope="row">{{right.user.name ? right.user.name : right.user.userId}}</th>
         <td>{{ right.user.email }}</td>
         <td>{{ right.role.replace('-', ' ') | lowercase }}</td>
         <td>
-          <button type="button" class="btn btn-default" ng-click="reinvite(right)">Reinvite</button>
+          <!-- <button type="button" class="btn btn-default" ng-click="reinvite(right)">Reinvite</button> -->
           <button type="button" class="btn btn-danger" ng-click="delete(right)">Delete</button>
         </td>
       </tr>
@@ -86,9 +86,9 @@
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label for="name">Name</label>
-            <input type="text" ng-model="user.name" class="form-control" id="name" aria-describedby="nameHelp" placeholder="Person name">
-            <small id="nameHelp" class="form-text text-muted">The name of the person to be invited to the project.</small>
+            <label for="userId">Github User Name</label>
+            <input type="text" ng-model="user.userId" class="form-control" id="userId" aria-describedby="userIdHelp" placeholder="h4x0r name">
+            <small id="userIdHelp" class="form-text text-muted">The Github user name of the person to be invited to the project (their real name will be filled-in when the log in).</small>
           </div>
           <div class="form-group">
             <label for="name">Email</label>
@@ -125,7 +125,7 @@
         </button>
       </div>
       <div class="modal-body">
-        Please confirm you would like to remove {{selectedAccessRight.user.name}} ({{selectedAccessRight.user.email}}) from this
+        Please confirm you would like to remove {{selectedAccessRight.user.userId}} ({{selectedAccessRight.user.email}}) from this
         project's collaborators.
       </div>
       <div class="modal-footer">
