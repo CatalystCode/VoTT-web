@@ -11,7 +11,7 @@ ProjectController.prototype.list = function (req, res) {
     }).catch(error => {
         expressFoundation.replyWithError(res, error);
     });
-};
+}
 
 ProjectController.prototype.create = function (req, res) {
     this.projectService.create(req.body).then(project => {
@@ -19,7 +19,7 @@ ProjectController.prototype.create = function (req, res) {
     }).catch(error => {
         expressFoundation.replyWithError(res, error);
     });
-};
+}
 
 ProjectController.prototype.read = function (req, res) {
     const projectId = req.params.id;
@@ -28,7 +28,7 @@ ProjectController.prototype.read = function (req, res) {
     }).catch(error => {
         expressFoundation.replyWithError(res, error);
     });
-};
+}
 
 ProjectController.prototype.update = function (req, res) {
     this.projectService.update(req.body).then(project => {
@@ -36,7 +36,7 @@ ProjectController.prototype.update = function (req, res) {
     }).catch(error => {
         expressFoundation.replyWithError(res, error);
     });
-};
+}
 
 ProjectController.prototype.delete = function (req, res, next) {
     const projectId = req.params.id;
@@ -45,7 +45,7 @@ ProjectController.prototype.delete = function (req, res, next) {
     }).catch(error => {
         expressFoundation.replyWithError(res, error);
     });
-};
+}
 
 ProjectController.prototype.allocateInstructionsImage = function (req, res) {
     const projectId = req.params.id;
@@ -54,7 +54,7 @@ ProjectController.prototype.allocateInstructionsImage = function (req, res) {
     }).catch(error => {
         expressFoundation.replyWithError(res, error);
     });
-};
+}
 
 ProjectController.prototype.commitInstructionsImage = function (req, res) {
     const projectId = req.params.id;
@@ -64,13 +64,13 @@ ProjectController.prototype.commitInstructionsImage = function (req, res) {
     }).catch(error => {
         expressFoundation.replyWithError(res, error);
     });
-};
+}
 
 ProjectController.prototype.image = function (req, res) {
     const projectId = req.params.projectId;
     const imageId = req.params.imageId;
     const url = this.projectService.getImageURL(projectId, imageId);
     res.redirect(url);
-};
+}
 
 module.exports = ProjectController;

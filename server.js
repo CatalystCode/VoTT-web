@@ -67,7 +67,6 @@ app.get(
   }
 );
 
-// TODO: Enforce policies.
 const router = new express.Router();
 const api = require('./src/api');
 const middleware = require('./src/middleware');
@@ -92,6 +91,8 @@ router.get('/trainingImages', projectManagerAccessMiddleware, (req, res, next) =
 router.post('/trainingImages', projectManagerAccessMiddleware, (req, res, next) => { trainingImageController.allocate(req, res, next); });
 router.put('/trainingImages/:id', projectManagerAccessMiddleware, (req, res, next) => { trainingImageController.create(req, res, next); });
 router.get('/trainingImages/stats', projectManagerAccessMiddleware, (req, res, next) => { trainingImageController.stats(req, res, next); });
+router.get('/projects/:projectId/tasks/next', projectCollaboratorAccessMiddleware, (req, res) => { trainingImageController.pullTask(req, res); });
+router.post('/projects/:projectId/tasks/results', projectCollaboratorAccessMiddleware, (req, res) => { trainingImageController.pullTask(req, res); });
 
 const accessRightsController = new api.AccessRightsController(accessRightsService);
 router.get('/accessRights', projectManagerAccessMiddleware, (req, res, next) => { accessRightsController.list(req, res, next); });

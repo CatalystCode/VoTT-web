@@ -44,4 +44,22 @@ TrainingImageController.prototype.stats = function (req, res, next) {
     });
 }
 
+TrainingImageController.prototype.pullTask = function (req, res) {
+    const projectId = req.params.projectId;
+    this.trainingImageService.pullTask(projectId).then(task => {
+        res.json(task);
+    }).catch(error => {
+        expressFoundation.replyWithError(res, error);
+    });
+}
+
+TrainingImageController.prototype.pushTask = function (req, res) {
+    const projectId = req.params.projectId;
+    this.trainingImageService.pushTask(projectId, req.body, req.user).then(task => {
+        res.json(task);
+    }).catch(error => {
+        expressFoundation.replyWithError(res, error);
+    });
+}
+
 module.exports = TrainingImageController;
