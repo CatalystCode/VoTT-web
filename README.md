@@ -6,22 +6,13 @@ First make sure you have a `.env` file created and that it includes the followin
 
 ```
 PORT=8080
-GRAPHIQL_ENABLED=true
-WEBSITE_HOSTNAME='localhost'
 
-AZURE_STORAGE_CONNECTION_STRING='somevaluefromazureportal'
+AZURE_STORAGE_CONNECTION_STRING=
+GITHUB_CLIENT=
+GITHUB_SECRET=
 
-SENDGRID_API_KEY='apikeyfromsendgrid'
-
-VOTT_JWT_SECRET='somesecretkey'
-VOTT_DEFAULT_ADMIN_EMAIL='your@emailaddress'
-VOTT_DEFAULT_ADMIN_NAME='Administrator Display Name'
-VOTT_INVITE_FROM_EMAIL='noreply@emailaddress'
-VOTT_INVITE_FROM_NAME='Invite From Name'
-
-PG_HOST='mydb.postgres.server.host'
-PG_USER='adminusername@mydb'
-PG_PASSWORD='somepassword'
+VOTT_DEFAULT_ADMIN_GITHUB_USER=
+VOTT_DEFAULT_ADMIN_NAME='Luke Skywalker'
 ```
 
 Then you can run either

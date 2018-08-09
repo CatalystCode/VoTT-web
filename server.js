@@ -71,33 +71,33 @@ const router = new express.Router();
 const api = require('./src/api');
 const middleware = require('./src/middleware');
 
-const projectManagerAccessMiddleware = middleware.ProjectManagerAccessMiddleware();
-const projectCollaboratorAccessMiddleware = middleware.ProjectCollaboratorAccessMiddleware();
+const managerAccess = middleware.ProjectManagerAccessMiddleware();
+const collaboratorAccess = middleware.ProjectCollaboratorAccessMiddleware();
 
 const projectService = new model.ProjectService(blobService, tableService, queueService);
 const projectController = new api.ProjectController(projectService);
-router.get('/projects', projectManagerAccessMiddleware, (req, res) => { projectController.list(req, res); });
-router.post('/projects', projectManagerAccessMiddleware, (req, res) => { projectController.create(req, res); });
-router.get('/projects/:id', projectManagerAccessMiddleware, (req, res) => { projectController.read(req, res); });
-router.put('/projects/:id', projectManagerAccessMiddleware, (req, res) => { projectController.update(req, res); });
-router.delete('/projects/:id', projectManagerAccessMiddleware, (req, res) => { projectController.delete(req, res); });
-router.get('/projects/:projectId/images/:imageId', projectCollaboratorAccessMiddleware, (req, res) => { projectController.image(req, res); });
-router.post('/projects/:id/instructionsImage', projectManagerAccessMiddleware, (req, res) => { projectController.allocateInstructionsImage(req, res); });
-router.put('/projects/:id/instructionsImage', projectManagerAccessMiddleware, (req, res) => { projectController.commitInstructionsImage(req, res); });
+router.get('/projects', managerAccess, (req, res) => { projectController.list(req, res); });
+router.post('/projects', managerAccess, (req, res) => { projectController.create(req, res); });
+router.get('/projects/:id', managerAccess, (req, res) => { projectController.read(req, res); });
+router.put('/projects/:id', managerAccess, (req, res) => { projectController.update(req, res); });
+router.delete('/projects/:id', managerAccess, (req, res) => { projectController.delete(req, res); });
+router.get('/projects/:projectId/images/:imageId', collaboratorAccess, (req, res) => { projectController.image(req, res); });
+router.post('/projects/:id/instructionsImage', managerAccess, (req, res) => { projectController.allocateInstructionsImage(req, res); });
+router.put('/projects/:id/instructionsImage', managerAccess, (req, res) => { projectController.commitInstructionsImage(req, res); });
 
 const trainingImageService = new model.TrainingImageService(blobService, tableService, queueService, projectService);
 const trainingImageController = new api.TrainingImageController(trainingImageService);
-router.get('/trainingImages', projectManagerAccessMiddleware, (req, res, next) => { trainingImageController.list(req, res, next); });
-router.post('/trainingImages', projectManagerAccessMiddleware, (req, res, next) => { trainingImageController.allocate(req, res, next); });
-router.put('/trainingImages/:id', projectManagerAccessMiddleware, (req, res, next) => { trainingImageController.create(req, res, next); });
-router.get('/trainingImages/stats', projectManagerAccessMiddleware, (req, res, next) => { trainingImageController.stats(req, res, next); });
-router.get('/projects/:projectId/tasks/next', projectCollaboratorAccessMiddleware, (req, res) => { trainingImageController.pullTask(req, res); });
-router.post('/projects/:projectId/tasks/results', projectCollaboratorAccessMiddleware, (req, res) => { trainingImageController.pullTask(req, res); });
+router.get('/trainingImages', managerAccess, (req, res, next) => { trainingImageController.list(req, res, next); });
+router.post('/trainingImages', managerAccess, (req, res, next) => { trainingImageController.allocate(req, res, next); });
+router.put('/trainingImages/:id', managerAccess, (req, res, next) => { trainingImageController.create(req, res, next); });
+router.get('/trainingImages/stats', managerAccess, (req, res, next) => { trainingImageController.stats(req, res, next); });
+router.get('/projects/:projectId/tasks/next', collaboratorAccess, (req, res) => { trainingImageController.pullTask(req, res); });
+router.post('/projects/:projectId/tasks/results', collaboratorAccess, (req, res) => { trainingImageController.pullTask(req, res); });
 
 const accessRightsController = new api.AccessRightsController(accessRightsService);
-router.get('/accessRights', projectManagerAccessMiddleware, (req, res, next) => { accessRightsController.list(req, res, next); });
-router.post('/accessRights', projectManagerAccessMiddleware, (req, res, next) => { accessRightsController.create(req, res, next); });
-router.delete('/accessRights/:id', projectManagerAccessMiddleware, (req, res, next) => { accessRightsController.delete(req, res, next); });
+router.get('/accessRights', managerAccess, (req, res, next) => { accessRightsController.list(req, res, next); });
+router.post('/accessRights', managerAccess, (req, res, next) => { accessRightsController.create(req, res, next); });
+router.delete('/accessRights/:id', managerAccess, (req, res, next) => { accessRightsController.delete(req, res, next); });
 
 app.use(
   '/api/vott/v1',
