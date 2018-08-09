@@ -1,7 +1,7 @@
 const async = require('async');
 const azureStorage = require('azure-storage');
 const uuid = require('uuid/v4');
-
+const rbush = require('rbush');
 const storageFoundation = require('../foundation/storage');
 
 function TrainingImageService(blobService, tableService, queueService, projectService) {
@@ -11,7 +11,7 @@ function TrainingImageService(blobService, tableService, queueService, projectSe
     this.projectService = projectService;
 
     this.trainingImagesTableName = 'TrainingImages';
-    this.trainingImageTagsTableName = 'TrainingImageTags';
+    this.trainingImageContributionsTableName = 'TrainingImageContributions';
     this.ensureTablesExistAsync();
 }
 
@@ -22,7 +22,7 @@ TrainingImageService.prototype.ensureTablesExistAsync = async function () {
 TrainingImageService.prototype.ensureTablesExist = function () {
     return Promise.all([
         storageFoundation.createTableIfNotExists(this.tableService, this.trainingImagesTableName),
-        storageFoundation.createTableIfNotExists(this.tableService, this.trainingImageTagsTableName)
+        storageFoundation.createTableIfNotExists(this.tableService, this.trainingImageContributionsTableName)
     ]);
 }
 
@@ -179,7 +179,7 @@ TrainingImageService.prototype.createImageTag = function (projectId, imageId, ta
         tags: { '_': JSON.stringify(tags) },
         user: { '_': user.username }
     };
-    return storageFoundation.insertEntity(this.tableService, this.trainingImageTagsTableName, entity);
+    return storageFoundation.insertEntity(this.tableService, this.trainingImageContributionsTableName, entity);
 }
 
 TrainingImageService.prototype.removeTask = function (projectId, messageId, popReceipt) {
@@ -201,16 +201,82 @@ TrainingImageService.prototype.refreshImageStatus = function (projectId, imageId
 }
 
 TrainingImageService.prototype.calculateImageStatus = function (projectId, imageId) {
-    const tableQuery = new azureStorage.TableQuery().where('PartitionKey == ?', imageId);
-    return storageFoundation.queryEntities(this.tableService, this.trainingImageTagsTableName, tableQuery).then(result => {
-        const tags = result.entries;
-        if (tags.length < 2) {
-            return 'tag-pending';
-        }
+    return this.projectService.read(projectId).then(project => {
+        const tableQuery = new azureStorage.TableQuery().where('PartitionKey == ?', imageId);
+        return storageFoundation.queryEntities(this.tableService, this.trainingImageContributionsTableName, tableQuery).then(result => {
+            if (result.entries.length < 2) {
+                return 'tag-pending';
+            }
 
-        // If 2 of the 3 tags agree, update to 'ready-for-training', 'conflict' otherwise. 
-        return 'ready-for-training';
+            const contributions = result.entries.map(entity => {
+                return this.mapEntityToContribution(entity);
+            })
+            if (project.type == 'object-detection') {
+                return this.calculateStatusForObjectDetection(contributions);
+            } else {
+                return this.calculateStatusForImageClassification(contributions);
+            }
+        });
     });
+}
+
+TrainingImageService.prototype.mapEntityToContribution = function (entity) {
+    return {
+        imageId: entity.PartitionKey._,
+        contributionId: entity.RowKey._,
+        tags: (entity.tags && entity.tags._) ? JSON.parse(entity.tags._) : [],
+        user: entity.user._
+    };
+}
+
+TrainingImageService.prototype.calculateStatusForObjectDetection = function (contributions) {
+    const referenceContribution = contributions.pop();
+    const secondContribution = contributions.pop();
+
+    const referenceTags = referenceContribution.tags;
+    const secondTags = secondContribution.tags;
+
+    //[{"label":"mustang","boundingBox":{"y":5.874396135265698,"x":5.2560386473429945,"width":117.38485997886474,"height":119.34299516908213}}]
+    const primaryAnalysis = tagAnalysis(referenceTags, secondTags);
+    if (primaryAnalysis.mismatches.length) {
+        // Tie-breaker needed. If there aren't any other contributions, the image status is IN_CONFLICT
+        if (contributions.length) {
+            const thirdContribution = contributions.pop();
+            const thirdTags = thirdContribution.tags;
+            const secondaryAnalysis = tagAnalysis(referenceTags, thirdTags);
+            if (secondaryAnalysis.mismatches.length) {
+                return 'in-conflict';
+            }
+            else {
+                return 'ready-for-training';
+            }
+        } else {
+            // There aren't any more contributions to serve as a tie-breaker.
+            return 'in-conflict';
+        }
+    } else {
+        // No mismatches, this is good, the image is now READY_FOR_TRAINING and the tags should be saved
+        return 'ready-for-training';
+    }
+}
+
+TrainingImageService.prototype.calculateStatusForImageClassification = function (contributions) {
+    const countByLabel = {};
+    contributions.forEach(contribution => {
+        if (countByLabel.hasOwnProperty(contribution.label)) {
+            countByLabel[contribution.label] += 1;
+        } else {
+            countByLabel[contribution.label] = 1;
+        }
+    });
+    const labelCount = Object.keys(countByLabel).length;
+    if (labelCount < 1) {
+        return 'tag-pending';
+    }
+    if (labelCount == 1) {
+        return 'ready-for-training';
+    }
+    return 'in-conflict';
 }
 
 TrainingImageService.prototype.setImageStatus = function (projectId, imageId, status) {
@@ -246,6 +312,84 @@ function mapImageToEntity(image) {
         PartitionKey: generator.String(image.projectId),
         RowKey: generator.String(image.id),
         status: image.status
+    };
+}
+
+function getImageURL(projectId, imageId) {
+    const containerName = ProjectService.getTrainingImageContainerName(projectId);
+    const url = BlobService.getUrl(containerName, imageId);
+    return url;
+}
+
+function tagToRbushRect(rectangle) {
+    return {
+        minX: rectangle.boundingBox.x,
+        minY: rectangle.boundingBox.y,
+        maxX: rectangle.boundingBox.x + rectangle.boundingBox.width,
+        maxY: rectangle.boundingBox.y + rectangle.boundingBox.height,
+        label: rectangle.label
+    };
+}
+
+function enlargedArea(a, b) {
+    return (Math.max(b.maxX, a.maxX) - Math.min(b.minX, a.minX)) *
+        (Math.max(b.maxY, a.maxY) - Math.min(b.minY, a.minY));
+}
+
+function intersectionArea(a, b) {
+    var minX = Math.max(a.minX, b.minX),
+        minY = Math.max(a.minY, b.minY),
+        maxX = Math.min(a.maxX, b.maxX),
+        maxY = Math.min(a.maxY, b.maxY);
+
+    return Math.max(0, maxX - minX) *
+        Math.max(0, maxY - minY);
+}
+
+function tagAnalysis(tagsA, tagsB, similarityThreshold) {
+    if (!similarityThreshold) {
+        similarityThreshold = process.env.RECTANGLE_SIMILARITY_THRESHOLD || 0.75;
+    }
+
+    const maxLength = Math.max(tagsA.length, tagsB.length);
+    const tree = rbush(maxLength);
+    tagsA.forEach(element => {
+        tree.insert(tagToRbushRect(element));
+    });
+
+    if (tagsB.length == 0) {
+        return {
+            matches: [],
+            mismatches: tagsA
+        }
+    }
+
+    const matches = [];
+    const mismatches = [];
+    tagsB.forEach(element => {
+        const rectangle = tagToRbushRect(element);
+        const intersectionArray = tree.search(rectangle);
+        if (!intersectionArray || intersectionArray.length == 0) {
+            mismatches.push(element);
+            return;
+        }
+
+        const aboveThreshold = intersectionArray.find(intersection => {
+            const score = intersectionArea(rectangle, intersection) / (1.0 * enlargedArea(rectangle, intersection));
+            return score > similarityThreshold;
+        });
+
+        if (aboveThreshold && aboveThreshold.label == element.label) {
+            matches.push(element);
+        } else {
+            mismatches.push(element);
+        }
+
+    });
+
+    return {
+        matches: matches,
+        mismatches: mismatches
     };
 }
 
