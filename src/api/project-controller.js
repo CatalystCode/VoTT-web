@@ -73,6 +73,4 @@ ProjectController.prototype.image = function (req, res) {
     res.redirect(url);
 };
 
-module.exports = {
-    ProjectController: ProjectController
-};
+module.exports = ProjectController;

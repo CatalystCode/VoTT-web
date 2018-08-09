@@ -200,6 +200,4 @@ function tryArrayParse(arrayString) {
     return arrayString.split(',');
 }
 
-module.exports = {
-    ProjectService: ProjectService
-};
+module.exports = ProjectService;

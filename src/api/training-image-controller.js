@@ -44,6 +44,4 @@ TrainingImageController.prototype.stats = function (req, res, next) {
     });
 }
 
-module.exports = {
-    TrainingImageController: TrainingImageController
-};
+module.exports = TrainingImageController;

@@ -94,6 +94,4 @@ function mapAccessRightToEntity(right) {
     };
 }
 
-module.exports = {
-    AccessRightsService: AccessRightsService
-};
+module.exports = AccessRightsService;

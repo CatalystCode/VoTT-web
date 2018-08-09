@@ -29,6 +29,4 @@ AccessRightsController.prototype.delete = function (req, res, next) {
     });
 };
 
-module.exports = {
-    AccessRightsController: AccessRightsController
-};
+module.exports = AccessRightsController;

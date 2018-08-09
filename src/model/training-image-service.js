@@ -141,6 +141,4 @@ function mapImageToEntity(image) {
     };
 }
 
-module.exports = {
-    TrainingImageService: TrainingImageService
-};
+module.exports = TrainingImageService;
