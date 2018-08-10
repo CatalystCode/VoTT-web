@@ -29,6 +29,6 @@ npm start
 ```
 
 ## Deploy to Azure
-Click this button to deploy web app, storage, and PostgreSQL resources to Azure. 
+Click this button to deploy web app and storage resources to Azure. 
 
 [![Deploy to Azure](https://azuredeploy.net/deploybutton.svg)](https://azuredeploy.net/)
