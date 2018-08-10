@@ -6,7 +6,7 @@ function AccessRightsController(accessRightsService) {
 }
 
 AccessRightsController.prototype.list = function (req, res, next) {
-    this.accessRightsService.list(req.query.projectId).then(result => {
+    this.accessRightsService.list(req.params.projectId).then(result => {
         res.json(result);
     }).catch(error => {
         expressFoundation.replyWithError(res, error);
@@ -14,7 +14,7 @@ AccessRightsController.prototype.list = function (req, res, next) {
 };
 
 AccessRightsController.prototype.create = function (req, res, next) {
-    this.accessRightsService.create(req.body).then(accessRight => {
+    this.accessRightsService.create(req.params.projectId, req.body).then(accessRight => {
         res.json(accessRight);
     }).catch(error => {
         expressFoundation.replyWithError(res, error);
@@ -22,7 +22,7 @@ AccessRightsController.prototype.create = function (req, res, next) {
 };
 
 AccessRightsController.prototype.delete = function (req, res, next) {
-    this.accessRightsService.delete(req.query.projectId, req.params.id).then(result => {
+    this.accessRightsService.delete(req.params.projectId, req.params.accessRightId).then(result => {
         res.json(result);
     }).catch(error => {
         expressFoundation.replyWithError(res, error);

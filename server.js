@@ -96,9 +96,9 @@ router.get('/projects/:projectId/tasks/next', collaboratorAccess, (req, res) => 
 router.post('/projects/:projectId/tasks/results', collaboratorAccess, (req, res) => { trainingImageController.pushTask(req, res); });
 
 const accessRightsController = new api.AccessRightsController(accessRightsService);
-router.get('/accessRights', managerAccess, (req, res, next) => { accessRightsController.list(req, res, next); });
-router.post('/accessRights', managerAccess, (req, res, next) => { accessRightsController.create(req, res, next); });
-router.delete('/accessRights/:id', managerAccess, (req, res, next) => { accessRightsController.delete(req, res, next); });
+router.get('/projects/:projectId/accessRights', managerAccess, (req, res, next) => { accessRightsController.list(req, res, next); });
+router.post('/projects/:projectId/accessRights', managerAccess, (req, res, next) => { accessRightsController.create(req, res, next); });
+router.delete('/projects/:projectId/accessRights/:accessRightId', managerAccess, (req, res, next) => { accessRightsController.delete(req, res, next); });
 
 app.use(
   '/api/vott/v1',

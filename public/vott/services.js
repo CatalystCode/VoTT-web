@@ -99,7 +99,7 @@ angular.module('vott.factories', [])
                 console.log(`createCollaborator: ${projectId}, ${userId}, ${email}, ${role}`)
                 return $http({
                     method: 'POST',
-                    url: `${baseUrl}/accessRights`,
+                    url: `${baseUrl}/projects/${projectId}/accessRights`,
                     data: {
                         projectId: projectId,
                         userId: userId,
@@ -111,7 +111,7 @@ angular.module('vott.factories', [])
             collaborators: function (projectId) {
                 return $http({
                     method: 'GET',
-                    url: `${baseUrl}/accessRights?projectId=${projectId}`
+                    url: `${baseUrl}/projects/${projectId}/accessRights`
                 });
             },
             deleteCollaborator: function (projectId, collaboratorId) {
@@ -120,7 +120,7 @@ angular.module('vott.factories', [])
                 console.log(collaboratorId);
                 return $http({
                     method: 'DELETE',
-                    url: `${baseUrl}/accessRights/${collaboratorId}?projectId=${projectId}`
+                    url: `${baseUrl}/projects/${projectId}/accessRights/${collaboratorId}`
                 });
             },
             trainingRequests: function (projectId) {

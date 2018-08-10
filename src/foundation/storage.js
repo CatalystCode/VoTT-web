@@ -52,6 +52,16 @@ module.exports = {
             });
         });
     },
+    deleteEntity: function (tableService, tableName, entity) {
+        return new Promise((resolve, reject) => {
+            tableService.deleteEntity(tableName, entity, (error) => {
+                if (error) {
+                    return reject(error);
+                }
+                return resolve();
+            });
+        });
+    },
     mergeEntity: function (tableService, tableName, entity) {
         return new Promise((resolve, reject) => {
             tableService.mergeEntity(tableName, entity, (error, result) => {
@@ -59,6 +69,16 @@ module.exports = {
                     return reject(error);
                 }
                 return resolve(result);
+            });
+        });
+    },
+    retrieveEntity: function (tableService, tableName, projectId, userId) {
+        return new Promise((resolve, reject) => {
+            tableService.retrieveEntity(tableName, projectId, userId, (error, entity) => {
+                if (error) {
+                    return reject(error);
+                }
+                return resolve(entity);
             });
         });
     },
