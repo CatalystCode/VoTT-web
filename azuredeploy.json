@@ -53,20 +53,6 @@
         "description": "The instance size of the hosting plan."
       }
     },
-    "repoURL": {
-      "type": "string",
-      "defaultValue": "https://github.com/catalystcode/vott-web.git",
-      "metadata": {
-        "description": "The URL for the GitHub repository that contains the project to deploy."
-      }
-    },
-    "branch": {
-      "type": "string",
-      "defaultValue": "master",
-      "metadata": {
-        "description": "The branch of the GitHub repository to use."
-      }
-    },
     "adminDisplayName": {
       "type": "string",
       "defaultValue": "Your Name"
@@ -76,8 +62,7 @@
       "defaultValue": "h4x0r"
     },
     "githubClient": {
-      "type": "string",
-      "defaultValue": "h4x0r"
+      "type": "string"
     },
     "githubSecret": {
       "type": "securestring"
@@ -137,19 +122,6 @@
         }
       },
       "resources": [
-        {
-          "apiVersion": "2015-08-01",
-          "name": "web",
-          "type": "sourcecontrols",
-          "dependsOn": [
-            "[Concat('Microsoft.Web/Sites/', variables('siteNameClean'))]"
-          ],
-          "properties": {
-            "RepoUrl": "[parameters('repoURL')]",
-            "branch": "[parameters('branch')]",
-            "IsManualIntegration": true
-          }
-        },
         {  
           "apiVersion":"2015-04-01",
           "name":"connectionstrings",
