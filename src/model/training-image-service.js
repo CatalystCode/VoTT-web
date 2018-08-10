@@ -346,9 +346,9 @@ function intersectionArea(a, b) {
         Math.max(0, maxY - minY);
 }
 
-function tagAnalysis(tagsA, tagsB, similarityThreshold) {
-    if (!similarityThreshold) {
-        similarityThreshold = process.env.RECTANGLE_SIMILARITY_THRESHOLD || 0.75;
+function tagAnalysis(tagsA, tagsB, iouThreshold) {
+    if (!iouThreshold) {
+        iouThreshold = process.env.RECTANGLE_SIMILARITY_THRESHOLD || 0.55;
     }
 
     const maxLength = Math.max(tagsA.length, tagsB.length);
@@ -375,8 +375,8 @@ function tagAnalysis(tagsA, tagsB, similarityThreshold) {
         }
 
         const aboveThreshold = intersectionArray.find(intersection => {
-            const score = intersectionArea(rectangle, intersection) / (1.0 * enlargedArea(rectangle, intersection));
-            return score > similarityThreshold;
+            const iou = intersectionArea(rectangle, intersection) / (1.0 * enlargedArea(rectangle, intersection));
+            return iou > iouThreshold;
         });
 
         if (aboveThreshold && aboveThreshold.label == element.label) {
