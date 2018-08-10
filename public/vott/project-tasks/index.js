@@ -6,15 +6,15 @@ angular.module('vott.project-tasks', [
   $scope.isLoadingProject = true;
   $scope.isLoadingTask = true;
 
-  $scope.tags = [];
-  $scope.currentTag = null;
-
-  $scope.createTag = function () {
+  $scope.createTag = function (currentLabel) {
     return {
-      label: null,
+      label: currentLabel,
       boundingBox: {}
     };
   };
+
+  $scope.tags = [];
+  $scope.currentTag = $scope.createTag();
 
   $scope.$watchGroup(['isLoadingProject', 'isLoadingTask'], function (newValues, oldValues, scope) {
     $scope.isLoading = $scope.isLoadingProject || $scope.isLoadingTask;
@@ -59,7 +59,6 @@ angular.module('vott.project-tasks', [
   $scope.setTask = function (task) {
     $scope.task = task;
     $scope.tags = [];
-    $scope.currentTag = null;
     $scope.taskImage = new Image();
     if (!task || !task.imageURL) {
       return;
@@ -107,8 +106,9 @@ angular.module('vott.project-tasks', [
 
   $scope.onmousedown = function (event) {
     const coordinates = $scope.imageEventCoordinates(event);
+    const currentLabel = $scope.currentTag.label;
     $scope.captureInProgress = true;
-    $scope.currentTag = $scope.createTag();
+    $scope.currentTag = $scope.createTag(currentLabel);
     $scope.currentTag.boundingBox.x1 = coordinates.x;
     $scope.currentTag.boundingBox.y1 = coordinates.y;
   };
@@ -155,7 +155,6 @@ angular.module('vott.project-tasks', [
   $scope.commitCurrentTag = function () {
     $scope.updateTag($scope.currentTag);
     $scope.tags.push($scope.currentTag);
-    $scope.currentTag = $scope.createTag();
   };
 
   $scope.imageScale = function (image, canvas) {
@@ -218,7 +217,6 @@ angular.module('vott.project-tasks', [
 
   $scope.cancel = function () {
     $scope.tags = [];
-    $scope.currentTag = null;
     $scope.drawTags();
   };
 
