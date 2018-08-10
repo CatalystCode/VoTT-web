@@ -63,7 +63,7 @@ app.get(
   '/auth/github/callback',
   passport.authenticate('github', { failureRedirect: '/login' }),
   (req, res) => {
-    res.redirect('/');
+    res.redirect('/welcome.html');
   }
 );
 
@@ -87,10 +87,11 @@ router.put('/projects/:id/instructionsImage', managerAccess, (req, res) => { pro
 
 const trainingImageService = new model.TrainingImageService(blobService, tableService, queueService, projectService);
 const trainingImageController = new api.TrainingImageController(trainingImageService);
-router.get('/trainingImages', managerAccess, (req, res, next) => { trainingImageController.list(req, res, next); });
-router.post('/trainingImages', managerAccess, (req, res, next) => { trainingImageController.allocate(req, res, next); });
-router.put('/trainingImages/:id', managerAccess, (req, res, next) => { trainingImageController.create(req, res, next); });
-router.get('/trainingImages/stats', managerAccess, (req, res, next) => { trainingImageController.stats(req, res, next); });
+router.get('/projects/:projectId/trainingImages', managerAccess, (req, res, next) => { trainingImageController.list(req, res, next); });
+router.get('/projects/:projectId/trainingImages/stats', managerAccess, (req, res, next) => { trainingImageController.stats(req, res, next); });
+router.post('/projects/:projectId/trainingImages', managerAccess, (req, res, next) => { trainingImageController.allocate(req, res, next); });
+router.put('/projects/:projectId/trainingImages/:imageId', managerAccess, (req, res, next) => { trainingImageController.create(req, res, next); });
+
 router.get('/projects/:projectId/tasks/next', collaboratorAccess, (req, res) => { trainingImageController.pullTask(req, res); });
 router.post('/projects/:projectId/tasks/results', collaboratorAccess, (req, res) => { trainingImageController.pushTask(req, res); });
 

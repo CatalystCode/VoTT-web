@@ -62,7 +62,7 @@ angular.module('vott.factories', [])
                 if (limit) {
                     query.push(`limit=${limit}`);
                 }
-                var url = `${baseUrl}/trainingImages?projectId=${projectId}`
+                var url = `${baseUrl}/projects/${projectId}/trainingImages`
                 if (query.length) {
                     url += '&' + query.join('&');
                 }
@@ -74,7 +74,7 @@ angular.module('vott.factories', [])
             trainingImageStats: function (projectId) {
                 return $http({
                     method: 'GET',
-                    url: `${baseUrl}/trainingImages/stats?projectId=${projectId}`
+                    url: `${baseUrl}/projects/${projectId}/trainingImages/stats`
                 });
             },
             createTrainingImage: function (projectId) {
@@ -82,14 +82,14 @@ angular.module('vott.factories', [])
                 console.log(projectId);
                 return $http({
                     method: 'POST',
-                    url: `${baseUrl}/trainingImages`,
+                    url: `${baseUrl}/projects/${projectId}/trainingImages`,
                     data: { projectId: projectId }
                 });
             },
             commitTrainingImage: function (image) {
                 return $http({
                     method: 'PUT',
-                    url: `${baseUrl}/trainingImages/${image.id}`,
+                    url: `${baseUrl}/projects/${image.projectId}/trainingImages/${image.id}`,
                     data: image
                 });
             },

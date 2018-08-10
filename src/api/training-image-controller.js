@@ -7,7 +7,7 @@ function TrainingImageController(trainingImageService) {
 
 TrainingImageController.prototype.list = function (req, res, next) {
     const currentToken = req.query.currentToken ? JSON.parse(req.query.currentToken) : null;
-    this.trainingImageService.list(req.query.projectId, currentToken, req.query.limit).then(result => {
+    this.trainingImageService.list(req.params.projectId, currentToken, req.query.limit).then(result => {
         res.json(result);
     }).catch(error => {
         expressFoundation.replyWithError(res, error);
@@ -31,7 +31,7 @@ TrainingImageController.prototype.create = function (req, res, next) {
 };
 
 TrainingImageController.prototype.stats = function (req, res, next) {
-    const projectId = req.query.projectId;
+    const projectId = req.params.projectId;
     // TODO: Find a way to do these counts in one go, a la 'select status, count(*) from trainingimage group by status;'
     Promise.all([
         this.trainingImageService.count(projectId, 'tag-pending').then(count => Promise.resolve({ status: 'tag-pending', count: count })),
