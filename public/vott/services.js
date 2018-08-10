@@ -78,18 +78,20 @@ angular.module('vott.factories', [])
                 });
             },
             createTrainingImage: function (projectId) {
-                console.log("Creating training image with:");
-                console.log(projectId);
+                const url = `${baseUrl}/projects/${projectId}/trainingImages`;
+                console.log(`Creating training image with: ${url}`);
                 return $http({
                     method: 'POST',
-                    url: `${baseUrl}/projects/${projectId}/trainingImages`,
+                    url: url,
                     data: { projectId: projectId }
                 });
             },
             commitTrainingImage: function (image) {
+                const url = `${baseUrl}/projects/${image.projectId}/trainingImages/${image.id}`;
+                console.log(`Committing training image with: ${url}`);
                 return $http({
                     method: 'PUT',
-                    url: `${baseUrl}/projects/${image.projectId}/trainingImages/${image.id}`,
+                    url: url,
                     data: image
                 });
             },

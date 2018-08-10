@@ -6,6 +6,7 @@
 function ProjectManagerAccessMiddleware() {
     return function (req, res, next) {
         if (!req || !req.accessRights) {
+            next();
             return;
         }
 

@@ -78,12 +78,12 @@ const projectService = new model.ProjectService(blobService, tableService, queue
 const projectController = new api.ProjectController(projectService);
 router.get('/projects', managerAccess, (req, res) => { projectController.list(req, res); });
 router.post('/projects', managerAccess, (req, res) => { projectController.create(req, res); });
-router.get('/projects/:id', managerAccess, (req, res) => { projectController.read(req, res); });
-router.put('/projects/:id', managerAccess, (req, res) => { projectController.update(req, res); });
-router.delete('/projects/:id', managerAccess, (req, res) => { projectController.delete(req, res); });
+router.get('/projects/:projectId', managerAccess, (req, res) => { projectController.read(req, res); });
+router.put('/projects/:projectId', managerAccess, (req, res) => { projectController.update(req, res); });
+router.delete('/projects/:projectId', managerAccess, (req, res) => { projectController.delete(req, res); });
 router.get('/projects/:projectId/images/:imageId', collaboratorAccess, (req, res) => { projectController.image(req, res); });
-router.post('/projects/:id/instructionsImage', managerAccess, (req, res) => { projectController.allocateInstructionsImage(req, res); });
-router.put('/projects/:id/instructionsImage', managerAccess, (req, res) => { projectController.commitInstructionsImage(req, res); });
+router.post('/projects/:projectId/instructionsImage', managerAccess, (req, res) => { projectController.allocateInstructionsImage(req, res); });
+router.put('/projects/:projectId/instructionsImage', managerAccess, (req, res) => { projectController.commitInstructionsImage(req, res); });
 
 const trainingImageService = new model.TrainingImageService(blobService, tableService, queueService, projectService);
 const trainingImageController = new api.TrainingImageController(trainingImageService);

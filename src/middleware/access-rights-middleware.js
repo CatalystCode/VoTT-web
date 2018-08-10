@@ -17,6 +17,7 @@ function AccessRightsInjector(accessRightsService) {
  */
 AccessRightsInjector.prototype.processRequest = function (req, res, next) {
     if (req.accessRights) {
+        next();
         return;
     }
     this.accessRightsService.read(
@@ -40,8 +41,7 @@ AccessRightsInjector.prototype.getProjectId = function (req) {
     const values = [
         req.query.projectId,
         req.params.projectId,
-        (req.body ? req.body.projectId : null),
-        req.params.id,
+        (req.body ? req.body.projectId : null)
     ];
     return values.find(value => value);
 }

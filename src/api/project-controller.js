@@ -22,7 +22,7 @@ ProjectController.prototype.create = function (req, res) {
 }
 
 ProjectController.prototype.read = function (req, res) {
-    const projectId = req.params.id;
+    const projectId = req.params.projectId;
     this.projectService.read(projectId).then(project => {
         res.json(project);
     }).catch(error => {
@@ -39,7 +39,7 @@ ProjectController.prototype.update = function (req, res) {
 }
 
 ProjectController.prototype.delete = function (req, res, next) {
-    const projectId = req.params.id;
+    const projectId = req.params.projectId;
     this.projectService.delete(projectId).then(result => {
         res.json({});
     }).catch(error => {
@@ -48,7 +48,7 @@ ProjectController.prototype.delete = function (req, res, next) {
 }
 
 ProjectController.prototype.allocateInstructionsImage = function (req, res) {
-    const projectId = req.params.id;
+    const projectId = req.params.projectId;
     this.projectService.allocateInstructionsImage(projectId).then(image => {
         res.json(image);
     }).catch(error => {
@@ -57,7 +57,7 @@ ProjectController.prototype.allocateInstructionsImage = function (req, res) {
 }
 
 ProjectController.prototype.commitInstructionsImage = function (req, res) {
-    const projectId = req.params.id;
+    const projectId = req.params.projectId;
     const image = req.body;
     this.projectService.commitInstructionsImage(projectId, image).then(project => {
         res.json(image);
