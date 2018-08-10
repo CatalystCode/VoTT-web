@@ -9,21 +9,38 @@ function AccessRightsService(tableService) {
 
     this.userTableName = 'Users';
     this.accessRightsByProjectTableName = 'AccessRightsByProject';
-    this.ensureTablesExist();
+    this.prepare();
+}
+
+AccessRightsService.prototype.prepare = async function () {
+    await this.ensureTablesExist();
+    await this.ensureAdminUserAccessRights();
 }
 
 AccessRightsService.prototype.ensureTablesExist = function () {
-    return new Promise((resolve, reject) => {
-        async.series(
-            [
-                (callback) => { this.tableService.createTableIfNotExists(this.userTableName, callback); },
-                (callback) => { this.tableService.createTableIfNotExists(this.accessRightsByProjectTableName, callback); }
-            ],
-            (error, results) => {
-                if (error) return reject(error);
-                resolve(results);
-            }
-        );
+    return Promise.all([
+        storageFoundation.createTableIfNotExists(this.tableService, this.userTableName),
+        storageFoundation.createTableIfNotExists(this.tableService, this.accessRightsByProjectTableName)
+    ]);
+}
+
+AccessRightsService.prototype.ensureAdminUserAccessRights = function () {
+    const userId = process.env.VOTT_DEFAULT_ADMIN_GITHUB_USER;
+    if (!userId) {
+        return Promise.resolve();
+    }
+
+    return this.create('root', {
+        userId: userId,
+        name: process.env.VOTT_DEFAULT_ADMIN_NAME,
+        email: process.env.VOTT_DEFAULT_ADMIN_EMAIL,
+        role: 'project-manager'
+    }).catch(error => {
+        if (error.statusCode && error.statusCode == 409) {
+            console.log("Admin user access rights already present.");
+            return;
+        }
+        return error;
     });
 }
 
@@ -51,14 +68,15 @@ AccessRightsService.prototype.read = function (projectId, userId) {
 }
 
 AccessRightsService.prototype.upsertUser = function (user) {
-    return new Promise((resolve, reject) => {
-        const entity = mapUserToEntity(user);
-        this.tableService.insertEntity(this.userTableName, entity, (error, result, response) => {
-            if (error) {
-                return reject(error);
-            }
-            return resolve(user);
-        });
+    const entity = mapUserToEntity(user);
+    return storageFoundation.insertEntity(this.tableService, this.userTableName, entity).then(result => {
+        return user;
+    }).catch(error => {
+        if (error.statusCode && error.statusCode == 409) {
+            console.log("Admin user access rights already present.");
+            return user;
+        }
+        return error;
     });
 }
 
