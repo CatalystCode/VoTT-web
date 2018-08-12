@@ -1,0 +1,58 @@
+<div class="container-fluid">
+  <div class="container">
+    <h2>{{ isNewRecord() ? 'New Project' : project.name }}</h2>
+  </div>
+  <nav>
+    <div class="container">
+      <ul class="nav navbar-nav">
+        <li>
+          <a href ng-click="details()">Details</a>
+        </li>
+        <li class="active">
+          <a href ng-click="manageTasks()">Tasks</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</div>
+
+<div class="container">
+
+  <hr/>
+
+  <div ng-if="isLoading">
+    <h4>Loading...</h4>
+    <div class="loader"></div>
+  </div>
+  <div ng-if="!isLoading">
+
+    <h4 ng-if="!task">No tagging tasks available at this time. Please try again soon.</h4>
+    <canvas ng-if="task"
+      id="taskCanvas"
+      onmousedown="angular.element(this).scope().onmousedown(event)"
+      onmousemove="angular.element(this).scope().onmousemove(event)"
+      onmouseup="angular.element(this).scope().onmouseup(event)"
+      onmouseout="angular.element(this).scope().onmouseout(event)"
+      width="480"
+      height="480"></canvas>
+
+    <hr/>
+    <form ng-if="task">
+      <div class="form-group">
+        <label for="tagLabel">Label</label>
+        <select
+          class="form-control"
+          ng-model="currentTag.label"
+          id="tagLabel"
+          aria-describedby="tagLabelHelp">
+          <option ng-repeat="label in task.labels" value="{{label}}">{{label}}</option>
+        </select>
+        <small id="tagLabelHelp" class="form-text text-muted">Select a label.</small>
+      </div>
+      <button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
+      <button type="button" class="btn btn-success" ng-click="save()">Save</button>
+    </form>
+  </div>
+
+
+</div>

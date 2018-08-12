@@ -56,9 +56,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.get('/login', passport.authenticate('github'));
-app.get('/vott', connect_ensure_login.ensureLoggedIn(), (req, res, next) => {
-  next();
-});
 app.get(
   '/auth/github/callback',
   passport.authenticate('github', { failureRedirect: '/login' }),
@@ -76,7 +73,7 @@ const collaboratorAccess = middleware.ProjectCollaboratorAccessMiddleware();
 
 const projectService = new model.ProjectService(blobService, tableService, queueService);
 const projectController = new api.ProjectController(projectService);
-router.get('/projects', managerAccess, (req, res) => { projectController.list(req, res); });
+router.get('/projects', collaboratorAccess, (req, res) => { projectController.list(req, res); });
 router.post('/projects', managerAccess, (req, res) => { projectController.create(req, res); });
 router.get('/projects/:projectId', managerAccess, (req, res) => { projectController.read(req, res); });
 router.put('/projects/:projectId', managerAccess, (req, res) => { projectController.update(req, res); });
@@ -100,11 +97,32 @@ router.get('/projects/:projectId/accessRights', managerAccess, (req, res, next) 
 router.post('/projects/:projectId/accessRights', managerAccess, (req, res, next) => { accessRightsController.create(req, res, next); });
 router.delete('/projects/:projectId/accessRights/:accessRightId', managerAccess, (req, res, next) => { accessRightsController.delete(req, res, next); });
 
+//http://localhost:8080/api/vott/v1/trainingRequests?projectId=29f75237-9ba4-4039-96d1-80be502914dc
+
+const accessRightsMiddleware = middleware.AccessRightsMiddleware(accessRightsService);
 app.use(
   '/api/vott/v1',
   connect_ensure_login.ensureLoggedIn(),
-  middleware.AccessRightsMiddleware(accessRightsService),
+  accessRightsMiddleware,
   router
+);
+
+app.get('/vott',
+  connect_ensure_login.ensureLoggedIn(),
+  accessRightsMiddleware,
+  managerAccess,
+  (req, res, next) => {
+    next();
+  }
+);
+
+app.get('/tasks',
+  connect_ensure_login.ensureLoggedIn(),
+  accessRightsMiddleware,
+  managerAccess,
+  (req, res, next) => {
+    next();
+  }
 );
 
 app.use(require('serve-static')(path.join(__dirname, 'public')));
