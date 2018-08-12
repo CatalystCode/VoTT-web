@@ -97,7 +97,11 @@ router.get('/projects/:projectId/accessRights', managerAccess, (req, res, next) 
 router.post('/projects/:projectId/accessRights', managerAccess, (req, res, next) => { accessRightsController.create(req, res, next); });
 router.delete('/projects/:projectId/accessRights/:accessRightId', managerAccess, (req, res, next) => { accessRightsController.delete(req, res, next); });
 
-//http://localhost:8080/api/vott/v1/trainingRequests?projectId=29f75237-9ba4-4039-96d1-80be502914dc
+const trainingRequestService = new model.TrainingRequestService(blobService, tableService, queueService);
+const trainingRequestController = new api.TrainingRequestController(trainingRequestService);
+router.get('/trainingRequests', managerAccess, (req, res, next) => { trainingRequestController.list(req, res, next); });
+router.post('/trainingRequests', managerAccess, (req, res, next) => { trainingRequestController.create(req, res, next); });
+router.delete('/trainingRequests/:requestId', managerAccess, (req, res, next) => { trainingRequestController.delete(req, res, next); });
 
 const accessRightsMiddleware = middleware.AccessRightsMiddleware(accessRightsService);
 app.use(
