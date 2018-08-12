@@ -22,7 +22,7 @@ TrainingRequestController.prototype.create = function (req, res, next) {
 };
 
 TrainingRequestController.prototype.delete = function (req, res, next) {
-    this.trainingRequestService.delete(req.query.requestId).then(result => {
+    this.trainingRequestService.delete(req.query.projectId, req.params.requestId).then(result => {
         res.json(result);
     }).catch(error => {
         expressFoundation.replyWithError(res, error);
