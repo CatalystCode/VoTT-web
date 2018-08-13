@@ -1,9 +1,9 @@
 /**
- * ProjectCollaboratorAccessMiddleware ensures the request is associated to a user
+ * ProjectCollaboratorAccessPolicy ensures the request is associated to a user
  * who has project collaborator (or higher) access  to the project referenced
  * in the request.
  */
-function ProjectCollaboratorAccessMiddleware() {
+function ProjectCollaboratorAccessPolicy() {
     return function (req, res, next) {
         if (!req || !req.accessRights) {
             res.status(403);
@@ -22,4 +22,4 @@ function ProjectCollaboratorAccessMiddleware() {
     }
 }
 
-module.exports = ProjectCollaboratorAccessMiddleware;
+module.exports = ProjectCollaboratorAccessPolicy;

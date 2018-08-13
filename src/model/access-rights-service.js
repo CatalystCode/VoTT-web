@@ -9,8 +9,9 @@ const AccessRightsRole = Object.freeze({
     PROJECT_COLLABORATOR: 'project-collaborator'
 });
 
-function AccessRightsService(tableService) {
+function AccessRightsService(tableService, cache) {
     this.tableService = tableService;
+    this.cache = cache;
 
     this.userTableName = 'Users';
     this.accessRightsByUserTableName = 'AccessRightsByUser';
@@ -52,15 +53,26 @@ AccessRightsService.prototype.ensureAdminUserAccessRights = function () {
 }
 
 AccessRightsService.prototype.list = function (projectId) {
+    const cacheKey = this.cacheKeyForList(projectId);
+    const cachedRights = this.cache.get(cacheKey);
+    if (cachedRights) {
+        return Promise.resolve(cachedRights);
+    }
+
     const tableQuery = new azureStorage.TableQuery().where('PartitionKey == ?', projectId);
     return storageFoundation.queryEntities(this.tableService, this.accessRightsByProjectTableName, tableQuery).then(result => {
-        return result.entries.map(entity => {
+        const rights = result.entries.map(entity => {
             return this.mapEntityToAccessRight(entity);
         });
+        this.cache.set(cacheKey, rights);
+        return rights;
     });
 }
 
 AccessRightsService.prototype.create = function (projectId, record) {
+    const cacheKey = this.cacheKeyForList(projectId);
+    this.cache.del(cacheKey);
+
     const entityByProject = mapProjectAccessRightToEntity(projectId, record);
     const entityByUser = mapUserAccessRightToEntity(projectId, record);
     return Promise.all([
@@ -73,15 +85,32 @@ AccessRightsService.prototype.read = function (projectId, userId) {
     if (!projectId) {
         projectId = 'root';
     }
+
+    const cacheKey = this.cacheKeyForRead(projectId, userId);
+    const cachedRight = this.cache.get(cacheKey);
+    if (cachedRight) {
+        return Promise.resolve(cachedRight);
+    }
+
     return storageFoundation.retrieveEntity(this.tableService, this.accessRightsByProjectTableName, projectId, userId.toLowerCase()).then(entity => {
-        return this.mapEntityToAccessRight(entity);
+        const right = this.mapEntityToAccessRight(entity);
+        this.cache.set(cacheKey, right);
+        return right;
     });
 }
 
 AccessRightsService.prototype.isRegistered = function (userId) {
+    const cacheKey = this.cacheKeyForIsRegistered(userId);
+    const cachedIsRegistered = this.cache.get(cacheKey);
+    if (cachedIsRegistered != undefined) {
+        return Promise.resolve(cachedIsRegistered);
+    }
+
     const tableQuery = new azureStorage.TableQuery().top(1).where('PartitionKey == ?', userId.toLowerCase());
     return storageFoundation.queryEntities(this.tableService, this.accessRightsByUserTableName, tableQuery).then(result => {
-        return result.entries.length > 0;
+        const isRegistered = result.entries.length > 0;
+        this.cache.set(cacheKey, isRegistered);
+        return isRegistered;
     });
 }
 
@@ -124,7 +153,7 @@ AccessRightsService.prototype.mapEntityToAccessRight = function (rightEntity) {
         user: {
             userId: userId,
             name: (rightEntity.name) ? rightEntity.name._ : null,
-            email: rightEntity.email._
+            email: (rightEntity.email) ? rightEntity.email._ : null
         }
     };
 }
@@ -175,6 +204,18 @@ function mapEntityToUser(user) {
         username: rightEntity.PartitionKey._,
         displayName: rightEntity.displayName._
     };
+}
+
+AccessRightsService.prototype.cacheKeyForList = function (projectId) {
+    return `list(${projectId})`;
+}
+
+AccessRightsService.prototype.cacheKeyForRead = function (projectId, userId) {
+    return `read(${projectId}, ${userId})`;
+}
+
+AccessRightsService.prototype.cacheKeyForIsRegistered = function (userId) {
+    return `isRegistered(${userId})`;
 }
 
 module.exports = AccessRightsService;

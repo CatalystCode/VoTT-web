@@ -13,6 +13,7 @@ const expressSession = require('express-session');
 const passport = require('passport');
 const passportGithub = require('passport-github');
 const path = require('path');
+const NodeCache = require('node-cache');
 const model = require('./src/model');
 
 const blobServiceConnectionString = process.env.BLOB_SERVICE_CONNECTION_STRING;
@@ -24,7 +25,8 @@ const tableService = azureStorage.createTableService(tableServiceConnectionStrin
 const queueServiceConnectionString = process.env.QUEUE_SERVICE_CONNECTION_STRING;
 const queueService = azureStorage.createQueueService(queueServiceConnectionString);
 
-const accessRightsService = new model.AccessRightsService(tableService);
+const accessRightsCache = new NodeCache({ stdTTL: 100, checkperiod: 120 });
+const accessRightsService = new model.AccessRightsService(tableService, accessRightsCache);
 
 passport.use(new passportGithub.Strategy(
   {
@@ -68,55 +70,53 @@ const router = new express.Router();
 const api = require('./src/api');
 const middleware = require('./src/middleware');
 
-const managerAccess = new middleware.ProjectManagerAccessMiddleware();
-const collaboratorAccess = new middleware.ProjectCollaboratorAccessMiddleware();
+const accessRightsMiddleware = new middleware.AccessRightsMiddleware(accessRightsService);
+const managerAccess = new middleware.ProjectManagerAccessPolicy();
+const collaboratorAccess = new middleware.ProjectCollaboratorAccessPolicy();
 
 const projectService = new model.ProjectService(blobService, tableService, queueService);
 const projectController = new api.ProjectController(projectService);
 router.get('/projects', (req, res) => { projectController.list(req, res); });
-router.post('/projects', managerAccess, (req, res) => { projectController.create(req, res); });
-router.get('/projects/:projectId', collaboratorAccess, (req, res) => { projectController.read(req, res); });
-router.put('/projects/:projectId', managerAccess, (req, res) => { projectController.update(req, res); });
-router.delete('/projects/:projectId', managerAccess, (req, res) => { projectController.delete(req, res); });
-router.get('/projects/:projectId/images/:imageId', collaboratorAccess, (req, res) => { projectController.image(req, res); });
-router.post('/projects/:projectId/instructionsImage', managerAccess, (req, res) => { projectController.allocateInstructionsImage(req, res); });
-router.put('/projects/:projectId/instructionsImage', managerAccess, (req, res) => { projectController.commitInstructionsImage(req, res); });
+router.post('/projects', accessRightsMiddleware, managerAccess, (req, res) => { projectController.create(req, res); });
+router.get('/projects/:projectId', accessRightsMiddleware, collaboratorAccess, (req, res) => { projectController.read(req, res); });
+router.put('/projects/:projectId', accessRightsMiddleware, managerAccess, (req, res) => { projectController.update(req, res); });
+router.delete('/projects/:projectId', accessRightsMiddleware, managerAccess, (req, res) => { projectController.delete(req, res); });
+router.get('/projects/:projectId/images/:imageId', accessRightsMiddleware, collaboratorAccess, (req, res) => { projectController.image(req, res); });
+router.post('/projects/:projectId/instructionsImage', accessRightsMiddleware, managerAccess, (req, res) => { projectController.allocateInstructionsImage(req, res); });
+router.put('/projects/:projectId/instructionsImage', accessRightsMiddleware, managerAccess, (req, res) => { projectController.commitInstructionsImage(req, res); });
 
 const trainingImageService = new model.TrainingImageService(blobService, tableService, queueService, projectService);
 const trainingImageController = new api.TrainingImageController(trainingImageService);
-router.get('/projects/:projectId/trainingImages', managerAccess, (req, res, next) => { trainingImageController.list(req, res, next); });
-router.get('/projects/:projectId/trainingImages/stats', managerAccess, (req, res, next) => { trainingImageController.stats(req, res, next); });
-router.post('/projects/:projectId/trainingImages', managerAccess, (req, res, next) => { trainingImageController.allocate(req, res, next); });
-router.put('/projects/:projectId/trainingImages/:imageId', managerAccess, (req, res, next) => { trainingImageController.create(req, res, next); });
+router.get('/projects/:projectId/trainingImages', accessRightsMiddleware, managerAccess, (req, res, next) => { trainingImageController.list(req, res, next); });
+router.get('/projects/:projectId/trainingImages/stats', accessRightsMiddleware, managerAccess, (req, res, next) => { trainingImageController.stats(req, res, next); });
+router.post('/projects/:projectId/trainingImages', accessRightsMiddleware, managerAccess, (req, res, next) => { trainingImageController.allocate(req, res, next); });
+router.put('/projects/:projectId/trainingImages/:imageId', accessRightsMiddleware, managerAccess, (req, res, next) => { trainingImageController.create(req, res, next); });
 
-router.get('/projects/:projectId/tasks/next', collaboratorAccess, (req, res) => { trainingImageController.pullTask(req, res); });
-router.post('/projects/:projectId/tasks/results', collaboratorAccess, (req, res) => { trainingImageController.pushTask(req, res); });
+router.get('/projects/:projectId/tasks/next', accessRightsMiddleware, collaboratorAccess, (req, res) => { trainingImageController.pullTask(req, res); });
+router.post('/projects/:projectId/tasks/results', accessRightsMiddleware, collaboratorAccess, (req, res) => { trainingImageController.pushTask(req, res); });
 
 const accessRightsController = new api.AccessRightsController(accessRightsService);
-router.get('/projects/:projectId/accessRights', managerAccess, (req, res, next) => { accessRightsController.list(req, res, next); });
-router.post('/projects/:projectId/accessRights', managerAccess, (req, res, next) => { accessRightsController.create(req, res, next); });
-router.delete('/projects/:projectId/accessRights/:accessRightId', managerAccess, (req, res, next) => { accessRightsController.delete(req, res, next); });
+router.get('/projects/:projectId/accessRights', accessRightsMiddleware, managerAccess, (req, res, next) => { accessRightsController.list(req, res, next); });
+router.post('/projects/:projectId/accessRights', accessRightsMiddleware, managerAccess, (req, res, next) => { accessRightsController.create(req, res, next); });
+router.delete('/projects/:projectId/accessRights/:accessRightId', accessRightsMiddleware, managerAccess, (req, res, next) => { accessRightsController.delete(req, res, next); });
 
 const trainingRequestService = new model.TrainingRequestService(blobService, tableService, queueService, projectService, trainingImageService);
 const trainingRequestController = new api.TrainingRequestController(trainingRequestService);
-router.get('/projects/:projectId/trainingRequests', managerAccess, (req, res, next) => { trainingRequestController.list(req, res, next); });
-router.post('/projects/:projectId/trainingRequests', managerAccess, (req, res, next) => { trainingRequestController.create(req, res, next); });
-router.delete('/projects/:projectId/trainingRequests/:requestId', managerAccess, (req, res, next) => { trainingRequestController.delete(req, res, next); });
-router.get('/projects/:projectId/trainingRequests/:requestId/annotations.csv', managerAccess, (req, res, next) => { trainingRequestController.export(req, res, next); });
+router.get('/projects/:projectId/trainingRequests', accessRightsMiddleware, managerAccess, (req, res, next) => { trainingRequestController.list(req, res, next); });
+router.post('/projects/:projectId/trainingRequests', accessRightsMiddleware, managerAccess, (req, res, next) => { trainingRequestController.create(req, res, next); });
+router.delete('/projects/:projectId/trainingRequests/:requestId', accessRightsMiddleware, managerAccess, (req, res, next) => { trainingRequestController.delete(req, res, next); });
+router.get('/projects/:projectId/trainingRequests/:requestId/annotations.csv', accessRightsMiddleware, managerAccess, (req, res, next) => { trainingRequestController.export(req, res, next); });
 
-const accessRightsMiddleware = new middleware.AccessRightsMiddleware(accessRightsService);
-const registeredUserMiddleware = new middleware.RegisteredUserMiddleware();
+const registeredUserMiddleware = new middleware.RegisteredUserAccessPolicy(accessRightsService);
 app.use(
   '/api/vott/v1',
   connect_ensure_login.ensureLoggedIn(),
-  accessRightsMiddleware,
   registeredUserMiddleware,
   router
 );
 
 app.get('/vott',
   connect_ensure_login.ensureLoggedIn(),
-  accessRightsMiddleware,
   registeredUserMiddleware,
   (req, res, next) => {
     next();
@@ -125,7 +125,6 @@ app.get('/vott',
 
 app.get('/tasks',
   connect_ensure_login.ensureLoggedIn(),
-  accessRightsMiddleware,
   registeredUserMiddleware,
   (req, res, next) => {
     next();
