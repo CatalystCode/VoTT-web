@@ -81,7 +81,7 @@ AccessRightsService.prototype.read = function (projectId, userId) {
 AccessRightsService.prototype.isRegistered = function (userId) {
     const tableQuery = new azureStorage.TableQuery().top(1).where('PartitionKey == ?', userId.toLowerCase());
     return storageFoundation.queryEntities(this.tableService, this.accessRightsByUserTableName, tableQuery).then(result => {
-        return result.entries.lenth > 0;
+        return result.entries.length > 0;
     });
 }
 
