@@ -30,7 +30,7 @@ passport.use(new passportGithub.Strategy(
   {
     clientID: process.env.GITHUB_CLIENT,
     clientSecret: process.env.GITHUB_SECRET,
-    callbackURL: `${process.env.WEBSITE_HOSTNAME}/auth/github/callback`
+    callbackURL: `/auth/github/callback`
   },
   (accessToken, refreshToken, profile, cb) => {
     return cb(null, profile);
