@@ -61,8 +61,20 @@ TrainingRequestService.prototype.create = function (projectId) {
         const containerName = this.projectService.getModelContainerName(projectId);
         const blobName = this.getCsvBlobName(projectId, entity.RowKey._);
         storageFoundation.createBlockBlobFromText(this.blobService, containerName, blobName, csvText).then(result => {
-            // TODO: Create the queue entry.
-            return storageFoundation.insertEntity(this.tableService, this.trainingRequestsTableName, entity);
+            const queueName = this.projectService.getTrainQueueName(projectId);
+            const url = storageFoundation.createSAS(
+                this.blobService,
+                containerName,
+                blobName,
+                60 * 24 * 7,
+                azureStorage.BlobUtilities.SharedAccessPermissions.READ
+            ).url;
+            const queueMessage = JSON.stringify({
+                url: url
+            });
+            return storageFoundation.createMessage(this.queueService, queueName, queueMessage).then(result => {
+                return storageFoundation.insertEntity(this.tableService, this.trainingRequestsTableName, entity);
+            });
         });
     });
 }

@@ -102,4 +102,14 @@ module.exports = {
             });
         });
     },
+    createMessage: function (queueService, queueName, message) {
+        return new Promise((resolve, reject) => {
+            queueService.createMessage(queueName, message, (error) => {
+                if (error) {
+                    return reject(error);
+                }
+                resolve({});
+            });
+        });
+    },
 };
