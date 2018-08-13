@@ -6,6 +6,7 @@ First make sure you have a `.env` file created and that it includes the followin
 
 ```
 PORT=8080
+WEBSITE_HOSTNAME=http://localhost:8080
 
 AZURE_STORAGE_CONNECTION_STRING=
 GITHUB_CLIENT=

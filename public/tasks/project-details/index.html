@@ -25,15 +25,7 @@
 
     <form ng-if="!isLoading">
         <div class="form-group">
-            <label for="projectName">Name</label>
-            <label class="form-control" id="projectName" aria-describedby="projectNameHelp">{{project.name}}</label>
-        </div>
-        <div class="form-group">
-            <label for="projectType">Type</label>
-            <label class="form-control" id="projectType" aria-describedby="projectTypeHelp">{{project.type.replace('-', ' ') | lowercase}}</label>
-        </div>
-        <div class="form-group">
-            <label for="labels">Tags</label>
+            <label for="labels">Labels</label>
             <label class="form-control" id="labels" aria-describedby="labelsHelp">{{project.labels.join(', ')}}</label>
         </div>
         <div class="form-group">
@@ -41,7 +33,7 @@
             <label class="form-control" id="instructionsText" aria-describedby="instructionsTextHelp">{{project.instructionsText}}</label>
         </div>
         <div class="form-group" ng-if="instructionsImageURL()">
-            <label for="instructionsImage">Instructions Image</label>
+            <label for="instructionsImage">Sample Image</label>
             <img ng-src="{{instructionsImageURL()}}" class="img-thumbnail" style="width: 128pt; height: 128pt; display: block;">
         </div>
     </form>
@@ -49,21 +41,3 @@
     <hr/>
 
 </div>
-
-<div id="uploadProgressModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="uploadProgressModalLabel" aria-hidden="true"
-    data-keyboard="false">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="uploadProgressModalLabel">Uploading</h5>
-            </div>
-            <div class="modal-body">
-                <progress id="uploadProgressBar" value="0" max="100" style="width: 100%"></progress>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-warning" data-dismiss="modal">Cancel</button>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Delete confirmation -->

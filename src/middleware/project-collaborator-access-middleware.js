@@ -6,7 +6,8 @@
 function ProjectCollaboratorAccessMiddleware() {
     return function (req, res, next) {
         if (!req || !req.accessRights) {
-            next();
+            res.status(403);
+            res.send("Access denied.");
             return;
         }
 
@@ -17,6 +18,7 @@ function ProjectCollaboratorAccessMiddleware() {
         }
 
         res.status(403);
+        res.send("Access denied.");
     }
 }
 

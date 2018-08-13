@@ -30,7 +30,7 @@ passport.use(new passportGithub.Strategy(
   {
     clientID: process.env.GITHUB_CLIENT,
     clientSecret: process.env.GITHUB_SECRET,
-    callbackURL: "http://localhost:8080/auth/github/callback"
+    callbackURL: `${process.env.VOTT_HOSTNAME}/auth/github/callback`
   },
   (accessToken, refreshToken, profile, cb) => {
     return cb(null, profile);
@@ -73,9 +73,9 @@ const collaboratorAccess = middleware.ProjectCollaboratorAccessMiddleware();
 
 const projectService = new model.ProjectService(blobService, tableService, queueService);
 const projectController = new api.ProjectController(projectService);
-router.get('/projects', collaboratorAccess, (req, res) => { projectController.list(req, res); });
+router.get('/projects', (req, res) => { projectController.list(req, res); });
 router.post('/projects', managerAccess, (req, res) => { projectController.create(req, res); });
-router.get('/projects/:projectId', managerAccess, (req, res) => { projectController.read(req, res); });
+router.get('/projects/:projectId', collaboratorAccess, (req, res) => { projectController.read(req, res); });
 router.put('/projects/:projectId', managerAccess, (req, res) => { projectController.update(req, res); });
 router.delete('/projects/:projectId', managerAccess, (req, res) => { projectController.delete(req, res); });
 router.get('/projects/:projectId/images/:imageId', collaboratorAccess, (req, res) => { projectController.image(req, res); });
@@ -105,17 +105,19 @@ router.delete('/projects/:projectId/trainingRequests/:requestId', managerAccess,
 router.get('/projects/:projectId/trainingRequests/:requestId/annotations.csv', managerAccess, (req, res, next) => { trainingRequestController.export(req, res, next); });
 
 const accessRightsMiddleware = middleware.AccessRightsMiddleware(accessRightsService);
+const registeredUserMiddleware = middleware.RegisteredUserMiddleware(accessRightsService);
 app.use(
   '/api/vott/v1',
   connect_ensure_login.ensureLoggedIn(),
   accessRightsMiddleware,
+  registeredUserMiddleware,
   router
 );
 
 app.get('/vott',
   connect_ensure_login.ensureLoggedIn(),
   accessRightsMiddleware,
-  managerAccess,
+  registeredUserMiddleware,
   (req, res, next) => {
     next();
   }
@@ -124,11 +126,11 @@ app.get('/vott',
 app.get('/tasks',
   connect_ensure_login.ensureLoggedIn(),
   accessRightsMiddleware,
-  managerAccess,
+  registeredUserMiddleware,
   (req, res, next) => {
     next();
   }
 );
 
 app.use(require('serve-static')(path.join(__dirname, 'public')));
-app.listen(PORT, () => console.log(`Listening on port ${PORT}.`));
+app.listen(PORT, () => console.log(`Listening on port ${PORT} (${process.env.VOTT_HOSTNAME}).`));

@@ -4,6 +4,11 @@ const uuid = require('uuid/v4');
 
 const storageFoundation = require('../foundation/storage');
 
+const AccessRightsRole = Object.freeze({
+    PROJECT_MANAGER: 'project-manager',
+    PROJECT_COLLABORATOR: 'project-collaborator'
+});
+
 function AccessRightsService(tableService) {
     this.tableService = tableService;
 
@@ -36,7 +41,7 @@ AccessRightsService.prototype.ensureAdminUserAccessRights = function () {
         userId: userId,
         name: process.env.VOTT_DEFAULT_ADMIN_NAME,
         email: process.env.VOTT_DEFAULT_ADMIN_EMAIL,
-        role: 'project-manager'
+        role: AccessRightsRole.PROJECT_MANAGER
     }).catch(error => {
         if (error.statusCode && error.statusCode == 409) {
             console.log("Admin user access rights already present.");
@@ -70,6 +75,13 @@ AccessRightsService.prototype.read = function (projectId, userId) {
     }
     return storageFoundation.retrieveEntity(this.tableService, this.accessRightsByProjectTableName, projectId, userId).then(entity => {
         return this.mapEntityToAccessRight(entity);
+    });
+}
+
+AccessRightsService.prototype.isRegistered = function (userId) {
+    const tableQuery = new azureStorage.TableQuery().top(1).where('PartitionKey == ?', userId);
+    return storageFoundation.queryEntities(this.tableService, this.accessRightsByUserTableName, tableQuery).then(result => {
+        return result.entries.lenth > 0;
     });
 }
 
