@@ -41,6 +41,30 @@ TrainingImageService.prototype.list = function (projectId, currentToken, request
     });
 }
 
+TrainingImageService.prototype.getReadyForTraining = function (projectId, currentToken) {
+    const status = 'ready-for-training';
+    const tableQuery = new azureStorage.TableQuery().where('PartitionKey == ? and status == ?', projectId, status);
+    return new Promise((resolve, reject) => {
+        this.tableService.queryEntities(this.trainingImagesTableName, tableQuery, currentToken, (error, result) => {
+            if (error) {
+                return reject(error);
+            }
+            const records = result.entries.map(entity => {
+                return this.mapEntityToImage(entity);
+            });
+            if (result.continuationToken) {
+                return this.getReadyForTraining(projectId, result.continuationToken).then(moreRecords => {
+                    resolve(records.concat(moreRecords));
+                }).catch(error => {
+                    resolve(records);
+                });
+            } else {
+                resolve(records);
+            }
+        });
+    });
+}
+
 TrainingImageService.prototype.count = function (projectId, status, currentToken) {
     return new Promise((resolve, reject) => {
         const tableQuery = new azureStorage.TableQuery().select('PrimaryKey').where('PartitionKey == ? and status == ?', projectId, status);

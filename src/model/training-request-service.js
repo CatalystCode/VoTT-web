@@ -3,10 +3,12 @@ const uuid = require('uuid/v4');
 
 const storageFoundation = require('../foundation/storage');
 
-function TrainingRequestService(blobService, tableService, queueService) {
+function TrainingRequestService(blobService, tableService, queueService, projectService, trainingImageService) {
     this.blobService = blobService;
     this.tableService = tableService;
     this.queueService = queueService;
+    this.projectService = projectService;
+    this.trainingImageService = trainingImageService;
 
     this.trainingRequestsTableName = 'TrainingRequests';
     this.prepare();
@@ -38,11 +40,18 @@ TrainingRequestService.prototype.list = function (projectId, currentToken, reque
 }
 
 TrainingRequestService.prototype.create = function (projectId) {
-    // TODO: Create the CSV.
-    // TODO: Upload the CSV.
-    // TODO: Create the queue entry.
-    const entityByProject = viewModelTransform(projectId);
-    return storageFoundation.insertEntity(this.tableService, this.trainingRequestsTableName, entityByProject);
+    const entity = viewModelTransform(projectId);
+    return this.trainingImageService.getReadyForTraining(projectId).then(images => {
+        // TODO: Create the CSV.
+        // TODO: Upload the CSV.
+        const containerName = this.projectService.getModelContainerName(projectId);
+        const blobName = this.getCsvBlobName(projectId, entity.RowKey._);
+        const csvText = 'sample,content,here,only'
+        storageFoundation.createBlockBlobFromText(this.blobService, containerName, blobName, csvText).then(result => {
+            // TODO: Create the queue entry.
+            return storageFoundation.insertEntity(this.tableService, this.trainingRequestsTableName, entity);
+        });
+    });
 }
 
 TrainingRequestService.prototype.delete = function (projectId, requestId) {
@@ -52,6 +61,25 @@ TrainingRequestService.prototype.delete = function (projectId, requestId) {
         RowKey: generator.String(requestId)
     };
     return storageFoundation.deleteEntity(this.tableService, this.trainingRequestsTableName, entity);
+}
+
+TrainingRequestService.prototype.export = function (projectId, requestId) {
+    return storageFoundation.retrieveEntity(this.tableService, this.trainingRequestsTableName, projectId, requestId).then(entity => {
+        const containerName = this.projectService.getModelContainerName(projectId);
+        const blobName = this.getCsvBlobName(projectId, requestId);
+        const sas = storageFoundation.createSAS(
+            this.blobService,
+            containerName,
+            blobName,
+            null,
+            azureStorage.BlobUtilities.SharedAccessPermissions.READ
+        );
+        return sas.url;
+    });
+}
+
+TrainingRequestService.prototype.getCsvBlobName = function (projectId, requestId) {
+    return `${requestId}.csv`;
 }
 
 /**
@@ -65,17 +93,26 @@ TrainingRequestService.prototype.modelViewTransform = function (entity) {
         projectId: entity.PartitionKey._,
         id: entity.RowKey._,
         createdAt: entity.Timestamp._,
-        status: (entity.status) ? entity.status._ : 'queued',
-        url : ''
+        status: (entity.status) ? entity.status._ : 'pending',
+        requestedBy: null,
+        url: ''
     };
 }
 
+/**
+        id: uuid(),
+        status: 'pending',
+        project: project,
+        requestedBy: user
+ * @param {*} projectId 
+ */
 function viewModelTransform(projectId) {
     const generator = azureStorage.TableUtilities.entityGenerator;
     return {
         PartitionKey: generator.String(projectId),
         RowKey: generator.String(uuid()),
-        status: 'queued'
+        status: 'pending',
+        requestedBy: null,
     };
 }
 

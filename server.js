@@ -97,11 +97,12 @@ router.get('/projects/:projectId/accessRights', managerAccess, (req, res, next) 
 router.post('/projects/:projectId/accessRights', managerAccess, (req, res, next) => { accessRightsController.create(req, res, next); });
 router.delete('/projects/:projectId/accessRights/:accessRightId', managerAccess, (req, res, next) => { accessRightsController.delete(req, res, next); });
 
-const trainingRequestService = new model.TrainingRequestService(blobService, tableService, queueService);
+const trainingRequestService = new model.TrainingRequestService(blobService, tableService, queueService, projectService, trainingImageService);
 const trainingRequestController = new api.TrainingRequestController(trainingRequestService);
 router.get('/projects/:projectId/trainingRequests', managerAccess, (req, res, next) => { trainingRequestController.list(req, res, next); });
 router.post('/projects/:projectId/trainingRequests', managerAccess, (req, res, next) => { trainingRequestController.create(req, res, next); });
 router.delete('/projects/:projectId/trainingRequests/:requestId', managerAccess, (req, res, next) => { trainingRequestController.delete(req, res, next); });
+router.get('/projects/:projectId/trainingRequests/:requestId/annotations.csv', managerAccess, (req, res, next) => { trainingRequestController.export(req, res, next); });
 
 const accessRightsMiddleware = middleware.AccessRightsMiddleware(accessRightsService);
 app.use(

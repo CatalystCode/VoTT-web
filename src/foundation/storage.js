@@ -2,7 +2,7 @@ const azureStorage = require('azure-storage');
 const uuid = require('uuid/v4');
 
 module.exports = {
-    createSAS: function (blobService, containerName, blobName, durationInMinutes) {
+    createSAS: function (blobService, containerName, blobName, durationInMinutes, permissions) {
         const startDate = new Date();
         const expiryDate = new Date(startDate);
         const expiryMinutes = startDate.getMinutes() + (durationInMinutes ? durationInMinutes : 10);
@@ -11,7 +11,7 @@ module.exports = {
         const BlobUtilities = azureStorage.BlobUtilities;
         const sharedAccessPolicy = {
             AccessPolicy: {
-                Permissions: BlobUtilities.SharedAccessPermissions.WRITE,
+                Permissions: (permissions ? permissions : BlobUtilities.SharedAccessPermissions.WRITE),
                 Start: startDate,
                 Expiry: expiryDate
             }
@@ -31,6 +31,16 @@ module.exports = {
             url: url,
             id: blobName,
         }
+    },
+    createBlockBlobFromText: function (blobService, containerName, blobName, content, options) {
+        return new Promise((resolve, reject) => {
+            blobService.createBlockBlobFromText(containerName, blobName, content, options, (error, result) => {
+                if (error) {
+                    return reject(error);
+                }
+                return resolve(result);
+            });
+        });
     },
     createTableIfNotExists: function (tableService, tableName) {
         return new Promise((resolve, reject) => {
@@ -72,9 +82,9 @@ module.exports = {
             });
         });
     },
-    retrieveEntity: function (tableService, tableName, projectId, userId) {
+    retrieveEntity: function (tableService, tableName, partitionKey, primaryKey) {
         return new Promise((resolve, reject) => {
-            tableService.retrieveEntity(tableName, projectId, userId, (error, entity) => {
+            tableService.retrieveEntity(tableName, partitionKey, primaryKey, (error, entity) => {
                 if (error) {
                     return reject(error);
                 }

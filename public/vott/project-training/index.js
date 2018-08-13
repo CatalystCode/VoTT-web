@@ -45,7 +45,7 @@ angular.module('vott.project-training', [
   };
 
   $scope.export = function (request) {
-    window.location = `/v1/vott-training/projects/${$routeParams.projectId}/${request.id}/annotations.csv`;
+    window.location = `/api/vott/v1/projects/${$routeParams.projectId}/trainingRequests/${request.id}/annotations.csv`;
   };
 
   $scope.train = function () {
@@ -57,10 +57,6 @@ angular.module('vott.project-training', [
         console.log(error);
         $scope.error = error;
       });
-  };
-
-  $scope.promote = function (request) {
-    console.log("Promote");
   };
 
   $scope.delete = function (trainingRequest) {

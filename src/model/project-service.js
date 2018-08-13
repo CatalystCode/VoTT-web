@@ -143,12 +143,8 @@ ProjectService.prototype.getTaskQueueName = function (projectId) {
     return `${projectId}-tasks`;
 }
 
-ProjectService.prototype.getTrainingImageContainerName = function (projectId) {
-    return `${projectId}-images`;
-}
-
 ProjectService.prototype.getModelContainerName = function (projectId) {
-    return `${projectId}-images`;
+    return `${projectId}-models`;
 }
 
 ProjectService.prototype.getTrainQueueName = function (projectId) {

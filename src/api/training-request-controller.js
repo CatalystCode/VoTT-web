@@ -29,4 +29,12 @@ TrainingRequestController.prototype.delete = function (req, res, next) {
     });
 };
 
+TrainingRequestController.prototype.export = function (req, res, next) {
+    this.trainingRequestService.export(req.params.projectId, req.params.requestId).then(url => {
+        res.redirect(url);
+    }).catch(error => {
+        expressFoundation.replyWithError(res, error);
+    });
+};
+
 module.exports = TrainingRequestController;
