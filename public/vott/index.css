@@ -18,6 +18,11 @@ header img {
   height: 48px;
   width: 48px;
 }
+
+div .in-conflict {
+  background-color: crimson;
+}
+
 .container-fluid {
   background-color: #fafafa;
 }
