@@ -4,6 +4,11 @@ const uuid = require('uuid/v4');
 
 const storageFoundation = require('../foundation/storage');
 
+const AccessRightsRole = Object.freeze({
+    PROJECT_MANAGER: 'project-manager',
+    PROJECT_COLLABORATOR: 'project-collaborator'
+});
+
 function AccessRightsService(tableService) {
     this.tableService = tableService;
 
@@ -36,7 +41,7 @@ AccessRightsService.prototype.ensureAdminUserAccessRights = function () {
         userId: userId,
         name: process.env.VOTT_DEFAULT_ADMIN_NAME,
         email: process.env.VOTT_DEFAULT_ADMIN_EMAIL,
-        role: 'project-manager'
+        role: AccessRightsRole.PROJECT_MANAGER
     }).catch(error => {
         if (error.statusCode && error.statusCode == 409) {
             console.log("Admin user access rights already present.");

@@ -217,6 +217,7 @@ angular.module('vott.project-tasks', [
 
   $scope.cancel = function () {
     $scope.tags = [];
+    $scope.currentTag.boundingBox = {};
     $scope.drawTags();
   };
 

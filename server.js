@@ -75,7 +75,7 @@ const projectService = new model.ProjectService(blobService, tableService, queue
 const projectController = new api.ProjectController(projectService);
 router.get('/projects', collaboratorAccess, (req, res) => { projectController.list(req, res); });
 router.post('/projects', managerAccess, (req, res) => { projectController.create(req, res); });
-router.get('/projects/:projectId', managerAccess, (req, res) => { projectController.read(req, res); });
+router.get('/projects/:projectId', collaboratorAccess, (req, res) => { projectController.read(req, res); });
 router.put('/projects/:projectId', managerAccess, (req, res) => { projectController.update(req, res); });
 router.delete('/projects/:projectId', managerAccess, (req, res) => { projectController.delete(req, res); });
 router.get('/projects/:projectId/images/:imageId', collaboratorAccess, (req, res) => { projectController.image(req, res); });
@@ -124,7 +124,7 @@ app.get('/vott',
 app.get('/tasks',
   connect_ensure_login.ensureLoggedIn(),
   accessRightsMiddleware,
-  managerAccess,
+  collaboratorAccess,
   (req, res, next) => {
     next();
   }
