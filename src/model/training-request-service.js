@@ -58,8 +58,9 @@ TrainingRequestService.prototype.generateCSV = function (projectId) {
 TrainingRequestService.prototype.create = function (projectId) {
     return this.generateCSV(projectId).then(csvText => {
         const entity = viewModelTransform(projectId);
+        const requestId = entity.RowKey._;
         const containerName = this.projectService.getModelContainerName(projectId);
-        const blobName = this.getCsvBlobName(projectId, entity.RowKey._);
+        const blobName = this.getCsvBlobName(projectId, requestId);
         storageFoundation.createBlockBlobFromText(this.blobService, containerName, blobName, csvText).then(result => {
             const queueName = this.projectService.getTrainQueueName(projectId);
             const url = storageFoundation.createSAS(
@@ -70,6 +71,8 @@ TrainingRequestService.prototype.create = function (projectId) {
                 azureStorage.BlobUtilities.SharedAccessPermissions.READ
             ).url;
             const queueMessage = JSON.stringify({
+                projectId: projectId,
+                requestId: requestId,
                 url: url
             });
             return storageFoundation.createMessage(this.queueService, queueName, queueMessage).then(result => {
