@@ -68,8 +68,8 @@ const router = new express.Router();
 const api = require('./src/api');
 const middleware = require('./src/middleware');
 
-const managerAccess = middleware.ProjectManagerAccessMiddleware();
-const collaboratorAccess = middleware.ProjectCollaboratorAccessMiddleware();
+const managerAccess = new middleware.ProjectManagerAccessMiddleware();
+const collaboratorAccess = new middleware.ProjectCollaboratorAccessMiddleware();
 
 const projectService = new model.ProjectService(blobService, tableService, queueService);
 const projectController = new api.ProjectController(projectService);
@@ -104,8 +104,8 @@ router.post('/projects/:projectId/trainingRequests', managerAccess, (req, res, n
 router.delete('/projects/:projectId/trainingRequests/:requestId', managerAccess, (req, res, next) => { trainingRequestController.delete(req, res, next); });
 router.get('/projects/:projectId/trainingRequests/:requestId/annotations.csv', managerAccess, (req, res, next) => { trainingRequestController.export(req, res, next); });
 
-const accessRightsMiddleware = middleware.AccessRightsMiddleware(accessRightsService);
-const registeredUserMiddleware = middleware.RegisteredUserMiddleware(accessRightsService);
+const accessRightsMiddleware = new middleware.AccessRightsMiddleware(accessRightsService);
+const registeredUserMiddleware = new middleware.RegisteredUserMiddleware();
 app.use(
   '/api/vott/v1',
   connect_ensure_login.ensureLoggedIn(),

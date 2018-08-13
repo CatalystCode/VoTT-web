@@ -38,7 +38,7 @@ AccessRightsService.prototype.ensureAdminUserAccessRights = function () {
     }
 
     return this.create('root', {
-        userId: userId,
+        userId: userId.toLowerCase(),
         name: process.env.VOTT_DEFAULT_ADMIN_NAME,
         email: process.env.VOTT_DEFAULT_ADMIN_EMAIL,
         role: AccessRightsRole.PROJECT_MANAGER
@@ -73,13 +73,13 @@ AccessRightsService.prototype.read = function (projectId, userId) {
     if (!projectId) {
         projectId = 'root';
     }
-    return storageFoundation.retrieveEntity(this.tableService, this.accessRightsByProjectTableName, projectId, userId).then(entity => {
+    return storageFoundation.retrieveEntity(this.tableService, this.accessRightsByProjectTableName, projectId, userId.toLowerCase()).then(entity => {
         return this.mapEntityToAccessRight(entity);
     });
 }
 
 AccessRightsService.prototype.isRegistered = function (userId) {
-    const tableQuery = new azureStorage.TableQuery().top(1).where('PartitionKey == ?', userId);
+    const tableQuery = new azureStorage.TableQuery().top(1).where('PartitionKey == ?', userId.toLowerCase());
     return storageFoundation.queryEntities(this.tableService, this.accessRightsByUserTableName, tableQuery).then(result => {
         return result.entries.lenth > 0;
     });
@@ -102,10 +102,10 @@ AccessRightsService.prototype.delete = function (projectId, userId) {
     const generator = azureStorage.TableUtilities.entityGenerator;
     const projectEntity = {
         PartitionKey: generator.String(projectId),
-        RowKey: generator.String(userId)
+        RowKey: generator.String(userId.toLowerCase())
     };
     const userEntity = {
-        PartitionKey: generator.String(userId),
+        PartitionKey: generator.String(userId.toLowerCase()),
         RowKey: generator.String(projectId)
     };
     return Promise.all([
@@ -133,7 +133,7 @@ function mapProjectAccessRightToEntity(projectId, right) {
     const generator = azureStorage.TableUtilities.entityGenerator;
     return {
         PartitionKey: generator.String(projectId),
-        RowKey: generator.String(right.userId),
+        RowKey: generator.String(right.userId.toLowerCase()),
         email: generator.String(right.email),
         role: generator.String(right.role)
     };
@@ -142,7 +142,7 @@ function mapProjectAccessRightToEntity(projectId, right) {
 function mapUserAccessRightToEntity(projectId, right) {
     const generator = azureStorage.TableUtilities.entityGenerator;
     return {
-        PartitionKey: generator.String(right.userId),
+        PartitionKey: generator.String(right.userId.toLowerCase()),
         RowKey: generator.String(projectId),
         email: generator.String(right.email),
         role: generator.String(right.role)
@@ -164,7 +164,7 @@ function mapUserToEntity(user) {
     const generator = azureStorage.TableUtilities.entityGenerator;
     return {
         PartitionKey: generator.String(user.provider),
-        RowKey: generator.String(user.username),
+        RowKey: generator.String(user.username.toLowerCase()),
         name: generator.String(user.displayName)
     };
 }
