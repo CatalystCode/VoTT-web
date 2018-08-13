@@ -229,7 +229,7 @@ TrainingImageService.prototype.calculateImageStatus = function (projectId, image
         const tableQuery = new azureStorage.TableQuery().where('PartitionKey == ?', imageId);
         return storageFoundation.queryEntities(this.tableService, this.trainingImageContributionsTableName, tableQuery).then(result => {
             if (result.entries.length < 2) {
-                return 'tag-pending';
+                return { status: 'tag-pending' };
             }
 
             const contributions = result.entries.map(entity => {
@@ -269,18 +269,18 @@ TrainingImageService.prototype.calculateStatusForObjectDetection = function (con
             const thirdTags = thirdContribution.tags;
             const secondaryAnalysis = tagAnalysis(referenceTags, thirdTags);
             if (secondaryAnalysis.mismatches.length) {
-                return 'in-conflict';
+                return { status: 'in-conflict', mismatches: secondaryAnalysis.mismatches };
             }
             else {
-                return 'ready-for-training';
+                return { status: 'ready-for-training', annotations: secondaryAnalysis.matches };
             }
         } else {
             // There aren't any more contributions to serve as a tie-breaker.
-            return 'in-conflict';
+            return { status: 'in-conflict', mismatches: primaryAnalysis.mismatches };
         }
     } else {
         // No mismatches, this is good, the image is now READY_FOR_TRAINING and the tags should be saved
-        return 'ready-for-training';
+        return { status: 'ready-for-training', annotations: primaryAnalysis.matches };
     }
 }
 
@@ -295,19 +295,20 @@ TrainingImageService.prototype.calculateStatusForImageClassification = function 
     });
     const labelCount = Object.keys(countByLabel).length;
     if (labelCount < 1) {
-        return 'tag-pending';
+        return { status: 'tag-pending' };
     }
     if (labelCount == 1) {
-        return 'ready-for-training';
+        return { status: 'ready-for-training', annotations: contributions };
     }
-    return 'in-conflict';
+    return { status: 'in-conflict' };
 }
 
 TrainingImageService.prototype.setImageStatus = function (projectId, imageId, status) {
     const entity = {
         PartitionKey: { '_': projectId },
         RowKey: { '_': imageId },
-        status: { '_': status }
+        status: { '_': status.status },
+        annotations: { '_': (status.annotations ? JSON.stringify(status.annotations) : '[]') }
     };
     return storageFoundation.mergeEntity(this.tableService, this.trainingImagesTableName, entity);
 }

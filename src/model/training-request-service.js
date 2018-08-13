@@ -43,12 +43,13 @@ TrainingRequestService.prototype.generateCSV = function (projectId) {
     return this.trainingImageService.getReadyForTraining(projectId).then(images => {
         return images.map(image => {
             return image.annotations.map(annotation => {
-                if (annotation.width) {
+                const boundingBox = annotation.boundingBox;
+                if (boundingBox) {
                     // This means the annotation is for an object detection project.
-                    return `${annotation.x},${annotation.y},${annotation.width},${annotation.height},${annotation.label},${image.url}`;
+                    return `${image.url},${Math.round(boundingBox.x)},${Math.round(boundingBox.y)},${Math.round(boundingBox.width)},${Math.round(boundingBox.height)},${annotation.label}`;
                 } else {
                     // This means the annotation is for an image classification project.
-                    return `${annotation.label},${image.url}`;
+                    return `${image.url},${annotation.label}`;
                 }
             }).join('\n');
         }).join('\n');
