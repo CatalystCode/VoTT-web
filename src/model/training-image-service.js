@@ -326,6 +326,7 @@ TrainingImageService.prototype.mapEntityToImage = function (entity) {
         id: imageId,
         projectId: projectId,
         status: entity.status._,
+        annotations: entity.annotations ? JSON.parse(entity.annotations._) : [],
         url: this.getImageURL(projectId, imageId)
     };
 }

@@ -39,14 +39,27 @@ TrainingRequestService.prototype.list = function (projectId, currentToken, reque
     });
 }
 
-TrainingRequestService.prototype.create = function (projectId) {
-    const entity = viewModelTransform(projectId);
+TrainingRequestService.prototype.generateCSV = function (projectId) {
     return this.trainingImageService.getReadyForTraining(projectId).then(images => {
-        // TODO: Create the CSV.
-        // TODO: Upload the CSV.
+        return images.map(image => {
+            return image.annotations.map(annotation => {
+                if (annotation.width) {
+                    // This means the annotation is for an object detection project.
+                    return `${annotation.x},${annotation.y},${annotation.width},${annotation.height},${annotation.label},${image.url}`;
+                } else {
+                    // This means the annotation is for an image classification project.
+                    return `${annotation.label},${image.url}`;
+                }
+            }).join('\n');
+        }).join('\n');
+    });
+}
+
+TrainingRequestService.prototype.create = function (projectId) {
+    return this.generateCSV(projectId).then(csvText => {
+        const entity = viewModelTransform(projectId);
         const containerName = this.projectService.getModelContainerName(projectId);
         const blobName = this.getCsvBlobName(projectId, entity.RowKey._);
-        const csvText = 'sample,content,here,only'
         storageFoundation.createBlockBlobFromText(this.blobService, containerName, blobName, csvText).then(result => {
             // TODO: Create the queue entry.
             return storageFoundation.insertEntity(this.tableService, this.trainingRequestsTableName, entity);
