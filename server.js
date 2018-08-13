@@ -30,7 +30,7 @@ passport.use(new passportGithub.Strategy(
   {
     clientID: process.env.GITHUB_CLIENT,
     clientSecret: process.env.GITHUB_SECRET,
-    callbackURL: "http://localhost:8080/auth/github/callback"
+    callbackURL: `${process.env.WEBSITE_HOSTNAME}/auth/github/callback`
   },
   (accessToken, refreshToken, profile, cb) => {
     return cb(null, profile);
@@ -131,4 +131,4 @@ app.get('/tasks',
 );
 
 app.use(require('serve-static')(path.join(__dirname, 'public')));
-app.listen(PORT, () => console.log(`Listening on port ${PORT}.`));
+app.listen(PORT, () => console.log(`Listening on port ${PORT} (${process.env.WEBSITE_HOSTNAME}).`));
