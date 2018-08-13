@@ -73,7 +73,7 @@ const collaboratorAccess = middleware.ProjectCollaboratorAccessMiddleware();
 
 const projectService = new model.ProjectService(blobService, tableService, queueService);
 const projectController = new api.ProjectController(projectService);
-router.get('/projects', collaboratorAccess, (req, res) => { projectController.list(req, res); });
+router.get('/projects', (req, res) => { projectController.list(req, res); });
 router.post('/projects', managerAccess, (req, res) => { projectController.create(req, res); });
 router.get('/projects/:projectId', collaboratorAccess, (req, res) => { projectController.read(req, res); });
 router.put('/projects/:projectId', managerAccess, (req, res) => { projectController.update(req, res); });
@@ -124,7 +124,6 @@ app.get('/vott',
 app.get('/tasks',
   connect_ensure_login.ensureLoggedIn(),
   accessRightsMiddleware,
-  collaboratorAccess,
   (req, res, next) => {
     next();
   }
