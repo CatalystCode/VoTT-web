@@ -1,0 +1,68 @@
+<div class="container-fluid">
+    <div class="container">
+        <h2>Projects</h2>
+    </div>
+</div>
+<div class="container">
+    <hr />
+    <h4 ng-if="isLoading">Loading...</h4>
+    <button type="button" class="btn btn-success" ng-if="isAuthorized" ng-click="createProject()">Create New Project</button>
+    <h5 ng-if="!isLoading &amp;&amp; projects == null || projects.length == 0">No projects have been created - please create one when you are ready.</h5>
+    <table ng-if="!isLoading &amp;&amp; projects != null &amp;&amp; projects.length > 0" class="table">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Type</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="project in projects">
+                <th scope="row">{{project.name}}</th>
+                <td>{{project.type.replace('-', ' ') | lowercase}}</td>
+                <td>
+                    <button type="button" class="btn btn-warning" ng-click="editProject(project)">Edit</button>
+                    <button type="button" class="btn btn-danger" ng-click="deleteProject(project)">Delete</button>
+                </td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="100%">
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination">
+                            <li ng-if="projectPageTokens.length" class="page-item">
+                                <a class="page-link" href="#" ng-click="viewPreviousProjectsPage()">Previous</a>
+                            </li>
+                            <li ng-if="nextPageToken" class="page-item">
+                                <a class="page-link" href="#page={{nextPageToken}}" ng-click="viewNextProjectsPage()">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<div id="projectDeleteConfirmation" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="projectDeleteConfirmationLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="projectDeleteConfirmationLabel">Confirm Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Please confirm you would like to delete project {{selectedProject.name}} ({{selectedProject.id}}).
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" ng-click="confirmDeleteProject(selectedProject)">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Delete confirmation -->

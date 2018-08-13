@@ -1,0 +1,138 @@
+<div class="container-fluid">
+  <div class="container">
+    <h2>{{ isNewRecord() ? 'New Project' : project.name }}</h2>
+  </div>
+  <nav>
+    <div class="container">
+      <ul class="nav navbar-nav">
+        <li>
+          <a href ng-click="details()">Details</a>
+        </li>
+        <li>
+          <a href ng-click="manageImages()">Images</a>
+        </li>
+        <li class="active">
+          <a href ng-click="manageCollaborators()">Collaborators</a>
+        </li>
+        <li>
+          <a href ng-click="manageModels()">Training</a>
+        </li>
+        <li>
+          <a href ng-click="manageTasks()">Tasks</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</div>
+
+<div class="container">
+
+  <hr/>
+
+  <h4 ng-if="isLoading">Loading...</h4>
+  <button type="button" class="btn btn-success" ng-click="invite()">Add Collaborator</button>
+
+  <hr />
+
+  <table ng-if="!isLoading &amp;&amp; accessRights != null &amp;&amp; accessRights.length > 0" class="table">
+    <thead>
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Email</th>
+        <th scope="col">Role</th>
+        <th scope="col">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="right in accessRights">
+        <th scope="row">{{right.user.name ? right.user.name : right.user.userId}}</th>
+        <td>{{ right.user.email }}</td>
+        <td>{{ right.role.replace('-', ' ') | lowercase }}</td>
+        <td>
+          <!-- <button type="button" class="btn btn-default" ng-click="reinvite(right)">Reinvite</button> -->
+          <button type="button" class="btn btn-danger" ng-click="delete(right)">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="100%">
+          <nav aria-label="Collaborator pagination">
+            <ul class="pagination">
+              <li ng-if="previousPageToken" class="page-item">
+                <a class="page-link" href="#" ng-click="viewPreviousPage()">Previous</a>
+              </li>
+              <li ng-if="nextPageToken" class="page-item">
+                <a class="page-link" href="#page={{nextPageToken}}" ng-click="viewNextPage()">Next</a>
+              </li>
+            </ul>
+          </nav>
+        </td>
+      </tr>
+    </tfoot>
+  </table>
+
+</div>
+
+<div id="editDialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editDialogLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form>
+        <div class="modal-header">
+          <h5 class="modal-title" id="editDialogLabel">New Collaborator</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="userId">Github User Name</label>
+            <input type="text" ng-model="user.userId" class="form-control" id="userId" aria-describedby="userIdHelp" placeholder="h4x0r name">
+            <small id="userIdHelp" class="form-text text-muted">The Github user name of the person to be invited to the project (their real name will be filled-in when the log in).</small>
+          </div>
+          <div class="form-group">
+            <label for="name">Email</label>
+            <input type="email" ng-model="user.email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="someone@example.com">
+            <small id="emailHelp" class="form-text text-muted">The email address of the project collaborator.</small>
+          </div>
+          <div class="form-group">
+            <label for="role">Role</label>
+            <select class="form-control" ng-model="user.role" id="role" aria-describedby="roleHelp">
+              <option value="project-manager">Project Manager</option>
+              <option value="project-collaborator">Image Tagger</option>
+            </select>
+            <small id="roleHelp" class="form-text text-muted">Select wether the collaborator will be able to manager projects or if he or she will only be able to help with
+              the image tagging effort.</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-success" ng-click="save()">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- Edit -->
+
+<div id="deleteConfirmation" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmationLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteConfirmationLabel">Confirm Delete</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Please confirm you would like to remove {{selectedAccessRight.user.userId}} ({{selectedAccessRight.user.email}}) from this
+        project's collaborators.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-danger" ng-click="deleteConfirmed(selectedAccessRight)">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Delete confirmation -->

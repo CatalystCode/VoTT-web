@@ -1,0 +1,74 @@
+/**
+ * An AccessRightsInjector is a part of the AccessRightsMiddleware that sets a
+ * request's accessRights based on the values provided by the request.
+ * 
+ * @param {*} accessRightsService 
+ */
+function AccessRightsInjector(accessRightsService) {
+    this.accessRightsService = accessRightsService;
+}
+
+/**
+ * The processRequest method is the one called by the middleware.
+ *  
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ */
+AccessRightsInjector.prototype.processRequest = function (req, res, next) {
+    if (req.accessRights) {
+        next();
+        return;
+    }
+    this.accessRightsService.read(
+        this.getProjectId(req),
+        this.getUserId(req)
+    ).then(record => {
+        req.accessRights = record;
+        next();
+    }).catch(error => {
+        req.accessRights = null;
+        next();
+    });
+}
+
+/**
+ * Returns project's primary key value if present in the given request.
+ * 
+ * @param {*} req 
+ */
+AccessRightsInjector.prototype.getProjectId = function (req) {
+    const values = [
+        req.query.projectId,
+        req.params.projectId,
+        (req.body ? req.body.projectId : null)
+    ];
+    return values.find(value => value);
+}
+
+/**
+ * Returns the user's login name if present in the given request.
+ * 
+ * @param {*} req 
+ */
+AccessRightsInjector.prototype.getUserId = function (req) {
+    if (!req.user) {
+        return null;
+    }
+    return req.user.username;
+}
+
+/**
+ * An AccessRightsMiddleware will attempt to the a request's accessRights
+ * property set based on the values associated to the request.
+ * 
+ * @param {*} accessRightsService 
+ */
+function AccessRightsMiddleware(accessRightsService) {
+    const policy = new AccessRightsInjector(accessRightsService);
+    return function (req, res, next) {
+        return policy.processRequest(req, res, next);
+    }
+}
+
+module.exports = AccessRightsMiddleware;

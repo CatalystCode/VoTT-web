@@ -17,6 +17,8 @@
       "type": "string",
       "allowedValues": [
         "East US",
+        "Central US",
+        "South Central US",
         "West US"
       ]
     },
@@ -53,112 +55,67 @@
         "description": "The instance size of the hosting plan."
       }
     },
-    "repoURL": {
-      "type": "string",
-      "defaultValue": "https://github.com/catalystcode/vott-web.git",
-      "metadata": {
-        "description": "The URL for the GitHub repository that contains the project to deploy."
-      }
-    },
-    "branch": {
-      "type": "string",
-      "defaultValue": "master",
-      "metadata": {
-        "description": "The branch of the GitHub repository to use."
-      }
-    },
-    "postgresAdminUsername": {
-      "type": "string"
-    },
-    "postgresAdminPassword": {
-      "type": "securestring"
-    },
-    "sendgridApiKey": {
-      "type": "securestring"
-    },
-    "adminEmail": {
-      "type": "string",
-      "defaultValue": "youremail@address"
-    },
     "adminDisplayName": {
       "type": "string",
       "defaultValue": "Your Name"
     },
-    "invitationSenderEmail": {
+    "adminGithubUser": {
       "type": "string",
-      "defaultValue": "noreply@address"
+      "defaultValue": "h4x0r"
     },
-    "invitationSenderName": {
-      "type": "string",
-      "defaultValue": "Invitation Sender Display Name"
+    "githubClient": {
+      "type": "string"
+    },
+    "githubSecret": {
+      "type": "securestring"
     }
   },
   "resources": [
     {
-      "apiVersion": "2015-08-01",
+      "apiVersion": "2016-09-01",
       "name": "[variables('hostingPlanName')]",
       "type": "Microsoft.Web/serverfarms",
+      "kind": "linux",
       "location": "[parameters('resourceLocation')]",
       "sku": {
-        "name": "[parameters('sku')]",
-        "capacity": "[parameters('workerSize')]"
+        "name": "P1v2",
+        "tier": "PremiumV2",
+        "size": "P1v2",
+        "family": "Pv2",
+        "capacity": 1
       },
       "properties": {
         "name": "[variables('hostingPlanName')]"
       }
     },
     {
-      "apiVersion": "2015-08-01",
+      "apiVersion": "2016-08-01",
       "name": "[variables('siteNameClean')]",
       "type": "Microsoft.Web/sites",
+      "kind": "app,linux,container",
       "location": "[parameters('resourceLocation')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
-        "[resourceId('Microsoft.DBforPostgreSQL/servers/', variables('siteNameClean'))]"
+        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]"
       ],
       "properties": {
         "serverFarmId": "[variables('hostingPlanName')]",
         "siteConfig": {
           "appSettings": [
             {
-              "name": "SENDGRID_API_KEY",
-              "value": "[parameters('sendgridApiKey')]"
+              "name": "GITHUB_CLIENT",
+              "value": "[parameters('githubClient')]"
             },
             {
-              "name": "VOTT_DEFAULT_ADMIN_EMAIL",
-              "value": "[parameters('adminEmail')]"
+              "name": "GITHUB_SECRET",
+              "value": "[parameters('githubSecret')]"
             },
             {
               "name": "VOTT_DEFAULT_ADMIN_NAME",
               "value": "[parameters('adminDisplayName')]"
             },
             {
-              "name": "VOTT_DEFAULT_FROM_EMAIL",
-              "value": "[parameters('invitationSenderEmail')]"
-            },
-            {
-              "name": "VOTT_DEFAULT_FROM_NAME",
-              "value": "[parameters('invitationSenderName')]"
-            },
-            {
-              "name": "VOTT_JWT_SECRET",
-              "value": "[uniqueString(resourceGroup().id)]"
-            },
-            {
-              "name": "PG_HOST",
-              "value": "[Concat(variables('siteNameClean'), '.postgres.database.azure.com')]"
-            },
-            {
-              "name": "PG_USER",
-              "value": "[Concat(parameters('postgresAdminUsername'),'@', variables('siteNameClean'))]"
-            },
-            {
-              "name": "PG_PASSWORD",
-              "value": "[parameters('postgresAdminPassword')]"
-            },
-            {
-              "name": "GRAPHIQL_ENABLED",
-              "value": "true"
+              "name": "VOTT_DEFAULT_ADMIN_GITHUB_USER",
+              "value": "[parameters('adminGithubUser')]"
             },
             {
               "name": "WEBSITE_NODE_DEFAULT_VERSION",
@@ -172,19 +129,6 @@
         }
       },
       "resources": [
-        {
-          "apiVersion": "2015-08-01",
-          "name": "web",
-          "type": "sourcecontrols",
-          "dependsOn": [
-            "[Concat('Microsoft.Web/Sites/', variables('siteNameClean'))]"
-          ],
-          "properties": {
-            "RepoUrl": "[parameters('repoURL')]",
-            "branch": "[parameters('branch')]",
-            "IsManualIntegration": true
-          }
-        },
         {  
           "apiVersion":"2015-04-01",
           "name":"connectionstrings",
@@ -193,44 +137,8 @@
              "[concat('Microsoft.Web/sites/', variables('siteNameClean'))]"
           ],
           "properties":{  
-             "defaultConnection":{  
-                "value":"[concat('Database=postgres;Server=', variables('siteNameClean'), '.postgres.database.azure.com;User Id=', parameters('postgresAdminUsername'),'@',variables('siteNameClean'),';Password=',parameters('postgresAdminPassword'))]",
-                "type":"PostgreSQL"
-             }
           }
        }
-      ]
-    },
-    {
-      "name": "[variables('siteNameClean')]",
-      "type": "Microsoft.DBforPostgreSQL/servers",
-      "apiVersion": "2017-04-30-preview",
-      "sku": {
-        "name": "PGSQLS100",
-        "tier": "Standard",
-        "capacity": "100"
-      },
-      "properties": {
-        "administratorLogin": "[parameters('postgresAdminUsername')]",
-        "administratorLoginPassword": "[parameters('postgresAdminPassword')]",
-        "sslEnforcement": "Disabled"
-      },
-      "location": "[parameters('resourceLocation')]",
-      "tags": {},
-      "resources": [
-        {
-          "type": "firewallrules",
-          "apiVersion": "2016-02-01-privatepreview",
-          "dependsOn": [
-              "[concat('Microsoft.DBforPostgreSQL/servers/', variables('siteNameClean'))]"
-          ],
-          "location": "[parameters('resourceLocation')]",
-          "name": "[concat(variables('siteNameClean'),'firewall')]",
-          "properties": {
-              "startIpAddress": "0.0.0.0",
-              "endIpAddress": "255.255.255.255"
-          }
-        }
       ]
     },
     {

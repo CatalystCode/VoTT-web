@@ -1,0 +1,101 @@
+<div class="container-fluid">
+  <div class="container">
+    <h2>{{ isNewRecord() ? 'New Project' : project.name }}</h2>
+  </div>
+  <nav>
+    <div class="container">
+      <ul class="nav navbar-nav">
+        <li>
+          <a href ng-click="details()">Details</a>
+        </li>
+        <li>
+          <a href ng-click="manageImages()">Images</a>
+        </li>
+        <li>
+          <a href ng-click="manageCollaborators()">Collaborators</a>
+        </li>
+        <li class="active">
+          <a href ng-click="manageModels()">Training</a>
+        </li>
+        <li>
+          <a href ng-click="manageTasks()">Tasks</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</div>
+
+<div class="container">
+
+  <hr/>
+
+  <h4 ng-if="isLoading">Loading...</h4>
+  <button type="button" class="btn btn-success" ng-click="train()">Request Training</button>
+
+  <hr />
+
+  <table ng-if="!isLoading &amp;&amp; trainingRequests != null &amp;&amp; trainingRequests.length > 0" class="table">
+    <thead>
+      <tr>
+        <th scope="col">Training ID</th>
+        <th scope="col">Date</th>
+        <th scope="col">Status</th>
+        <th scope="col">File</th>
+        <th scope="col">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="request in trainingRequests">
+        <th scope="row">{{request.id}}</th>
+        <td>{{ request.createdAt }}</td>
+        <td>{{ request.status }}</td>
+        <td>
+          <a ng-if="request.status == 'READY' || request.status == 'PROMOTED'" ng-href="{{request.url}}">{{request.url.split('/').reverse()[0]}}</a>
+          <div ng-if="request.status != 'READY' &amp;&amp; request.status != 'PROMOTED'">Not yet available</div>
+        </td>
+        <td>
+          <button type="button" class="btn btn-success" ng-click="export(request)">Export</button>
+          <button type="button" class="btn btn-danger" ng-click="delete(request)">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="100%">
+          <nav aria-label="Model pagination">
+            <ul class="pagination">
+              <li ng-if="previousPageToken" class="page-item">
+                <a class="page-link" href="#" ng-click="viewPreviousPage()">Previous</a>
+              </li>
+              <li ng-if="nextPageToken" class="page-item">
+                <a class="page-link" href="#page={{nextPageToken}}" ng-click="viewNextPage()">Next</a>
+              </li>
+            </ul>
+          </nav>
+        </td>
+      </tr>
+    </tfoot>
+  </table>
+
+</div>
+
+<div id="deleteConfirmation" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmationLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteConfirmationLabel">Confirm Delete</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Please confirm you would like to delete the training request created on {{selectedRequest.createdAt}} ({{selectedRequest.id}}).
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-danger" ng-click="deleteConfirmed()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Delete confirmation -->

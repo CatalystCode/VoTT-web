@@ -1,0 +1,92 @@
+<div class="container-fluid">
+  <div class="container">
+    <h2>{{ isNewRecord() ? 'New Project' : project.name }}</h2>
+  </div>
+  <nav>
+    <div class="container">
+      <ul class="nav navbar-nav">
+        <li>
+          <a href ng-click="details()">Details</a>
+        </li>
+        <li class="active">
+          <a href ng-click="manageImages()">Images</a>
+        </li>
+        <li>
+          <a href ng-click="manageCollaborators()">Collaborators</a>
+        </li>
+        <li>
+          <a href ng-click="manageModels()">Training</a>
+        </li>
+        <li>
+          <a href ng-click="manageTasks()">Tasks</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</div>
+
+<div class="container">
+  <hr/>
+  <h4 ng-if="isLoading">Loading...</h4>
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Status</th>
+        <th scope="col">Count</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="counter in stats.statusCount">
+        <th scope="row">{{counter.status.replace('_',' ') | lowercase}}</th>
+        <td>{{counter.count}}</td>
+      </tr>
+    </tbody>
+  </table>
+  <button type="button" class="btn btn-success" ng-click="upload()">Upload Images</button>
+  <h5 ng-if="!isLoading &amp;&amp; (images == null || images.length == 0)">No images have been uploaded - please upload some when you are ready.</h5>
+  <hr/>
+
+  <div class="row list-group">
+    <div class="item col-xs-12 col-lg-3" ng-repeat="image in images">
+      <div class="thumbnail {{image.status}}">
+        <img class="group list-group-image" style="height: 128px; width: auto;" ng-src="{{image.url}}" />
+      </div>
+    </div>
+  </div>
+
+  <button type="button" class="btn btn-primary" ng-if="hasMore()" ng-click="loadMore()">Load More Images</button>
+
+  <hr/>
+
+</div>
+
+<div id="uploadDialog" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="uploadDialogLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form>
+        <div class="modal-header">
+          <h5 class="modal-title" id="uploadDialogLabel">Upload Images</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group" ng-if="!isUploading">
+            <label for="instructionsText">Image Files</label>
+            <input type="file" id="imageFiles" multiple accept="jpg" onchange="angular.element(this).scope().imageFilesDidChange(this.value)"
+              class="form-control" aria-describedby="imageFilesHelp" />
+            <small id="instructionsTextHelp" class="form-text text-muted">Select one or more files to upload.</small>
+          </div>
+          <div class="form-group" ng-if="isUploading">
+            <label for="uploadProgressBar">Uploading ...</label>
+            <progress id="uploadProgressBar" value="{{uploadProgress}}" max="100" style="width: 100%"></progress>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- Upload -->
