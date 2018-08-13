@@ -27,11 +27,15 @@ AccessRightsInjector.prototype.processRequest = function (req, res, next) {
     ).then(record => {
         req.accessRights = record;
         req.isUserRegistered = true;
+        console.log("Recording access rights:");
+        console.log(JSON.stringify(record));
         next();
     }).catch(error => {
         req.accessRights = null;
         if (error.statusCode == 404) {
+            console.log(`No access rights for ${userId}, checking for registration...`);
             this.accessRightsService.isRegistered(userId).then(registered => {
+                console.log(`Registration for ${userId}: ${registered}`);
                 req.isUserRegistered = registered;
                 next();
             });
