@@ -126,19 +126,19 @@ angular.module('vott.factories', [])
             trainingRequests: function (projectId) {
                 return $http({
                     method: 'GET',
-                    url: `${baseUrl}/trainingRequests?projectId=${projectId}`,
+                    url: `${baseUrl}/projects/${projectId}/trainingRequests`,
                 });
             },
             createTrainingRequest: function (projectId, trainingRequest) {
                 return $http({
                     method: 'POST',
-                    url: `${baseUrl}/trainingRequests?projectId=${projectId}`
+                    url: `${baseUrl}/projects/${projectId}/trainingRequests`
                 });
             },
             deleteTrainingRequest: function (projectId, trainingRequestId) {
                 return $http({
                     method: 'DELETE',
-                    url: `${baseUrl}/trainingRequests/${trainingRequestId}?projectId=${projectId}`
+                    url: `${baseUrl}/projects/${projectId}/trainingRequests/${trainingRequestId}`
                 });
             },
             pullTask: function (projectId) {

@@ -6,7 +6,7 @@ function TrainingRequestController(trainingRequestService) {
 
 TrainingRequestController.prototype.list = function (req, res, next) {
     const currentToken = req.query.currentToken ? JSON.parse(req.query.currentToken) : null;
-    this.trainingRequestService.list(req.query.projectId, currentToken, req.query.limit).then(result => {
+    this.trainingRequestService.list(req.params.projectId, currentToken, req.query.limit).then(result => {
         res.json(result.entries);
     }).catch(error => {
         expressFoundation.replyWithError(res, error);
@@ -14,7 +14,7 @@ TrainingRequestController.prototype.list = function (req, res, next) {
 };
 
 TrainingRequestController.prototype.create = function (req, res, next) {
-    this.trainingRequestService.create(req.query.projectId).then(result => {
+    this.trainingRequestService.create(req.params.projectId).then(result => {
         res.json(result);
     }).catch(error => {
         expressFoundation.replyWithError(res, error);
@@ -22,7 +22,7 @@ TrainingRequestController.prototype.create = function (req, res, next) {
 };
 
 TrainingRequestController.prototype.delete = function (req, res, next) {
-    this.trainingRequestService.delete(req.query.projectId, req.params.requestId).then(result => {
+    this.trainingRequestService.delete(req.params.projectId, req.params.requestId).then(result => {
         res.json(result);
     }).catch(error => {
         expressFoundation.replyWithError(res, error);

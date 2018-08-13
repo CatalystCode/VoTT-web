@@ -99,9 +99,9 @@ router.delete('/projects/:projectId/accessRights/:accessRightId', managerAccess,
 
 const trainingRequestService = new model.TrainingRequestService(blobService, tableService, queueService);
 const trainingRequestController = new api.TrainingRequestController(trainingRequestService);
-router.get('/trainingRequests', managerAccess, (req, res, next) => { trainingRequestController.list(req, res, next); });
-router.post('/trainingRequests', managerAccess, (req, res, next) => { trainingRequestController.create(req, res, next); });
-router.delete('/trainingRequests/:requestId', managerAccess, (req, res, next) => { trainingRequestController.delete(req, res, next); });
+router.get('/projects/:projectId/trainingRequests', managerAccess, (req, res, next) => { trainingRequestController.list(req, res, next); });
+router.post('/projects/:projectId/trainingRequests', managerAccess, (req, res, next) => { trainingRequestController.create(req, res, next); });
+router.delete('/projects/:projectId/trainingRequests/:requestId', managerAccess, (req, res, next) => { trainingRequestController.delete(req, res, next); });
 
 const accessRightsMiddleware = middleware.AccessRightsMiddleware(accessRightsService);
 app.use(
