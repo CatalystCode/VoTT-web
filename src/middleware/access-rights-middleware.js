@@ -20,14 +20,23 @@ AccessRightsInjector.prototype.processRequest = function (req, res, next) {
         next();
         return;
     }
+    const userId = this.getUserId(req);
     this.accessRightsService.read(
         this.getProjectId(req),
-        this.getUserId(req)
+        userId
     ).then(record => {
         req.accessRights = record;
+        req.isUserRegistered = true;
         next();
     }).catch(error => {
         req.accessRights = null;
+        if (error.statusCode == 404) {
+            this.accessRightsService.isRegistered(userId).then(registered => {
+                req.isUserRegistered = registered;
+                next();
+            });
+            return;
+        }
         next();
     });
 }

@@ -105,17 +105,19 @@ router.delete('/projects/:projectId/trainingRequests/:requestId', managerAccess,
 router.get('/projects/:projectId/trainingRequests/:requestId/annotations.csv', managerAccess, (req, res, next) => { trainingRequestController.export(req, res, next); });
 
 const accessRightsMiddleware = middleware.AccessRightsMiddleware(accessRightsService);
+const registeredUserMiddleware = middleware.RegisteredUserMiddleware(accessRightsService);
 app.use(
   '/api/vott/v1',
   connect_ensure_login.ensureLoggedIn(),
   accessRightsMiddleware,
+  registeredUserMiddleware,
   router
 );
 
 app.get('/vott',
   connect_ensure_login.ensureLoggedIn(),
   accessRightsMiddleware,
-  managerAccess,
+  registeredUserMiddleware,
   (req, res, next) => {
     next();
   }
@@ -124,6 +126,7 @@ app.get('/vott',
 app.get('/tasks',
   connect_ensure_login.ensureLoggedIn(),
   accessRightsMiddleware,
+  registeredUserMiddleware,
   (req, res, next) => {
     next();
   }

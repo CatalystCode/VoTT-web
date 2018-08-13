@@ -78,6 +78,13 @@ AccessRightsService.prototype.read = function (projectId, userId) {
     });
 }
 
+AccessRightsService.prototype.isRegistered = function (userId) {
+    const tableQuery = new azureStorage.TableQuery().top(1).where('PartitionKey == ?', userId);
+    return storageFoundation.queryEntities(this.tableService, this.accessRightsByUserTableName, tableQuery).then(result => {
+        return result.entries.lenth > 0;
+    });
+}
+
 AccessRightsService.prototype.upsertUser = function (user) {
     const entity = mapUserToEntity(user);
     return storageFoundation.insertEntity(this.tableService, this.userTableName, entity).then(result => {
