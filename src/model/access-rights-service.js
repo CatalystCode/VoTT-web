@@ -8,6 +8,7 @@ function AccessRightsService(tableService) {
     this.tableService = tableService;
 
     this.userTableName = 'Users';
+    this.accessRightsByUserTableName = 'AccessRightsByUser';
     this.accessRightsByProjectTableName = 'AccessRightsByProject';
     this.prepare();
 }
@@ -20,6 +21,7 @@ AccessRightsService.prototype.prepare = async function () {
 AccessRightsService.prototype.ensureTablesExist = function () {
     return Promise.all([
         storageFoundation.createTableIfNotExists(this.tableService, this.userTableName),
+        storageFoundation.createTableIfNotExists(this.tableService, this.accessRightsByUserTableName),
         storageFoundation.createTableIfNotExists(this.tableService, this.accessRightsByProjectTableName)
     ]);
 }
@@ -54,8 +56,12 @@ AccessRightsService.prototype.list = function (projectId) {
 }
 
 AccessRightsService.prototype.create = function (projectId, record) {
-    const entityByProject = mapAccessRightToEntity(projectId, record);
-    return storageFoundation.insertEntity(this.tableService, this.accessRightsByProjectTableName, entityByProject);
+    const entityByProject = mapProjectAccessRightToEntity(projectId, record);
+    const entityByUser = mapUserAccessRightToEntity(projectId, record);
+    return Promise.all([
+        storageFoundation.insertEntity(this.tableService, this.accessRightsByProjectTableName, entityByProject),
+        storageFoundation.insertEntity(this.tableService, this.accessRightsByUserTableName, entityByUser)
+    ]);
 }
 
 AccessRightsService.prototype.read = function (projectId, userId) {
@@ -82,11 +88,18 @@ AccessRightsService.prototype.upsertUser = function (user) {
 
 AccessRightsService.prototype.delete = function (projectId, userId) {
     const generator = azureStorage.TableUtilities.entityGenerator;
-    const entity = {
+    const projectEntity = {
         PartitionKey: generator.String(projectId),
         RowKey: generator.String(userId)
     };
-    return storageFoundation.deleteEntity(this.tableService, this.accessRightsByProjectTableName, entity);
+    const userEntity = {
+        PartitionKey: generator.String(userId),
+        RowKey: generator.String(projectId)
+    };
+    return Promise.all([
+        storageFoundation.deleteEntity(this.tableService, this.accessRightsByProjectTableName, projectEntity),
+        storageFoundation.deleteEntity(this.tableService, this.accessRightsByUserTableName, userEntity)
+    ]);
 }
 
 AccessRightsService.prototype.mapEntityToAccessRight = function (rightEntity) {
@@ -104,11 +117,21 @@ AccessRightsService.prototype.mapEntityToAccessRight = function (rightEntity) {
     };
 }
 
-function mapAccessRightToEntity(projectId, right) {
+function mapProjectAccessRightToEntity(projectId, right) {
     const generator = azureStorage.TableUtilities.entityGenerator;
     return {
         PartitionKey: generator.String(projectId),
         RowKey: generator.String(right.userId),
+        email: generator.String(right.email),
+        role: generator.String(right.role)
+    };
+}
+
+function mapUserAccessRightToEntity(projectId, right) {
+    const generator = azureStorage.TableUtilities.entityGenerator;
+    return {
+        PartitionKey: generator.String(right.userId),
+        RowKey: generator.String(projectId),
         email: generator.String(right.email),
         role: generator.String(right.role)
     };

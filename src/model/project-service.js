@@ -26,6 +26,7 @@ ProjectService.prototype.ensureTablesExist = function () {
 }
 
 ProjectService.prototype.list = function (paginationToken) {
+    //TODO: Ensure user has access to each of the projects.
     return new Promise((resolve, reject) => {
         this.tableService.queryEntities(this.projectTableName, null, null, (error, result) => {
             if (error) {
