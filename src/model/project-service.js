@@ -9,9 +9,12 @@ function ProjectService(blobService, tableService, queueService) {
     this.tableService = tableService;
     this.queueService = queueService;
 
-    // TODO: Ensure blob containers and tables are present.
     this.projectTableName = 'Projects';
-    this.ensureTablesExist();
+    this.prepare();
+}
+
+ProjectService.prototype.prepare = async function () {
+    await this.ensureTablesExist();
 }
 
 ProjectService.prototype.ensureTablesExist = function () {

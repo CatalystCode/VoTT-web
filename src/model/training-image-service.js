@@ -12,10 +12,10 @@ function TrainingImageService(blobService, tableService, queueService, projectSe
 
     this.trainingImagesTableName = 'TrainingImages';
     this.trainingImageContributionsTableName = 'TrainingImageContributions';
-    this.ensureTablesExistAsync();
+    this.prepare();
 }
 
-TrainingImageService.prototype.ensureTablesExistAsync = async function () {
+TrainingImageService.prototype.prepare = async function () {
     await this.ensureTablesExist();
 }
 
