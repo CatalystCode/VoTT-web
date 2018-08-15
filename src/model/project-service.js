@@ -92,17 +92,19 @@ ProjectService.prototype.update = function (project) {
 }
 
 ProjectService.prototype.delete = function (projectId) {
-    return new Promise((resolve, reject) => {
-        const task = {
-            PartitionKey: { '_': projectId },
-            RowKey: { '_': projectId }
-        };
-        this.tableService.deleteEntity(this.projectTableName, task, (error, result, response) => {
-            if (error) {
-                return reject(error);
-            }
-            return resolve();
-        });
+    const entity = {
+        PartitionKey: { '_': projectId },
+        RowKey: { '_': projectId }
+    };
+    return storageFoundation.deleteEntity(this.tableService, this.projectTableName, entity).then(result => {
+        const taskQueueName = this.getTaskQueueName(projectId);
+        const trainingImagesContainerName = this.getTrainingImageContainerName(projectId);
+        const modelContainerName = this.getModelContainerName(projectId);
+        return Promise.all([
+            storageFoundation.deleteQueue(this.queueService, taskQueueName),
+            storageFoundation.deleteContainer(this.blobService, trainingImagesContainerName),
+            storageFoundation.deleteContainer(this.blobService, modelContainerName)
+        ]);
     });
 }
 

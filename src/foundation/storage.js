@@ -42,6 +42,16 @@ module.exports = {
             });
         });
     },
+    deleteContainer: function (blobService, containerName) {
+        return new Promise((resolve, reject) => {
+            blobService.deleteContainer(containerName, (error, result) => {
+                if (error) {
+                    return reject(error);
+                }
+                return resolve(result);
+            });
+        });
+    },
     createBlockBlobFromText: function (blobService, containerName, blobName, content, options) {
         return new Promise((resolve, reject) => {
             blobService.createBlockBlobFromText(containerName, blobName, content, options, (error, result) => {
@@ -115,6 +125,16 @@ module.exports = {
     createQueueIfNotExists: function (queueService, queueName) {
         return new Promise((resolve, reject) => {
             queueService.createQueueIfNotExists(queueName, (error) => {
+                if (error) {
+                    return reject(error);
+                }
+                resolve({});
+            });
+        });
+    },
+    deleteQueue: function (queueService, queueName) {
+        return new Promise((resolve, reject) => {
+            queueService.deleteQueue(queueName, (error) => {
                 if (error) {
                     return reject(error);
                 }
