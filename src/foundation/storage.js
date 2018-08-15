@@ -152,4 +152,12 @@ module.exports = {
             });
         });
     },
+    getMessage: function (queueService, queueName) {
+        return new Promise((resolve, reject) => {
+            queueService.getMessage(queueName, (error, message) => {
+                if (error) return reject(error);
+                resolve(message);
+            });
+        });
+    },
 };

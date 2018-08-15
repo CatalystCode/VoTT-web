@@ -158,6 +158,13 @@ ProjectService.prototype.getImageURL = function (projectId, imageId) {
     return url;
 }
 
+ProjectService.prototype.getInstructionsImageURL = function (project) {
+    if (!project.instructionsImageId) {
+        return null;
+    }
+    return this.getImageURL(project.id, project.instructionsImageId);
+}
+
 function mapProjectToEntity(project) {
     const generator = azureStorage.TableUtilities.entityGenerator;
     const projectId = project.projectId || project.id;

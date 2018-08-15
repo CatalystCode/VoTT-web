@@ -169,15 +169,23 @@ TrainingImageService.prototype.delete = function (projectId) {
 
 TrainingImageService.prototype.pullTask = function (projectId) {
     const queueName = this.projectService.getTaskQueueName(projectId);
-    return new Promise((resolve, reject) => {
-        this.queueService.getMessage(queueName, (error, message) => {
-            if (error) return reject(error);
-            if (!message) return resolve(null, null);
-
+    return this.projectService.read(projectId).then(project => {
+        const instructionsImageURL = this.projectService.getInstructionsImageURL(project);
+        return storageFoundation.getMessage(this.queueService, queueName).then(message => {
+            console.log(project);
+            if (!message) return null;
             const task = JSON.parse(message.messageText);
             task.id = message.messageId;
             task.popReceipt = message.popReceipt;
-            resolve(task);
+
+            // The latest metadata values are copied from the project because
+            // they may have changed since the time the task was created (on
+            // image upload).
+            task.type = project.type;
+            task.instructionsText = project.instructionsText;
+            task.instructionsImageURL = instructionsImageURL;
+            task.labels = project.labels;
+            return task;
         });
     });
 }
