@@ -14,7 +14,7 @@ AccessRightsController.prototype.list = function (req, res, next) {
 };
 
 AccessRightsController.prototype.create = function (req, res, next) {
-    this.accessRightsService.create(req.params.projectId, req.body).then(accessRight => {
+    this.accessRightsService.create(req.params.projectId, req.body.userId, req.body.role, req.body.email).then(accessRight => {
         res.json(accessRight);
     }).catch(error => {
         expressFoundation.replyWithError(res, error);

@@ -74,7 +74,7 @@ const accessRightsMiddleware = new middleware.AccessRightsMiddleware(accessRight
 const managerAccess = new middleware.ProjectManagerAccessPolicy();
 const collaboratorAccess = new middleware.ProjectCollaboratorAccessPolicy();
 
-const projectService = new model.ProjectService(blobService, tableService, queueService);
+const projectService = new model.ProjectService(blobService, tableService, queueService, accessRightsService);
 const projectController = new api.ProjectController(projectService);
 router.get('/projects', (req, res) => { projectController.list(req, res); });
 router.post('/projects', accessRightsMiddleware, managerAccess, (req, res) => { projectController.create(req, res); });

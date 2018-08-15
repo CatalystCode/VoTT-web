@@ -4,10 +4,11 @@ const uuid = require('uuid/v4');
 
 const storageFoundation = require('../foundation/storage');
 
-function ProjectService(blobService, tableService, queueService) {
+function ProjectService(blobService, tableService, queueService, accessRightsService) {
     this.blobService = blobService;
     this.tableService = tableService;
     this.queueService = queueService;
+    this.accessRightsService = accessRightsService;
 
     this.projectTableName = 'Projects';
     this.prepare();
@@ -41,7 +42,7 @@ ProjectService.prototype.list = function (paginationToken) {
     });
 }
 
-ProjectService.prototype.create = function (project) {
+ProjectService.prototype.create = function (project, owner) {
     const projectCopy = Object.assign({}, project);
     projectCopy.id = uuid();
 
@@ -50,26 +51,19 @@ ProjectService.prototype.create = function (project) {
     const trainingQueueName = this.getTrainQueueName(projectCopy.id);
     const modelContainerName = this.getModelContainerName(projectCopy.id);
 
-    return new Promise((resolve, reject) => {
-        async.series(
-            [
-                (callback) => { this.queueService.createQueueIfNotExists(taskQueueName, callback); },
-                (callback) => { this.blobService.createContainerIfNotExists(trainingImagesContainerName, { publicAccessLevel: 'blob' }, callback); },
-                (callback) => { this.queueService.createQueueIfNotExists(trainingQueueName, callback); },
-                (callback) => { this.blobService.createContainerIfNotExists(modelContainerName, { publicAccessLevel: 'blob' }, callback); },
-            ],
-            (error, results) => {
-                if (error) return reject(error);
-
-                const entity = mapProjectToEntity(projectCopy);
-                this.tableService.insertEntity(this.projectTableName, entity, (error, result, response) => {
-                    if (error) {
-                        return reject(error);
-                    }
-                    return resolve(projectCopy);
-                });
-            }
-        );
+    const entity = mapProjectToEntity(projectCopy);
+    return Promise.all([
+        storageFoundation.createQueueIfNotExists(this.queueService, taskQueueName),
+        storageFoundation.createQueueIfNotExists(this.queueService, trainingQueueName),
+        storageFoundation.createContainerIfNotExists(this.blobService, trainingImagesContainerName, { publicAccessLevel: 'blob' }),
+        storageFoundation.createContainerIfNotExists(this.blobService, modelContainerName, { publicAccessLevel: 'blob' }),
+    ]).then(result => {
+        return Promise.all([
+            storageFoundation.insertEntity(this.tableService, this.projectTableName, entity),
+            this.accessRightsService.create(projectCopy.id, owner, 'project-manager')
+        ]).then(result => {
+            return projectCopy;
+        })
     });
 }
 

@@ -32,6 +32,16 @@ module.exports = {
             id: blobName,
         }
     },
+    createContainerIfNotExists: function (blobService, containerName, options) {
+        return new Promise((resolve, reject) => {
+            blobService.createContainerIfNotExists(containerName, options, (error, result) => {
+                if (error) {
+                    return reject(error);
+                }
+                return resolve(result);
+            });
+        });
+    },
     createBlockBlobFromText: function (blobService, containerName, blobName, content, options) {
         return new Promise((resolve, reject) => {
             blobService.createBlockBlobFromText(containerName, blobName, content, options, (error, result) => {
@@ -99,6 +109,16 @@ module.exports = {
                     return reject(error);
                 }
                 resolve(result, response);
+            });
+        });
+    },
+    createQueueIfNotExists: function (queueService, queueName) {
+        return new Promise((resolve, reject) => {
+            queueService.createQueueIfNotExists(queueName, (error) => {
+                if (error) {
+                    return reject(error);
+                }
+                resolve({});
             });
         });
     },

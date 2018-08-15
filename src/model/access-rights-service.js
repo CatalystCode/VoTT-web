@@ -38,12 +38,12 @@ AccessRightsService.prototype.ensureAdminUserAccessRights = function () {
         return Promise.resolve();
     }
 
-    return this.create('root', {
-        userId: userId.toLowerCase(),
-        name: process.env.VOTT_DEFAULT_ADMIN_NAME,
-        email: process.env.VOTT_DEFAULT_ADMIN_EMAIL,
-        role: AccessRightsRole.PROJECT_MANAGER
-    }).catch(error => {
+    return this.create(
+        'root',
+        userId.toLowerCase(),
+        AccessRightsRole.PROJECT_MANAGER,
+        process.env.VOTT_DEFAULT_ADMIN_EMAIL
+    ).catch(error => {
         if (error.statusCode && error.statusCode == 409) {
             console.log("Admin user access rights already present.");
             return;
@@ -69,12 +69,12 @@ AccessRightsService.prototype.list = function (projectId) {
     });
 }
 
-AccessRightsService.prototype.create = function (projectId, record) {
+AccessRightsService.prototype.create = function (projectId, userId, role, email) {
     const cacheKey = this.cacheKeyForList(projectId);
     this.cache.del(cacheKey);
 
-    const entityByProject = mapProjectAccessRightToEntity(projectId, record);
-    const entityByUser = mapUserAccessRightToEntity(projectId, record);
+    const entityByProject = mapProjectAccessRightToEntity(projectId, userId, role, email);
+    const entityByUser = mapUserAccessRightToEntity(projectId, userId, role, email);
     return Promise.all([
         storageFoundation.insertEntity(this.tableService, this.accessRightsByProjectTableName, entityByProject),
         storageFoundation.insertEntity(this.tableService, this.accessRightsByUserTableName, entityByUser)
@@ -158,23 +158,23 @@ AccessRightsService.prototype.mapEntityToAccessRight = function (rightEntity) {
     };
 }
 
-function mapProjectAccessRightToEntity(projectId, right) {
+function mapProjectAccessRightToEntity(projectId, userId, role, email) {
     const generator = azureStorage.TableUtilities.entityGenerator;
     return {
         PartitionKey: generator.String(projectId),
-        RowKey: generator.String(right.userId.toLowerCase()),
-        email: generator.String(right.email),
-        role: generator.String(right.role)
+        RowKey: generator.String(userId.toLowerCase()),
+        email: (email ? generator.String(email) : null),
+        role: generator.String(role)
     };
 }
 
-function mapUserAccessRightToEntity(projectId, right) {
+function mapUserAccessRightToEntity(projectId, userId, role, email) {
     const generator = azureStorage.TableUtilities.entityGenerator;
     return {
-        PartitionKey: generator.String(right.userId.toLowerCase()),
+        PartitionKey: generator.String(userId.toLowerCase()),
         RowKey: generator.String(projectId),
-        email: generator.String(right.email),
-        role: generator.String(right.role)
+        email: (email ? generator.String(email) : null),
+        role: generator.String(role)
     };
 }
 
