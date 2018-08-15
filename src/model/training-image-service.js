@@ -172,7 +172,6 @@ TrainingImageService.prototype.pullTask = function (projectId) {
     return this.projectService.read(projectId).then(project => {
         const instructionsImageURL = this.projectService.getInstructionsImageURL(project);
         return storageFoundation.getMessage(this.queueService, queueName).then(message => {
-            console.log(project);
             if (!message) return null;
             const task = JSON.parse(message.messageText);
             task.id = message.messageId;
