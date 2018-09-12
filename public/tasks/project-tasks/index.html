@@ -39,15 +39,10 @@
     <hr/>
     <form ng-if="task">
       <div class="form-group">
-        <label for="tagLabel">Label</label>
-        <select
-          class="form-control"
-          ng-model="currentTag.label"
-          id="tagLabel"
-          aria-describedby="tagLabelHelp">
-          <option ng-repeat="label in task.labels" value="{{label}}">{{label}}</option>
-        </select>
-        <small id="tagLabelHelp" class="form-text text-muted">Select a label.</small>
+        <div class="form-check" ng-repeat="label in task.labels">
+          <input type="radio" class="form-check-input" ng-model="currentTag.label" value="{{label}}" id="radio-{{label}}">
+          <label class="form-check-label" for="radio-{{label}}">{{label}}</label>
+        </div>
       </div>
       <button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
       <button type="button" class="btn btn-success" ng-click="save()">Save</button>

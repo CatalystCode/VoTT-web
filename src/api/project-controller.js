@@ -14,7 +14,7 @@ ProjectController.prototype.list = function (req, res) {
 }
 
 ProjectController.prototype.create = function (req, res) {
-    this.projectService.create(req.body).then(project => {
+    this.projectService.create(req.body, req.user.username).then(project => {
         res.json(project);
     }).catch(error => {
         expressFoundation.replyWithError(res, error);

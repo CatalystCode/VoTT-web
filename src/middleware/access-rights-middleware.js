@@ -26,17 +26,9 @@ AccessRightsInjector.prototype.processRequest = function (req, res, next) {
         userId
     ).then(record => {
         req.accessRights = record;
-        req.isUserRegistered = true;
         next();
     }).catch(error => {
         req.accessRights = null;
-        if (error.statusCode == 404) {
-            this.accessRightsService.isRegistered(userId).then(registered => {
-                req.isUserRegistered = registered;
-                next();
-            });
-            return;
-        }
         next();
     });
 }

@@ -9,8 +9,9 @@ const AccessRightsRole = Object.freeze({
     PROJECT_COLLABORATOR: 'project-collaborator'
 });
 
-function AccessRightsService(tableService) {
+function AccessRightsService(tableService, cache) {
     this.tableService = tableService;
+    this.cache = cache;
 
     this.userTableName = 'Users';
     this.accessRightsByUserTableName = 'AccessRightsByUser';
@@ -37,12 +38,12 @@ AccessRightsService.prototype.ensureAdminUserAccessRights = function () {
         return Promise.resolve();
     }
 
-    return this.create('root', {
-        userId: userId,
-        name: process.env.VOTT_DEFAULT_ADMIN_NAME,
-        email: process.env.VOTT_DEFAULT_ADMIN_EMAIL,
-        role: AccessRightsRole.PROJECT_MANAGER
-    }).catch(error => {
+    return this.create(
+        'root',
+        userId.toLowerCase(),
+        AccessRightsRole.PROJECT_MANAGER,
+        process.env.VOTT_DEFAULT_ADMIN_EMAIL
+    ).catch(error => {
         if (error.statusCode && error.statusCode == 409) {
             console.log("Admin user access rights already present.");
             return;
@@ -52,17 +53,28 @@ AccessRightsService.prototype.ensureAdminUserAccessRights = function () {
 }
 
 AccessRightsService.prototype.list = function (projectId) {
+    const cacheKey = this.cacheKeyForList(projectId);
+    const cachedRights = this.cache.get(cacheKey);
+    if (cachedRights) {
+        return Promise.resolve(cachedRights);
+    }
+
     const tableQuery = new azureStorage.TableQuery().where('PartitionKey == ?', projectId);
     return storageFoundation.queryEntities(this.tableService, this.accessRightsByProjectTableName, tableQuery).then(result => {
-        return result.entries.map(entity => {
+        const rights = result.entries.map(entity => {
             return this.mapEntityToAccessRight(entity);
         });
+        this.cache.set(cacheKey, rights);
+        return rights;
     });
 }
 
-AccessRightsService.prototype.create = function (projectId, record) {
-    const entityByProject = mapProjectAccessRightToEntity(projectId, record);
-    const entityByUser = mapUserAccessRightToEntity(projectId, record);
+AccessRightsService.prototype.create = function (projectId, userId, role, email) {
+    const cacheKey = this.cacheKeyForList(projectId);
+    this.cache.del(cacheKey);
+
+    const entityByProject = mapProjectAccessRightToEntity(projectId, userId, role, email);
+    const entityByUser = mapUserAccessRightToEntity(projectId, userId, role, email);
     return Promise.all([
         storageFoundation.insertEntity(this.tableService, this.accessRightsByProjectTableName, entityByProject),
         storageFoundation.insertEntity(this.tableService, this.accessRightsByUserTableName, entityByUser)
@@ -73,15 +85,32 @@ AccessRightsService.prototype.read = function (projectId, userId) {
     if (!projectId) {
         projectId = 'root';
     }
-    return storageFoundation.retrieveEntity(this.tableService, this.accessRightsByProjectTableName, projectId, userId).then(entity => {
-        return this.mapEntityToAccessRight(entity);
+
+    const cacheKey = this.cacheKeyForRead(projectId, userId);
+    const cachedRight = this.cache.get(cacheKey);
+    if (cachedRight) {
+        return Promise.resolve(cachedRight);
+    }
+
+    return storageFoundation.retrieveEntity(this.tableService, this.accessRightsByProjectTableName, projectId, userId.toLowerCase()).then(entity => {
+        const right = this.mapEntityToAccessRight(entity);
+        this.cache.set(cacheKey, right);
+        return right;
     });
 }
 
 AccessRightsService.prototype.isRegistered = function (userId) {
-    const tableQuery = new azureStorage.TableQuery().top(1).where('PartitionKey == ?', userId);
+    const cacheKey = this.cacheKeyForIsRegistered(userId);
+    const cachedIsRegistered = this.cache.get(cacheKey);
+    if (cachedIsRegistered != undefined) {
+        return Promise.resolve(cachedIsRegistered);
+    }
+
+    const tableQuery = new azureStorage.TableQuery().top(1).where('PartitionKey == ?', userId.toLowerCase());
     return storageFoundation.queryEntities(this.tableService, this.accessRightsByUserTableName, tableQuery).then(result => {
-        return result.entries.lenth > 0;
+        const isRegistered = result.entries.length > 0;
+        this.cache.set(cacheKey, isRegistered);
+        return isRegistered;
     });
 }
 
@@ -102,10 +131,10 @@ AccessRightsService.prototype.delete = function (projectId, userId) {
     const generator = azureStorage.TableUtilities.entityGenerator;
     const projectEntity = {
         PartitionKey: generator.String(projectId),
-        RowKey: generator.String(userId)
+        RowKey: generator.String(userId.toLowerCase())
     };
     const userEntity = {
-        PartitionKey: generator.String(userId),
+        PartitionKey: generator.String(userId.toLowerCase()),
         RowKey: generator.String(projectId)
     };
     return Promise.all([
@@ -124,28 +153,28 @@ AccessRightsService.prototype.mapEntityToAccessRight = function (rightEntity) {
         user: {
             userId: userId,
             name: (rightEntity.name) ? rightEntity.name._ : null,
-            email: rightEntity.email._
+            email: (rightEntity.email) ? rightEntity.email._ : null
         }
     };
 }
 
-function mapProjectAccessRightToEntity(projectId, right) {
+function mapProjectAccessRightToEntity(projectId, userId, role, email) {
     const generator = azureStorage.TableUtilities.entityGenerator;
     return {
         PartitionKey: generator.String(projectId),
-        RowKey: generator.String(right.userId),
-        email: generator.String(right.email),
-        role: generator.String(right.role)
+        RowKey: generator.String(userId.toLowerCase()),
+        email: (email ? generator.String(email) : null),
+        role: generator.String(role)
     };
 }
 
-function mapUserAccessRightToEntity(projectId, right) {
+function mapUserAccessRightToEntity(projectId, userId, role, email) {
     const generator = azureStorage.TableUtilities.entityGenerator;
     return {
-        PartitionKey: generator.String(right.userId),
+        PartitionKey: generator.String(userId.toLowerCase()),
         RowKey: generator.String(projectId),
-        email: generator.String(right.email),
-        role: generator.String(right.role)
+        email: (email ? generator.String(email) : null),
+        role: generator.String(role)
     };
 }
 
@@ -164,7 +193,7 @@ function mapUserToEntity(user) {
     const generator = azureStorage.TableUtilities.entityGenerator;
     return {
         PartitionKey: generator.String(user.provider),
-        RowKey: generator.String(user.username),
+        RowKey: generator.String(user.username.toLowerCase()),
         name: generator.String(user.displayName)
     };
 }
@@ -175,6 +204,18 @@ function mapEntityToUser(user) {
         username: rightEntity.PartitionKey._,
         displayName: rightEntity.displayName._
     };
+}
+
+AccessRightsService.prototype.cacheKeyForList = function (projectId) {
+    return `list(${projectId})`;
+}
+
+AccessRightsService.prototype.cacheKeyForRead = function (projectId, userId) {
+    return `read(${projectId}, ${userId})`;
+}
+
+AccessRightsService.prototype.cacheKeyForIsRegistered = function (userId) {
+    return `isRegistered(${userId})`;
 }
 
 module.exports = AccessRightsService;

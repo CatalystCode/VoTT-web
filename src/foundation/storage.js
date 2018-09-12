@@ -32,6 +32,26 @@ module.exports = {
             id: blobName,
         }
     },
+    createContainerIfNotExists: function (blobService, containerName, options) {
+        return new Promise((resolve, reject) => {
+            blobService.createContainerIfNotExists(containerName, options, (error, result) => {
+                if (error) {
+                    return reject(error);
+                }
+                return resolve(result);
+            });
+        });
+    },
+    deleteContainer: function (blobService, containerName) {
+        return new Promise((resolve, reject) => {
+            blobService.deleteContainer(containerName, (error, result) => {
+                if (error) {
+                    return reject(error);
+                }
+                return resolve(result);
+            });
+        });
+    },
     createBlockBlobFromText: function (blobService, containerName, blobName, content, options) {
         return new Promise((resolve, reject) => {
             blobService.createBlockBlobFromText(containerName, blobName, content, options, (error, result) => {
@@ -102,6 +122,26 @@ module.exports = {
             });
         });
     },
+    createQueueIfNotExists: function (queueService, queueName) {
+        return new Promise((resolve, reject) => {
+            queueService.createQueueIfNotExists(queueName, (error) => {
+                if (error) {
+                    return reject(error);
+                }
+                resolve({});
+            });
+        });
+    },
+    deleteQueue: function (queueService, queueName) {
+        return new Promise((resolve, reject) => {
+            queueService.deleteQueue(queueName, (error) => {
+                if (error) {
+                    return reject(error);
+                }
+                resolve({});
+            });
+        });
+    },
     createMessage: function (queueService, queueName, message) {
         return new Promise((resolve, reject) => {
             queueService.createMessage(queueName, message, (error) => {
@@ -109,6 +149,14 @@ module.exports = {
                     return reject(error);
                 }
                 resolve({});
+            });
+        });
+    },
+    getMessage: function (queueService, queueName) {
+        return new Promise((resolve, reject) => {
+            queueService.getMessage(queueName, (error, message) => {
+                if (error) return reject(error);
+                resolve(message);
             });
         });
     },

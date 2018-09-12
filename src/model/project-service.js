@@ -4,10 +4,11 @@ const uuid = require('uuid/v4');
 
 const storageFoundation = require('../foundation/storage');
 
-function ProjectService(blobService, tableService, queueService) {
+function ProjectService(blobService, tableService, queueService, accessRightsService) {
     this.blobService = blobService;
     this.tableService = tableService;
     this.queueService = queueService;
+    this.accessRightsService = accessRightsService;
 
     this.projectTableName = 'Projects';
     this.prepare();
@@ -41,7 +42,7 @@ ProjectService.prototype.list = function (paginationToken) {
     });
 }
 
-ProjectService.prototype.create = function (project) {
+ProjectService.prototype.create = function (project, owner) {
     const projectCopy = Object.assign({}, project);
     projectCopy.id = uuid();
 
@@ -50,26 +51,19 @@ ProjectService.prototype.create = function (project) {
     const trainingQueueName = this.getTrainQueueName(projectCopy.id);
     const modelContainerName = this.getModelContainerName(projectCopy.id);
 
-    return new Promise((resolve, reject) => {
-        async.series(
-            [
-                (callback) => { this.queueService.createQueueIfNotExists(taskQueueName, callback); },
-                (callback) => { this.blobService.createContainerIfNotExists(trainingImagesContainerName, { publicAccessLevel: 'blob' }, callback); },
-                (callback) => { this.queueService.createQueueIfNotExists(trainingQueueName, callback); },
-                (callback) => { this.blobService.createContainerIfNotExists(modelContainerName, { publicAccessLevel: 'blob' }, callback); },
-            ],
-            (error, results) => {
-                if (error) return reject(error);
-
-                const entity = mapProjectToEntity(projectCopy);
-                this.tableService.insertEntity(this.projectTableName, entity, (error, result, response) => {
-                    if (error) {
-                        return reject(error);
-                    }
-                    return resolve(projectCopy);
-                });
-            }
-        );
+    const entity = mapProjectToEntity(projectCopy);
+    return Promise.all([
+        storageFoundation.createQueueIfNotExists(this.queueService, taskQueueName),
+        storageFoundation.createQueueIfNotExists(this.queueService, trainingQueueName),
+        storageFoundation.createContainerIfNotExists(this.blobService, trainingImagesContainerName, { publicAccessLevel: 'blob' }),
+        storageFoundation.createContainerIfNotExists(this.blobService, modelContainerName, { publicAccessLevel: 'blob' }),
+    ]).then(result => {
+        return Promise.all([
+            storageFoundation.insertEntity(this.tableService, this.projectTableName, entity),
+            this.accessRightsService.create(projectCopy.id, owner, 'project-manager')
+        ]).then(result => {
+            return projectCopy;
+        })
     });
 }
 
@@ -98,17 +92,19 @@ ProjectService.prototype.update = function (project) {
 }
 
 ProjectService.prototype.delete = function (projectId) {
-    return new Promise((resolve, reject) => {
-        const task = {
-            PartitionKey: { '_': projectId },
-            RowKey: { '_': projectId }
-        };
-        this.tableService.deleteEntity(this.projectTableName, task, (error, result, response) => {
-            if (error) {
-                return reject(error);
-            }
-            return resolve();
-        });
+    const entity = {
+        PartitionKey: { '_': projectId },
+        RowKey: { '_': projectId }
+    };
+    return storageFoundation.deleteEntity(this.tableService, this.projectTableName, entity).then(result => {
+        const taskQueueName = this.getTaskQueueName(projectId);
+        const trainingImagesContainerName = this.getTrainingImageContainerName(projectId);
+        const modelContainerName = this.getModelContainerName(projectId);
+        return Promise.all([
+            storageFoundation.deleteQueue(this.queueService, taskQueueName),
+            storageFoundation.deleteContainer(this.blobService, trainingImagesContainerName),
+            storageFoundation.deleteContainer(this.blobService, modelContainerName)
+        ]);
     });
 }
 
@@ -160,6 +156,13 @@ ProjectService.prototype.getImageURL = function (projectId, imageId) {
     const containerName = this.getTrainingImageContainerName(projectId);
     const url = this.blobService.getUrl(containerName, imageId);
     return url;
+}
+
+ProjectService.prototype.getInstructionsImageURL = function (project) {
+    if (!project.instructionsImageId) {
+        return null;
+    }
+    return this.getImageURL(project.id, project.instructionsImageId);
 }
 
 function mapProjectToEntity(project) {
